@@ -57,7 +57,7 @@ public class Index {
 	 */
 		public static void main(String args[]) {
 			
-		//使用substance皮肤，必须将代码放到SwingUtilities.invokeLater中执行
+		//使用substance皮肤，必须将代码放到SwingUtilities.invokeLater中执行（Swing组件的更新一定要在EDT线程中进行）
 		 SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					try {			

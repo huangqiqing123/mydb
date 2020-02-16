@@ -3994,6 +3994,8 @@ public class MainFrame extends JFrame{
     							fieldMap.put("外键关联表字段", fieldInfoList.get(k).getParentTableFieldName());
     							list.add(fieldMap);
     						}	
+    					}else if(dbType.contains("POSTGRESQL")){
+    						
     					}					
     				}else if(temp.startsWith("getchildren")){//查询指定表被哪些表所引用了。
     					
@@ -5300,7 +5302,7 @@ public class MainFrame extends JFrame{
 	            				DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)selectNode.getParent();
 	            				if("表".equals(parentNode.getUserObject()+"") || "视图".equals(parentNode.getUserObject()+"")){   	
 
-	            					String sql = "select * from " + currentSelectedNodeValue;
+	            					String sql = DBUtil.getSimpleQueryLimitSql(currentSelectedNodeValue.toString());
 	            					doAction(sql, false, 0, null);	
 	            					if("true".equals(ConfigUtil.getConfInfo().get(Const.IS_GENERATE_SQL)+"")){			
 	            						int length = jTextArea1.getText().length();
@@ -5582,12 +5584,12 @@ public class MainFrame extends JFrame{
 			
 			//2.1 如果光标在文本域的起始位置
 			if(cur == 0){
-				//判断当前光标所在行是否以“--”或“//”开头，如果以注释符开头，则删除注释符，如果不以注释符开头，则插入注释符。
+				//判断当前光标所在行是否以“--”开头，如果以注释符开头，则删除注释符，如果不以注释符开头，则插入注释符。
 				String text = jTextArea1.getText();
-				if(text.startsWith("--") || text.startsWith("//")){
-					jTextArea1.replaceRange("", 0, 2);
+				if(text.startsWith("-- ")){
+					jTextArea1.replaceRange("", 0, 3);
 				}else{								
-					jTextArea1.insert("--", 0);
+					jTextArea1.insert("-- ", 0);
 				}
 			//2.2  如果光标不在起始位置
 			}else{
@@ -5605,9 +5607,9 @@ public class MainFrame extends JFrame{
 				if (preText.contains("\n")) {
 					
 					//获得光标所在行的前2个起始字符
-					String pre2char = null;
+					String pre3char = null;
 					try {
-						pre2char = jTextArea1.getText(preText.lastIndexOf("\n") + 1, 2);
+						pre3char = jTextArea1.getText(preText.lastIndexOf("\n") + 1, 3);
 					} catch (BadLocationException e) {
 						if("true".equals(ConfigUtil.getConfInfo().get(Const.IS_LOG)+"")){				
 							log.error(null, e);
@@ -5615,23 +5617,23 @@ public class MainFrame extends JFrame{
 						return;
 					}
 					//如果光标所在行以注释符开头
-					if("--".equals(pre2char) || "//".equals(pre2char)){
-						jTextArea1.replaceRange("", preText.lastIndexOf("\n") + 1, preText.lastIndexOf("\n") + 1 + 2);
+					if("-- ".equals(pre3char)){
+						jTextArea1.replaceRange("", preText.lastIndexOf("\n") + 1, preText.lastIndexOf("\n") + 1 + 3);
 					
 						//否则，在该位置之后的第一行之前插入注释符。
 					}else{	
-						jTextArea1.insert("--", preText.lastIndexOf("\n") + 1);
+						jTextArea1.insert("-- ", preText.lastIndexOf("\n") + 1);
 					}
 				//2.2.2  如果选中文本之前不存在换行符的场景，即当前光标在第一行的场景
 				} else {
 					String text = jTextArea1.getText();
 					
 					//删除文本域起始注释符
-					if(text.startsWith("--") || text.startsWith("//")){
-						jTextArea1.replaceRange("", 0, 2);
+					if(text.startsWith("-- ")){
+						jTextArea1.replaceRange("", 0, 3);
 					}else{					
 						//直接在文本域起始位置插入注释符
-						jTextArea1.insert("--", 0);
+						jTextArea1.insert("-- ", 0);
 					}
 				}
 			}
@@ -5664,30 +5666,30 @@ public class MainFrame extends JFrame{
 				if (preText.contains("\n")) {
 					
 					//获得当前行的前2个起始字符
-					String pre2char = null;
+					String pre3char = null;
 					try {
-						pre2char = jTextArea1.getText(preText.lastIndexOf("\n") + 1, 2);
+						pre3char = jTextArea1.getText(preText.lastIndexOf("\n") + 1, 3);
 					} catch (BadLocationException e) {
 						if("true".equals(ConfigUtil.getConfInfo().get(Const.IS_LOG)+"")){				
 							log.error(null, e);
 						}
 					}
 					//如果光标所在行以注释符开头
-					if("--".equals(pre2char) || "//".equals(pre2char)){
-						jTextArea1.replaceRange("", preText.lastIndexOf("\n") + 1, preText.lastIndexOf("\n") + 1 + 2);
+					if("-- ".equals(pre3char)){
+						jTextArea1.replaceRange("", preText.lastIndexOf("\n") + 1, preText.lastIndexOf("\n") + 1 + 3);
 					}else{					
-						jTextArea1.insert("--", preText.lastIndexOf("\n") + 1);
+						jTextArea1.insert("-- ", preText.lastIndexOf("\n") + 1);
 					}
 				//3.1.2  如果选中文本之前不存在换行符的场景，即当前是第一行的场景
 				} else {
 					String text = jTextArea1.getText();
 					
 					//删除文本域起始注释符
-					if(text.startsWith("--") || text.startsWith("//")){
-						jTextArea1.replaceRange("", 0, 2);
+					if(text.startsWith("-- ")){
+						jTextArea1.replaceRange("", 0, 3);
 					}else{	
 						//文本域起始位置插入注释符
-						jTextArea1.insert("--", 0);
+						jTextArea1.insert("-- ", 0);
 					}
 				}
 				
@@ -5714,10 +5716,10 @@ public class MainFrame extends JFrame{
 				}
 				if (preText.contains("\n")) {
 					
-					//获得选中文本第一行的前2个起始字符
-					String pre2char = null;
+					//获得选中文本第一行的前3个起始字符
+					String pre3char = null;
 					try {
-						pre2char = jTextArea1.getText(preText.lastIndexOf("\n") + 1, 2);
+						pre3char = jTextArea1.getText(preText.lastIndexOf("\n") + 1, 3);
 					} catch (BadLocationException e) {
 						if("true".equals(ConfigUtil.getConfInfo().get(Const.IS_LOG)+"")){				
 							log.error(null, e);
@@ -5725,15 +5727,15 @@ public class MainFrame extends JFrame{
 						return;
 					}
 					//如果光标所在行以注释符开头
-					if("--".equals(pre2char) || "//".equals(pre2char)){
+					if("-- ".equals(pre3char)){
 						isStartsWithZhuShi = true;
 					}
 					if(isStartsWithZhuShi){//处理第一行，删除注释操作
 						
-						jTextArea1.replaceRange("", preText.lastIndexOf("\n") + 1, preText.lastIndexOf("\n") + 1 + 2);
+						jTextArea1.replaceRange("", preText.lastIndexOf("\n") + 1, preText.lastIndexOf("\n") + 1 + 3);
 						
 					}else{//处理第一行，添加注释操作
-						jTextArea1.insert("--", preText.lastIndexOf("\n") + 1);
+						jTextArea1.insert("-- ", preText.lastIndexOf("\n") + 1);
 					}
 					
 					// 如果选中文本之前不存在换行符的场景，即当前是第一行的场景
@@ -5741,29 +5743,29 @@ public class MainFrame extends JFrame{
 					String text = jTextArea1.getText();
 					
 					//删除文本域起始注释符
-					if(text.startsWith("--") || text.startsWith("//")){
+					if(text.startsWith("-- ")){
 						isStartsWithZhuShi = true;
 					}
 					if(isStartsWithZhuShi){//处理选中文本第一行，删除注释操作
 						
-						jTextArea1.replaceRange("", 0, 2);
+						jTextArea1.replaceRange("", 0, 3);
 						
 					}else{//处理选中文本第一行，添加注释操作
-						jTextArea1.insert("--", 0);
+						jTextArea1.insert("-- ", 0);
 					}
 				}					
 				
 				//2、然后处理其他行
 				StringBuilder builder = new StringBuilder();
 				if(isStartsWithZhuShi){
-					if(lines[0].startsWith("--")||lines[0].startsWith("//")){
-						lines[0] = lines[0].substring(2);
+					if(lines[0].startsWith("-- ")){
+						lines[0] = lines[0].substring(3);
 					}
 					builder.append(lines[0]);
 					for (int i = 1; i < lines.length; i++){
 						builder.append("\n");
-						if(lines[i].startsWith("--") || lines[i].startsWith("//")){
-							lines[i] = lines[i].substring(2);
+						if(lines[i].startsWith("-- ")){
+							lines[i] = lines[i].substring(3);
 						}
 						builder.append(lines[i]);
 					}
@@ -5780,7 +5782,7 @@ public class MainFrame extends JFrame{
 					builder.append(lines[0]);
 					for (int i = 1; i < lines.length; i++){
 						builder.append("\n");
-						builder.append("--").append(lines[i]);
+						builder.append("-- ").append(lines[i]);
 					}
 					selectionStart = jTextArea1.getSelectionStart();
 					selectionEnd = jTextArea1.getSelectionEnd();
@@ -5828,15 +5830,20 @@ public class MainFrame extends JFrame{
 			return null;
 		}
 		int whereIndex = sql.indexOf("where");
+		int limitIndex = sql.indexOf("limit");
 		String tableName = null;
 		if(whereIndex != -1){
 			tableName = sql.substring("select*from".length(), whereIndex);
 		}else{
-			int orderbyIndex = sql.indexOf("orderby");
-			if(orderbyIndex != -1){
-				tableName = sql.substring("select*from".length(), orderbyIndex);
+			if(limitIndex != -1){
+				tableName = sql.substring("select*from".length(), limitIndex);
 			}else{
-				tableName = sql.substring("select*from".length());
+				int orderbyIndex = sql.indexOf("orderby");
+				if(orderbyIndex != -1){
+					tableName = sql.substring("select*from".length(), orderbyIndex);
+				}else{
+					tableName = sql.substring("select*from".length());
+				}
 			}
 		}
 		if(tableName.indexOf(",") > -1){

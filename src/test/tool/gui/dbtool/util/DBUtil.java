@@ -198,7 +198,7 @@ public class DBUtil {
 				returnMap.put("msg", "对象名 "+tableName+" 无效！");
 				return returnMap;
 			}
-			StringBuilder createSQL = new StringBuilder("--创建表 ");
+			StringBuilder createSQL = new StringBuilder("-- 创建表 ");
 			createSQL.append(tableName);
 			createSQL.append("\n");
 			createSQL.append("CREATE TABLE ");
@@ -256,7 +256,7 @@ public class DBUtil {
 				}
 				pk_field_names.deleteCharAt(pk_field_names.length()-1);//删除末尾逗号
 				createSQL.append("\n");
-				createSQL.append("--设置主键");
+				createSQL.append("-- 设置主键");
 				createSQL.append("\n");
 				createSQL.append("ALTER TABLE ");
 				createSQL.append(tableName);
@@ -275,7 +275,7 @@ public class DBUtil {
 			if(field_list.size()>0){
 				
 				createSQL.append("\n");
-				createSQL.append("--设置外键");
+				createSQL.append("-- 设置外键");
 				
 				int count = 0;
 				for(FieldInfo field : field_list){
@@ -301,7 +301,7 @@ public class DBUtil {
 			List<IndexBean> index_list = getIndexForSqlServer(tableName);
 			if(index_list.size()>0){
 				createSQL.append("\n");
-				createSQL.append("--设置索引");
+				createSQL.append("-- 设置索引");
 				for(IndexBean bean : index_list){
 					createSQL.append("\n");
 					createSQL.append("CREATE  ");
@@ -340,7 +340,7 @@ public class DBUtil {
 				return returnMap;
 			}else{	
 				List<FieldInfo> fieldInfoList = (List<FieldInfo>)getMap.get("result"); 
-				StringBuilder createSQL = new StringBuilder("--创建表 ");
+				StringBuilder createSQL = new StringBuilder("-- 创建表 ");
 				createSQL.append(tableName);
 				createSQL.append("\n");
 				createSQL.append("CREATE TABLE ");
@@ -397,7 +397,7 @@ public class DBUtil {
 				if(pk_CONSTRAINT_name != null){//表存在主键的场景
 					pk_field_names.deleteCharAt(pk_field_names.length()-1);//删除末尾逗号
 					createSQL.append("\n");
-					createSQL.append("--设置主键");
+					createSQL.append("-- 设置主键");
 					createSQL.append("\n");
 					createSQL.append("ALTER TABLE ");
 					createSQL.append(tableName);
@@ -425,7 +425,7 @@ public class DBUtil {
 				if(fk_CONSTRAINT_names.size()>0){//表存在外键的场景
 					
 					createSQL.append("\n");
-					createSQL.append("--设置外键");
+					createSQL.append("-- 设置外键");
 					
 					for(int i=0;i<fk_CONSTRAINT_names.size();i++){					
 						createSQL.append("\n");
@@ -449,7 +449,7 @@ public class DBUtil {
 					LinkedList<Map<String,Object>> indexList = (LinkedList<Map<String,Object>>)indexMap.get("result");
 					if(indexList.size()>0){
 						createSQL.append("\n");
-						createSQL.append("--设置索引");
+						createSQL.append("-- 设置索引");
 						for(Map<String,Object> record : indexList){
 							createSQL.append("\n");
 							createSQL.append("CREATE  ");
@@ -492,7 +492,7 @@ public class DBUtil {
 				returnMap.put("msg", getMap.get("msg").toString());
 			}else{
 				List<Map<String, Object>> getList = (List<Map<String, Object>>)getMap.get("result");
-				returnMap.put("sql", "--创建表 "+tableName+"\n"+getList.get(0).get("Create Table")+";");
+				returnMap.put("sql", "-- 创建表 "+tableName+"\n"+getList.get(0).get("Create Table")+";");
 			}
 			return returnMap;
 		}else{
@@ -804,9 +804,17 @@ public class DBUtil {
 							columnValue = new String(temp);
 						}
 					}
-				//mysql数据库tinyint(1)类型，需要getByte()读取数据，如果使用getObject()，则返回的是true（非0）、false（0）。
 				}else if(metadata.getColumnType(j+1)==Types.BIT){
-					columnValue = rs.getByte(j+1);
+					String dbType = getDBProductInfo().getProductName();
+				    if(dbType.contains("MYSQL")){	
+				    	//mysql数据库tinyint(1)类型，需要getByte()读取数据，如果使用getObject()，则返回的是true（非0）、false（0）。
+				    	columnValue = rs.getByte(j+1);
+					}else if(dbType.contains("POSTGRESQL")){
+						//对应postgres数据库中的bool类型
+						columnValue = rs.getBoolean(j+1);
+					}else{
+						columnValue = rs.getObject(j+1);
+					}
 				}else{
 					columnValue = rs.getObject(j+1);
 				}
@@ -1107,7 +1115,8 @@ public class DBUtil {
     	String table_schema = getSchema_mysql();
     	List<String> pkList = new ArrayList<String>();;
     	if(table_schema != null){
-    		String getPKsql = "select COLUMN_NAME from information_schema.KEY_COLUMN_USAGE where TABLE_SCHEMA='"+table_schema+"' and TABLE_NAME='"+tableName+"' and CONSTRAINT_NAME in(select CONSTRAINT_NAME from INFORMATION_SCHEMA.TABLE_CONSTRAINTS where TABLE_SCHEMA='"+table_schema+"' and table_name='"+tableName+"' and CONSTRAINT_TYPE='PRIMARY KEY')";
+    		String tableNameNew = tableName.replace("`", "");
+    		String getPKsql = "select COLUMN_NAME from information_schema.KEY_COLUMN_USAGE where TABLE_SCHEMA='"+table_schema+"' and TABLE_NAME='"+tableNameNew+"' and CONSTRAINT_NAME in(select CONSTRAINT_NAME from INFORMATION_SCHEMA.TABLE_CONSTRAINTS where TABLE_SCHEMA='"+table_schema+"' and table_name='"+tableNameNew+"' and CONSTRAINT_TYPE='PRIMARY KEY')";
     		Map<String, Object> map_pk = DBUtil.executeQuery(getPKsql);
     		if(map_pk.get("msg") == null){
     			List<Map<String, Object>> list_pk = (List<Map<String, Object>>)map_pk.get("result");
@@ -1120,6 +1129,36 @@ public class DBUtil {
     	}
     	return pkList;
     }
+	/**
+	 * 查询主键
+	 * @param tableName
+	 * @return
+	 */
+    public static List<String>  getPrimaryKeyList_postgresql(String tableName){
+    	List<String> pkList = new ArrayList<String>();;
+    	if(tableName != null){
+    		String getPKsql = "select pg_constraint.conname as pk_name,pg_attribute.attname as colname,pg_type.typname as typename from " 
+				    	    +"pg_constraint  inner join pg_class " 
+				    	    +"on pg_constraint.conrelid = pg_class.oid " 
+				    	    +"inner join pg_attribute on pg_attribute.attrelid = pg_class.oid " 
+				    	    +"and  pg_attribute.attnum = pg_constraint.conkey[1] "
+				    	    +"inner join pg_type on pg_type.oid = pg_attribute.atttypid "
+				    	    +"where pg_class.relname = '"+tableName+"' "
+				    	    +"and pg_constraint.contype='p'";
+    		Map<String, Object> map_pk = DBUtil.executeQuery(getPKsql);
+    		if(map_pk.get("msg") == null){
+    			List<Map<String, Object>> list_pk = (List<Map<String, Object>>)map_pk.get("result");
+    			if(list_pk != null && list_pk.size() > 0){
+        			for(Map<String, Object> record:list_pk){
+        				pkList.add(record.get("colname").toString());
+        			}
+    			}
+    		}
+    	}
+    	return pkList;
+    }
+    
+
 	/**
 	 * 查询主键
 	 * @param tableName
@@ -1177,8 +1216,27 @@ public class DBUtil {
 			primaryKeyList = DBUtil.getPrimaryKeyList_db2(tableName);
 		}else if(dbType.contains("MICROSOFT SQL SERVER")){
 			primaryKeyList = DBUtil.getPrimaryKeyList_sqlserver(tableName);
+		}else if(dbType.contains("POSTGRESQL")){
+			primaryKeyList = DBUtil.getPrimaryKeyList_postgresql(tableName);
 		}
 		return primaryKeyList;
+    }
+    /**
+     * 获取单表select * 查询sql。
+     * 为防止表数据量过大，需要限制最大返回记录数(默认1000条)。
+     * @param tableName
+     */
+    public static String getSimpleQueryLimitSql(String tableName){
+    	String simpleQueryLimitSql = null;
+    	String dbType = getDBProductInfo().getProductName();
+	    if(dbType.contains("MYSQL")){	
+			simpleQueryLimitSql = "select * from `"+tableName+"` limit 0,1000";
+		}else if(dbType.contains("POSTGRESQL")){
+			simpleQueryLimitSql = "select * from "+tableName+" limit 1000 offset 0";
+		}else{
+			simpleQueryLimitSql = "select * from "+tableName;
+		}
+		return simpleQueryLimitSql;
     }
     /**
      * 获取当前模式名
@@ -1456,19 +1514,25 @@ public class DBUtil {
 		if (type == Types.BIGINT || type == Types.DECIMAL
 				|| type == Types.DOUBLE || type == Types.FLOAT
 				|| type == Types.INTEGER || type == Types.NUMERIC
-				|| type == Types.SMALLINT || type == Types.NULL) {
+				|| type == Types.SMALLINT 
+				|| type == Types.BIT 
+				|| type == Types.NULL) {
 			return false; 
 		}else{
 			return true;
 		}
 	}
 	/*
-	 * 目前只有DB2、Oracle、SQL Server、MYSQL是支持的数据库类型
+	 * 目前只有DB2、Oracle、SQL Server、MYSQL、POSTGRESQL是支持的数据库类型
 	 * 其他数据库只支持标准sql
 	 */
 	public static boolean isSupportedDBType(){
 		String dbType = getDBProductInfo().getProductName();
-		if(dbType.contains("ORACLE") || dbType.contains("DB2") ||dbType.contains("MICROSOFT SQL SERVER")||dbType.contains("MYSQL")){
+		if(dbType.contains("ORACLE") 
+				|| dbType.contains("DB2") 
+				||dbType.contains("MICROSOFT SQL SERVER")
+				||dbType.contains("MYSQL")
+				||dbType.contains("POSTGRESQL")){
 			return true;
 		}
 		return false;
