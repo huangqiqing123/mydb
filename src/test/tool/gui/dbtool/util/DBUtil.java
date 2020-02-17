@@ -761,7 +761,7 @@ public class DBUtil {
 	 * 构建dataset数据集
 	 */
 	private static List<Map<String, Object>> buildDataSet(ResultSet rs) throws SQLException{
-		
+		String dbType = getDBProductInfo().getProductName();
 		List<Map<String, Object>> dataSet = new LinkedList<Map<String,Object>>();//结果集
 		List<String> columnNameList = new LinkedList<String>();//列名称list	
 		ResultSetMetaData metadata = rs.getMetaData();//获取数据表元数据
@@ -775,8 +775,9 @@ public class DBUtil {
 			for(int j=0;j<columnNameList.size();j++){
 
 				String columnName = columnNameList.get(j);
+				int columnType = metadata.getColumnType(j+1);
 				Object columnValue = null;
-				if(metadata.getColumnType(j+1)==Types.TIMESTAMP){//对时间戳类型的处理	
+				if(columnType==Types.TIMESTAMP){//对时间戳类型的处理	
 					try {
 						columnValue = rs.getTimestamp(j+1);
 					} catch (Exception e) {
@@ -784,16 +785,16 @@ public class DBUtil {
 						log.error("", e);
 					}
 					
-				}else if(metadata.getColumnType(j+1)==Types.CLOB){//对于clob字段的处理
+				}else if(columnType==Types.CLOB){//对于clob字段的处理
 					Clob clob = rs.getClob(j+1);
 					if(clob != null){		
 						columnValue = clob.getSubString(1, (int)clob.length());
 					}
-				}else if(metadata.getColumnType(j+1)==Types.DATE){//对于date字段的处理
+				}else if(columnType==Types.DATE){//对于date字段的处理
 					columnValue = rs.getDate(j+1);
-				}else if(metadata.getColumnType(j+1)==Types.TIME){//对于time字段的处理
+				}else if(columnType==Types.TIME){//对于time字段的处理
 					columnValue = rs.getTime(j+1);
-				}else if(metadata.getColumnType(j+1)==Types.BLOB){//对于blob字段的处理
+				}else if(columnType==Types.BLOB){//对于blob字段的处理
 					byte[] temp = rs.getBytes(j+1);
 					if(temp.length>20000){
 						columnValue = rs.getObject(j+1);
@@ -804,8 +805,7 @@ public class DBUtil {
 							columnValue = new String(temp);
 						}
 					}
-				}else if(metadata.getColumnType(j+1)==Types.BIT){
-					String dbType = getDBProductInfo().getProductName();
+				}else if(columnType==Types.BIT){
 				    if(dbType.contains("MYSQL")){	
 				    	//mysql数据库tinyint(1)类型，需要getByte()读取数据，如果使用getObject()，则返回的是true（非0）、false（0）。
 				    	columnValue = rs.getByte(j+1);
@@ -814,6 +814,19 @@ public class DBUtil {
 						columnValue = rs.getBoolean(j+1);
 					}else{
 						columnValue = rs.getObject(j+1);
+					}
+				 //匹配postgres bytea，20kb以下转换为16进制展示
+				}else if(columnType==Types.BINARY){
+					byte[] temp = rs.getBytes(j+1);
+					if(temp != null){
+						if(temp.length>20000){
+							columnValue = rs.getObject(j+1);
+						}else{					
+							columnValue = MathUtil.bytesToHex(temp);
+							if(dbType.contains("POSTGRESQL")){
+								columnValue = "E'\\\\x"+columnValue+"'::bytea";
+							}
+						}
 					}
 				}else{
 					columnValue = rs.getObject(j+1);

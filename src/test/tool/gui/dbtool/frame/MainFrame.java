@@ -3142,7 +3142,7 @@ public class MainFrame extends JFrame{
 				insertHeader.append(rm.getColumnName(col_number)+ " ) VALUES ( ");
 			}
 		
-			//获取所有选中行的单元格的是值
+			//获取所有选中行的单元格的值
 			MyJTable jtable = getCurrentJtable();
 			for(int i=0;i<rowNumberList.size();i++){
 				int rowNumber = rowNumberList.get(i);
@@ -3155,6 +3155,9 @@ public class MainFrame extends JFrame{
 					Object cellValue = jtable.getValueAt(rowNumber, j);
 					if (cellValue == null || "(null)".equals(cellValue)) {
 						insertSql.append("null, ");
+					}else if(cellValue.toString().startsWith("E'\\\\x") 
+							&& cellValue.toString().endsWith("'::bytea")){//postgres bytea类型，16进制展示
+						insertSql.append(cellValue + ", ");
 					}else {
 						if(DBUtil.isChar(type)){
 							//对单引号的特殊处理
