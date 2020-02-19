@@ -3841,55 +3841,7 @@ public class MainFrame extends JFrame{
     					String arr[] = executeSqlList.get(a).trim().split(" ");// desc pub_organ
     					String tableName = arr[arr.length-1];
     					
-    					//如果是sqlserver数据库，则从接口类中查询
-    					if(dbType.equals("MICROSOFT SQL SERVER")){
-    						list = new LinkedList<Map<String,Object>>();
-    						List<FieldInfo> cols = DBUtil.getTableColums(tableName, "");
-    						List<String> pks =DBUtil.getPrimaryKeyList_sqlserver(tableName);
-    						List<FieldInfo> fks = DBUtil.getForeignKeys(tableName);
-    						
-    						for(FieldInfo col : cols){
-    							Map<String,Object> fieldMap = new LinkedHashMap<String, Object>();
-    							fieldMap.put("表名称", col.getTableName());
-    							fieldMap.put("字段名称",col.getFieldName());
-    							fieldMap.put("字段数据类型", col.getFieldType());
-    							fieldMap.put("字段长度", col.getFieldLength());
-    							fieldMap.put("默认值", col.getDefaultValue());
-    							fieldMap.put("是否可以为空", col.getCanBeNull()?"是":"否");
-    							
-    							//是否主键
-    							if(pks.contains(col.getFieldName())){
-    								fieldMap.put("是否主键", "是");
-    							}else{
-    								fieldMap.put("是否主键", "否");
-    							}
-    							//是否外键
-    							FieldInfo tempField = null;
-    							for(FieldInfo field:fks){
-    								if(field.getFieldName().equals(col.getFieldName())){
-    									tempField = field;
-    									break;
-    								}
-    							}
-    							if(tempField != null){
-    								fieldMap.put("是否外键", "是");
-    								fieldMap.put("外键状态", tempField.getConstraintStatus());
-    								fieldMap.put("外键关联表", tempField.getParentTableName());
-    								fieldMap.put("外键关联表字段", tempField.getParentTableFieldName());		
-    							}else{
-    								fieldMap.put("是否外键", "否");
-    								fieldMap.put("外键状态", "");
-    								fieldMap.put("外键关联表", "");
-    								fieldMap.put("外键关联表字段", "");		
-    							}
-    							list.add(fieldMap);
-    						}
-    						if(list.size() == 0){
-    							result.put(key, getResultInfo(executeSqlList.get(a), "执行<b><font color ='red'>失败</font></b>，未获取到 "+tableName+" 相关信息！"));
-    							show_componts.put(key, new JLabel());
-    							continue;
-    						}
-    					}else if(dbType.equals("MYSQL")){
+    					if(dbType.equals("MYSQL")){
     						String table_schema = null;
     						try {
     							table_schema = ConnUtil.getInstance().getConn().getCatalog();
@@ -3997,8 +3949,53 @@ public class MainFrame extends JFrame{
     							fieldMap.put("外键关联表字段", fieldInfoList.get(k).getParentTableFieldName());
     							list.add(fieldMap);
     						}	
-    					}else if(dbType.contains("POSTGRESQL")){
-    						
+    					}else if(dbType.contains("POSTGRESQL") || dbType.contains("MICROSOFT SQL SERVER")){
+    						list = new LinkedList<Map<String,Object>>();
+    						List<FieldInfo> cols = DBUtil.getTableColums(tableName, "");
+    						List<String> pks =DBUtil.getPrimaryKeyList(tableName);
+    						List<FieldInfo> fks = DBUtil.getForeignKeys(tableName);
+    						for(FieldInfo col : cols){
+    							Map<String,Object> fieldMap = new LinkedHashMap<String, Object>();
+    							fieldMap.put("表名称", col.getTableName());
+    							fieldMap.put("字段名称",col.getFieldName());
+    							fieldMap.put("字段数据类型", col.getFieldType());
+    							fieldMap.put("字段长度", col.getFieldLength());
+    							fieldMap.put("默认值", col.getDefaultValue());
+    							fieldMap.put("是否可以为空", col.getCanBeNull()?"是":"否");
+    							
+    							//是否主键
+    							if(pks.contains(col.getFieldName())){
+    								fieldMap.put("是否主键", "是");
+    							}else{
+    								fieldMap.put("是否主键", "否");
+    							}
+    							//是否外键
+    							FieldInfo tempField = null;
+    							for(FieldInfo field:fks){
+    								if(field.getFieldName().equals(col.getFieldName())){
+    									tempField = field;
+    									break;
+    								}
+    							}
+    							if(tempField != null){
+    								fieldMap.put("是否外键", "是");
+    								fieldMap.put("外键状态", tempField.getConstraintStatus());
+    								fieldMap.put("外键关联表", tempField.getParentTableName());
+    								fieldMap.put("外键关联表字段", tempField.getParentTableFieldName());		
+    							}else{
+    								fieldMap.put("是否外键", "否");
+    								fieldMap.put("外键状态", "");
+    								fieldMap.put("外键关联表", "");
+    								fieldMap.put("外键关联表字段", "");		
+    							}
+    							fieldMap.put("字段说明", col.getRemarks());		
+    							list.add(fieldMap);
+    						}
+    						if(list.size() == 0){
+    							result.put(key, getResultInfo(executeSqlList.get(a), "执行<b><font color ='red'>失败</font></b>，未获取到 "+tableName+" 相关信息！"));
+    							show_componts.put(key, new JLabel());
+    							continue;
+    						}
     					}					
     				}else if(temp.startsWith("getchildren")){//查询指定表被哪些表所引用了。
     					

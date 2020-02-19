@@ -136,7 +136,7 @@ public class DBUtil {
     	return getTableColums(list,pre);
     }
     /**  
-     * 根据表名，查询字段信息，适用于sqlserver数据库
+     * 根据表名，查询字段信息，适用于sqlserver、postgresql
      * 表名、字段名称、字段类型、长度、是否可以为空、默认值
      */  
     public static List<FieldInfo> getTableColums(List<String> tableNames,String pre)   
@@ -153,9 +153,11 @@ public class DBUtil {
 					field.setFieldType(rs.getString("TYPE_NAME"));
 					field.setCanBeNull(rs.getInt("NULLABLE")==1?true:false);
 					field.setFieldLength(rs.getString("COLUMN_SIZE"));
+					field.setRemarks(rs.getString("REMARKS"));
 					
-					String defaultValue = rs.getString("COLUMN_DEF");//sqlserver数据库，默认值一般是由小括弧()括起来的。
+					String defaultValue = rs.getString("COLUMN_DEF");
 					if(defaultValue != null){
+						//sqlserver数据库，默认值一般是由小括弧()括起来的。
 						if(defaultValue.startsWith("(")){
 							defaultValue = defaultValue.substring(1);
 						}
@@ -245,7 +247,7 @@ public class DBUtil {
 			
 			
 			//设置主键信息，一个表只能有一个主键约束名称，一个主键名称可以关联多个字段。
-			List<String> pk_cols = getPrimaryKeyList_sqlserver(tableName);			
+			List<String> pk_cols = getPrimaryKeyList(tableName);			
 			
 			//表存在主键的场景
 			if(pk_cols.size()>0){
@@ -494,6 +496,144 @@ public class DBUtil {
 				List<Map<String, Object>> getList = (List<Map<String, Object>>)getMap.get("result");
 				returnMap.put("sql", "-- 创建表 "+tableName+"\n"+getList.get(0).get("Create Table")+";");
 			}
+			return returnMap;
+		}else if(dbType.contains("POSTGRESQL")){
+			Map<String,String> returnMap = new HashMap<String, String>();
+			List<FieldInfo> fieldInfoList = getTableColums(tableName, "");
+			if(fieldInfoList.size() == 0){
+				returnMap.put("msg", "对象名 "+tableName+" 无效！");
+				return returnMap;
+			}
+			StringBuilder createSQL = new StringBuilder("-- 创建表 ");
+			createSQL.append(tableName);
+			createSQL.append("\n");
+			createSQL.append("CREATE TABLE ");
+			createSQL.append(tableName);
+			createSQL.append("(");
+			createSQL.append("\n");
+			
+			for(FieldInfo field : fieldInfoList){
+				createSQL.append("    ");//每列缩进4个空格，好看
+				
+				//字段名称
+				createSQL.append(field.getFieldName());
+				createSQL.append(" ");
+				
+				//字段类型
+				createSQL.append(field.getFieldType());
+				
+				//字段长度(bool字段类型，不需要设置长度)
+				if(! "bool".equals(field.getFieldType())){				
+					createSQL.append("(");
+					createSQL.append(field.getFieldLength());
+					createSQL.append(")");
+				}
+				
+				//默认值信息
+				if(!"(null)".equals(field.getDefaultValue()) && !"".equals(field.getDefaultValue())){
+					createSQL.append(" DEFAULT ");
+					createSQL.append(field.getDefaultValue());
+				}
+				
+				//是否可以为空
+				if(! field.getCanBeNull()){
+					createSQL.append(" NOT NULL");
+				}
+				
+				//添加逗号分隔，和换行符
+				createSQL.append(",");
+				createSQL.append("\n");
+			}
+			createSQL.deleteCharAt(createSQL.length()-1);//删除换行符
+			createSQL.deleteCharAt(createSQL.length()-1);//删除末尾逗号
+			createSQL.append("\n");
+			createSQL.append(");");
+			
+			
+			//设置主键信息，一个表只能有一个主键约束名称，一个主键名称可以关联多个字段。
+			List<String> pk_cols = getPrimaryKeyList(tableName);			
+			
+			//表存在主键的场景
+			if(pk_cols.size()>0){
+				StringBuilder pk_field_names = new StringBuilder();
+				for(String pk_col : pk_cols){
+					pk_field_names.append(pk_col);
+					pk_field_names.append(",");
+				}
+				pk_field_names.deleteCharAt(pk_field_names.length()-1);//删除末尾逗号
+				createSQL.append("\n");
+				createSQL.append("-- 设置主键");
+				createSQL.append("\n");
+				createSQL.append("ALTER TABLE ");
+				createSQL.append(tableName);
+				createSQL.append(" ADD CONSTRAINT ");
+				createSQL.append(tableName);
+				createSQL.append("_pk");
+				createSQL.append(" PRIMARY KEY(");
+				createSQL.append(pk_field_names);
+				createSQL.append(");");
+				
+			}	
+			//设置外键信息，一个表可以有多个外键约束名称，一个外键约束对应一个字段。		
+			List<FieldInfo> field_list = getForeignKeys(tableName);
+			
+			//表存在外键的场景
+			if(field_list.size()>0){
+				
+				createSQL.append("\n");
+				createSQL.append("-- 设置外键");
+				
+				int count = 0;
+				for(FieldInfo field : field_list){
+					count++;
+					createSQL.append("\n");
+					createSQL.append("ALTER TABLE ");
+					createSQL.append(tableName);
+					createSQL.append(" ADD CONSTRAINT ");
+					createSQL.append(tableName);
+					createSQL.append("_fk");
+					createSQL.append(count);
+					createSQL.append(" FOREIGN KEY(");
+					createSQL.append(field.getFieldName());
+					createSQL.append(") REFERENCES ");
+					createSQL.append(field.getParentTableName());
+					createSQL.append(" (");
+					createSQL.append(field.getParentTableFieldName());
+					createSQL.append(");");
+				}
+			}
+			//创建索引信息
+			//CREATE UNIQUE INDEX IDTABLE_IDX ON PUB_IDTABLE (ID_ID ASC,ORGAN_ID ASC);
+			List<IndexBean> index_list = getIndexForSqlServer(tableName);
+			if(index_list.size()>0){
+				createSQL.append("\n");
+				createSQL.append("-- 设置索引");
+				for(IndexBean bean : index_list){
+					createSQL.append("\n");
+					createSQL.append("CREATE  ");
+					if(bean.isUniqueIndex()){						
+						createSQL.append("UNIQUE ");
+					}
+					createSQL.append("INDEX ");
+					createSQL.append(bean.getIndexName());
+					createSQL.append(" ON ");
+					createSQL.append(tableName);
+					createSQL.append(" (");
+					
+					//关联列
+					List<String> colNameList = bean.getColNameList();
+					List<String> asc_desc_list = bean.getColASC_DESC();
+					for(int i=0;i<colNameList.size();i++){
+						createSQL.append(colNameList.get(i));
+						createSQL.append(" ");
+						createSQL.append(asc_desc_list.get(i));
+						createSQL.append(",");
+					}
+					createSQL.deleteCharAt(createSQL.length()-1);
+					createSQL.append(");");
+				}
+			}
+			returnMap.put("sql", createSQL.toString());
 			return returnMap;
 		}else{
 			Map<String,String> returnMap = new HashMap<String, String>();
@@ -1096,11 +1236,11 @@ public class DBUtil {
 		return chineseIndexType;
 	}
 	/**
-	 * 查询主键
+	 * 查询主键---通用
 	 * @param tableName
 	 * @return
 	 */
-    public static List<String> getPrimaryKeyList_sqlserver(String tableName)   
+    public static List<String> getPrimaryKeyList(String tableName)   
     {
 		ResultSet rs = null;
 		List<String> list = new ArrayList<String>();	
@@ -1142,35 +1282,6 @@ public class DBUtil {
     	}
     	return pkList;
     }
-	/**
-	 * 查询主键
-	 * @param tableName
-	 * @return
-	 */
-    public static List<String>  getPrimaryKeyList_postgresql(String tableName){
-    	List<String> pkList = new ArrayList<String>();;
-    	if(tableName != null){
-    		String getPKsql = "select pg_constraint.conname as pk_name,pg_attribute.attname as colname,pg_type.typname as typename from " 
-				    	    +"pg_constraint  inner join pg_class " 
-				    	    +"on pg_constraint.conrelid = pg_class.oid " 
-				    	    +"inner join pg_attribute on pg_attribute.attrelid = pg_class.oid " 
-				    	    +"and  pg_attribute.attnum = pg_constraint.conkey[1] "
-				    	    +"inner join pg_type on pg_type.oid = pg_attribute.atttypid "
-				    	    +"where pg_class.relname = '"+tableName+"' "
-				    	    +"and pg_constraint.contype='p'";
-    		Map<String, Object> map_pk = DBUtil.executeQuery(getPKsql);
-    		if(map_pk.get("msg") == null){
-    			List<Map<String, Object>> list_pk = (List<Map<String, Object>>)map_pk.get("result");
-    			if(list_pk != null && list_pk.size() > 0){
-        			for(Map<String, Object> record:list_pk){
-        				pkList.add(record.get("colname").toString());
-        			}
-    			}
-    		}
-    	}
-    	return pkList;
-    }
-    
 
 	/**
 	 * 查询主键
@@ -1227,10 +1338,8 @@ public class DBUtil {
 			primaryKeyList = DBUtil.getPrimaryKeyList_mysql(tableName);
 		}else if(dbType.contains("DB2")){
 			primaryKeyList = DBUtil.getPrimaryKeyList_db2(tableName);
-		}else if(dbType.contains("MICROSOFT SQL SERVER")){
-			primaryKeyList = DBUtil.getPrimaryKeyList_sqlserver(tableName);
-		}else if(dbType.contains("POSTGRESQL")){
-			primaryKeyList = DBUtil.getPrimaryKeyList_postgresql(tableName);
+		}else if(dbType.contains("MICROSOFT SQL SERVER") || dbType.contains("POSTGRESQL")){
+			primaryKeyList = DBUtil.getPrimaryKeyList(tableName);
 		}
 		return primaryKeyList;
     }

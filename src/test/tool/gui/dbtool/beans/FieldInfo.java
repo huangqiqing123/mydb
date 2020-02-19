@@ -16,12 +16,19 @@ public class FieldInfo {
 
 	private String parentTableFieldName;//外键字段关联的父表的字段
 	private String defaultValue;//字段默认值
+	private String remarks;//注释说明
 	
 	//以下2个字段不参与页面的展现
 	private String constraintName;//该字段的约束名称
 	private String r_constraintName;//该字段的引用约束名称
 	
 	
+	public String getRemarks() {
+		return remarks;
+	}
+	public void setRemarks(String remarks) {
+		this.remarks = remarks;
+	}
 	public String getConstraintStatus() {
 		return constraintStatus;
 	}
