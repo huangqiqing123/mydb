@@ -522,8 +522,13 @@ public class DBUtil {
 				//字段类型
 				createSQL.append(field.getFieldType());
 				
-				//字段长度(bool字段类型，不需要设置长度)
-				if(! "bool".equals(field.getFieldType())){				
+				//字段长度(bool/bytea/int，不需要设置长度)
+				if(! "bool".equals(field.getFieldType()) && 
+						! "bytea".equals(field.getFieldType())&& 
+						! "int4".equals(field.getFieldType())&& 
+						! "int8".equals(field.getFieldType())&& 
+						! "int10".equals(field.getFieldType())
+						){				
 					createSQL.append("(");
 					createSQL.append(field.getFieldLength());
 					createSQL.append(")");
@@ -1379,7 +1384,6 @@ public class DBUtil {
     /*
 	 * 获取外键信息
 	 * 包含信息：子表名称、子表字段、父表名称、父表字段
-	 * 仅适用于SQL Server
 	 */
     public static List<FieldInfo> getForeignKeys(String tableName)   
     {
@@ -1387,41 +1391,18 @@ public class DBUtil {
 		List<FieldInfo> list = new ArrayList<FieldInfo>();
 		try {
 			DatabaseMetaData metaData = ConnUtil.getInstance().getConn().getMetaData();
-			String databaseProductVersion = metaData.getDatabaseProductVersion();//8.0 sqlserver2000,9.0 sqlserver2005,10.0 sqlserver 2008
-			int databaseProductVersion_int = Integer.parseInt(databaseProductVersion.substring(0, databaseProductVersion.indexOf(".")));
 			rs = metaData.getImportedKeys(null, null, tableName);
 			while (rs.next()) {
 				FieldInfo field = new FieldInfo();
 				field.setParentTableName(rs.getString("PKTABLE_NAME"));
 				field.setParentTableFieldName(rs.getString("PKCOLUMN_NAME"));
 				field.setConstraintName(rs.getString("FK_NAME"));//外键约束名称
-				
-				//获取该外键约束的状态
-				//sql server 2000及以下版本
-				if(databaseProductVersion_int <= 8){
-					String sql = "select name as 外键约束名称,status as 约束状态 from sysobjects where name='"+field.getConstraintName()+"' and xtype='F';";
-					List<Map<String,Object>> returnList = (List<Map<String, Object>>)executeQuery(sql).get("result");
-					String constraintStatus = returnList.get(0).get("约束状态")+"";
-					if(constraintStatus.equals("2306")){//sql server 2000中，2306表示已禁用，2表示已启用
-						field.setConstraintStatus("已禁用");
-					}else{
-						field.setConstraintStatus("已启用");
-					}
-				//sqlserver2005 及以上版本
-				}else{
-					String sql = "select name as 约束名称, is_disabled 是否禁用 from sys.foreign_keys where name='"+field.getConstraintName()+"'";
-					List<Map<String,Object>> returnList = (List<Map<String, Object>>)executeQuery(sql).get("result");
-					String constraintStatus = returnList.get(0).get("是否禁用")+"";
-					if(constraintStatus.equals("true")){
-						field.setConstraintStatus("已禁用");
-					}else{
-						field.setConstraintStatus("已启用");
-					}
-				}
-				field.setFieldName(rs.getString(8));
+				field.setFieldName(rs.getString("FKCOLUMN_NAME"));
 				field.setTableName(tableName);
 				list.add(field);
 			}
+			//获取该外键约束的状态
+			buildConstraintStatus(list);
 		} catch (SQLException e) {
 			if ("true".equals(ConfigUtil.getConfInfo().get(Const.IS_LOG) + "")) {
 				log.error("获取外键信息出错！", e);
@@ -1431,6 +1412,45 @@ public class DBUtil {
 		}
 		return list;
 	}
+    //补全外键约束的状态
+    private static List<FieldInfo> buildConstraintStatus(List<FieldInfo> list){
+    	if(list != null){
+    		try {
+    			String dbType = getDBProductInfo().getProductName();
+    			if(dbType.contains("MICROSOFT SQL SERVER")){
+    				DatabaseMetaData metaData = ConnUtil.getInstance().getConn().getMetaData();
+    				String databaseProductVersion = metaData.getDatabaseProductVersion();//8.0 sqlserver2000,9.0 sqlserver2005,10.0 sqlserver 2008
+    				int databaseProductVersion_int = Integer.parseInt(databaseProductVersion.substring(0, databaseProductVersion.indexOf(".")));
+    				for(FieldInfo field : list){
+    					//sql server 2000及以下版本
+    					if(databaseProductVersion_int <= 8){
+    						String sql = "select name as 外键约束名称,status as 约束状态 from sysobjects where name='"+field.getConstraintName()+"' and xtype='F';";
+    						List<Map<String,Object>> returnList = (List<Map<String, Object>>)executeQuery(sql).get("result");
+    						String constraintStatus = returnList.get(0).get("约束状态")+"";
+    						if(constraintStatus.equals("2306")){//sql server 2000中，2306表示已禁用，2表示已启用
+    							field.setConstraintStatus("已禁用");
+    						}else{
+    							field.setConstraintStatus("已启用");
+    						}
+    						//sqlserver2005 及以上版本
+    					}else{
+    						String sql = "select name as 约束名称, is_disabled 是否禁用 from sys.foreign_keys where name='"+field.getConstraintName()+"'";
+    						List<Map<String,Object>> returnList = (List<Map<String, Object>>)executeQuery(sql).get("result");
+    						String constraintStatus = returnList.get(0).get("是否禁用")+"";
+    						if(constraintStatus.equals("true")){
+    							field.setConstraintStatus("已禁用");
+    						}else{
+    							field.setConstraintStatus("已启用");
+    						}
+    					}
+    				}
+    			}
+			} catch (Exception e) {
+				log.error("获取外键约束状态信息出错！", e);
+			}
+    	} 
+    	return list;
+    }
     /*
 	 * 查询子表信息
 	 * 包含信息：主表名称，主表字段，子表名称，子表字段
