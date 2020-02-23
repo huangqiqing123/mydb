@@ -4006,9 +4006,16 @@ public class MainFrame extends JFrame{
     					}
     					
     					String arr[] = executeSqlList.get(a).trim().split(" ");// getchildren pub_organ
-    					String tableName = arr[arr.length-1].trim().toUpperCase();
+    					String tableName = arr[arr.length-1].trim();
+    					
+    					//首先检查表是否存在
+						if(DBUtil.executeQuery("select * from "+tableName+" where 1=2").get("msg")!=null){
+							result.put(key, getResultInfo(executeSqlList.get(a), "执行<b><font color ='red'>失败</font></b>，"+tableName+" 表不存在或无效！"));
+							show_componts.put(key, new JLabel());
+							continue;
+						}
 
-    					if(dbType.equals("MICROSOFT SQL SERVER")){
+    					if(dbType.equals("MICROSOFT SQL SERVER") || dbType.equals("POSTGRESQL")){
     						List<FieldInfo> ChildList = DBUtil.getChildTables(tableName);
     						if(ChildList.size() == 0){
     							result.put(key, getResultInfo(executeSqlList.get(a), "执行<b><font color ='red'>失败</font></b>，当前表不存在子表！"));
@@ -4026,13 +4033,6 @@ public class MainFrame extends JFrame{
     							}
     						}
     					}else{		
-    						//首先检查表是否存在
-    						if(DBUtil.executeQuery("select * from "+tableName+" where 1=2").get("msg")!=null){
-    							result.put(key, getResultInfo(executeSqlList.get(a), "执行<b><font color ='red'>失败</font></b>，"+tableName+" 表不存在或无效！"));
-    							show_componts.put(key, new JLabel());
-    							continue;
-    						}
-    						
     						if(dbType.contains("ORACLE")){
     							String getchildrenSQL = "select parent.table_name as 主表名称 ,parent.constraint_name as 主表约束,child.table_name as 子表名称,child.constraint_name as 子表约束 " +
     									"from user_constraints parent,user_constraints child " +

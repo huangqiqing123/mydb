@@ -127,7 +127,7 @@ public class DBUtil {
 		return list;
 	}
     /**  
-     * 根据表名，查询字段信息，适用于sqlserver数据库
+     * 根据表名，查询字段信息，适用于sqlserver、postgresql
      * 表名、字段名称、字段类型、长度、是否可以为空、默认值
      */  
     public static List<FieldInfo> getTableColums(String tableName,String pre) {
@@ -554,6 +554,23 @@ public class DBUtil {
 			createSQL.append("\n");
 			createSQL.append(");");
 			
+			//为字段和表添加注释（如果存在的话）
+			boolean isFirst = true;
+			for(FieldInfo field : fieldInfoList){
+				String remark = field.getRemarks();
+				if(remark != null){
+					if(isFirst){
+						createSQL.append("\n");
+						createSQL.append("-- 为字段添加注释");
+						isFirst = false;
+					}
+					createSQL.append("\n");
+					createSQL.append("COMMENT ON COLUMN  ");
+					createSQL.append(field.getTableName()).append(".").append(field.getFieldName());
+					createSQL.append(" IS ");
+					createSQL.append("'").append(remark).append("';");
+				}
+			}
 			
 			//设置主键信息，一个表只能有一个主键约束名称，一个主键名称可以关联多个字段。
 			List<String> pk_cols = getPrimaryKeyList(tableName);			
