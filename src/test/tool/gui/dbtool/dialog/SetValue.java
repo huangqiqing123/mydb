@@ -3,6 +3,10 @@ package test.tool.gui.dbtool.dialog;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -18,6 +22,7 @@ import java.sql.Driver;
 import java.util.TreeMap;
 import java.util.Iterator;
 import java.util.Properties;
+
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
@@ -33,7 +38,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
 import org.apache.log4j.Logger;
+
 import test.tool.gui.common.MyUUID;
 import test.tool.gui.dbtool.beans.DataSourceInfo;
 import test.tool.gui.dbtool.consts.Const;
@@ -79,6 +86,7 @@ public class SetValue extends JFrame {
     private JMenuItem jMenuItemReName = new JMenuItem("重命名");
     private JMenuItem jMenuItemConnect = new JMenuItem("连接");
     private JMenuItem jMenuItem_delete = new JMenuItem("删除");
+    private JMenuItem jMenuItemShowPassword = new JMenuItem("查看密码");
 
     //用于记录连接失败时的详细错误信息
     private String errorInfo = null;
@@ -163,6 +171,20 @@ public class SetValue extends JFrame {
 					    jPopupMenu.add(jMenuItem_detail);
 					    jPopupMenu.show(jLabel_tips, e.getX(), e.getY());
 					}
+					if("密码".equals(jLabel_tips.getToolTipText())){
+						JPopupMenu jPopupMenu = new JPopupMenu();
+					    JMenuItem jMenuItem_copy = new JMenuItem("复制");
+					    jMenuItem_copy.setIcon(ImageIcons.copy_gif);
+					    jMenuItem_copy.addActionListener(new ActionListener(){
+							public void actionPerformed(ActionEvent e) {
+								Transferable contents = new StringSelection(jLabel_tips.getText().replace("<html>","").replace("</html>", ""));
+					 			Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+					 			clip.setContents(contents, null);
+							} 	
+					    });
+					    jPopupMenu.add(jMenuItem_copy);
+					    jPopupMenu.show(jLabel_tips, e.getX(), e.getY());
+					}
 				}
 			}		
 		});
@@ -236,16 +258,22 @@ public class SetValue extends JFrame {
         jMenuItemReName.setIcon(ImageIcons.rename_gif);
         jMenuItemConnect.setIcon(ImageIcons.ok_png);
         jMenuItem_delete.setIcon(ImageIcons.delete_png);
+        jMenuItemShowPassword.setIcon(ImageIcons.detail_gif);
         jPopupMenu_tool.add(jMenuItemReName);
         jPopupMenu_tool.addSeparator();
         jPopupMenu_tool.add(jMenuItemConnect);
         jPopupMenu_tool.addSeparator();
         jPopupMenu_tool.add(jMenuItem_delete);
+        jPopupMenu_tool.addSeparator();
+        jPopupMenu_tool.add(jMenuItemShowPassword);
+        
+        //连接重命名
         jMenuItemReName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
             	reNameConnect(evt);
             }
         });
+        //连接
         jMenuItemConnect.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
             	okMouseClicked();
@@ -264,7 +292,7 @@ public class SetValue extends JFrame {
             		
             		//刷新Jlist中的数据
             		refreshJlist(DataSourceMapUtil.getDataSourceTreeMap());
-            		
+            		jLabel_tips.setToolTipText("删除成功");
             		jLabel_tips.setForeground(Color.BLUE);
             		jLabel_tips.setText("<html>删除成功！</html>");
             		jLabel_tips.setIcon(null);
@@ -272,6 +300,18 @@ public class SetValue extends JFrame {
             	}  
             }
         });
+        //查看密码
+        jMenuItemShowPassword.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {      	
+        		DataSourceInfo ds = (DataSourceInfo)jList1_help.getSelectedValue();
+        		//jLabel_tips.setToolTipText("密码");
+        		jLabel_tips.setForeground(Color.BLUE);
+        		jLabel_tips.setText("<html>"+ds.getPwd()+"</html>");
+        		jLabel_tips.setIcon(null);
+        		
+            }
+        });
+        //为数据源列表添加事件监听
         jList1_help.addMouseListener(new MouseAdapter(){
         	public void mouseClicked(MouseEvent e) {
                
@@ -305,6 +345,7 @@ public class SetValue extends JFrame {
 				if("true".equals(ConfigUtil.getConfInfo().get(Const.IS_LOG)+"")){				
 					log.error(null, e);
 				}
+				jLabel_tips.setToolTipText("");
 				jLabel_tips.setForeground(Color.RED);
 				jLabel_tips.setText("<html>"+"出错了！"+e+"</html>");	
 				jLabel_tips.setIcon(null);
@@ -473,7 +514,8 @@ public class SetValue extends JFrame {
 
 		//更新 数据源文件中的数据。
 		try {
-			DataSourceMapUtil.saveDs2Disk(treemap);		
+			DataSourceMapUtil.saveDs2Disk(treemap);	
+			jLabel_tips.setToolTipText("");
 			jLabel_tips.setForeground(Color.BLUE);
 			jLabel_tips.setText("<html>重命名成功！</html>");
 			jLabel_tips.setIcon(null);
@@ -482,6 +524,7 @@ public class SetValue extends JFrame {
 				log.error(null, e);
 			}
 			final String er = e.getLocalizedMessage();
+			jLabel_tips.setToolTipText("");
 			jLabel_tips.setForeground(Color.RED);
 			jLabel_tips.setText("<html>"+"出错了！"+er+"</html>");	
 			jLabel_tips.setIcon(null);
@@ -493,7 +536,7 @@ public class SetValue extends JFrame {
 	 * 获取面板中的数据--根据这些数据建立到数据库的连接--连接成功。
 	 */
 	private void okMouseClicked() {
-
+		jLabel_tips.setToolTipText("");
 		jLabel_tips.setForeground(Color.BLUE);
 		jLabel_tips.setText("<html>正在连接，请稍后...</html>");
 		jLabel_tips.setIcon(ImageIcons.wait_gif32);
@@ -534,6 +577,7 @@ public class SetValue extends JFrame {
 							//连接失败时，设置提示信息
 							//设置jlabel字体颜色为红色
 							jLabel_tips.setForeground(Color.RED);
+							jLabel_tips.setToolTipText("");
 							
 							//添加<html>标签后，Jlabel中展现数据时会自动换行，否则不会。
 							jLabel_tips.setText("<html>"+getLocalizedMessage+"</html>");	
@@ -546,11 +590,10 @@ public class SetValue extends JFrame {
 				} 
 				//如果获取数据库连接成功
 				if (ConnUtil.getInstance().getConn() != null) {
-					
 					SwingUtilities.invokeLater(new Runnable(){
 						public void run() {
-							
 							//清除提示信息
+							jLabel_tips.setToolTipText("");
 							jLabel_tips.setText(null);
 							jLabel_tips.setIcon(null);
 							errorInfo = null;
@@ -631,5 +674,6 @@ public class SetValue extends JFrame {
 		jComboBox1_dbtype.setSelectedItem(ds.getDbtype());//设置默认选项
 		jTextField_driverClass.setText(ds.getDriverClass());
 		jTextArea_url.setText(ds.getUrl());
+		jLabel_tips.setText(null);
 		}
 }

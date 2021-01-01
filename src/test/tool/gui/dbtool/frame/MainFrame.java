@@ -321,7 +321,7 @@ public class MainFrame extends JFrame{
 		
 		//初始化组件信息
 		initComponents();
-		this.setSize(800, 550);//设置窗口初始大小
+		this.setSize(800, 600);//设置窗口初始大小
 		
 		//创建定时器
 		Timer timer = new Timer();
