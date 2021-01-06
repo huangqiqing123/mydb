@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -421,7 +422,6 @@ public class MainFrame extends JFrame{
     private JMenuItem jMenuItem1_notepad;//记事本
     private JMenuItem jMenuItem1_weather;//天气预报
     private JMenuItem jMenuItem1_translate;//在线翻译
-    private JMenuItem jMenuItem1_iop;//IOP
     
     //连接 菜单
     private JMenu jMenu_lianjie = new JMenu("连接");
@@ -2664,20 +2664,20 @@ public class MainFrame extends JFrame{
 				int last_SET = trimHead.lastIndexOf("SET");
 				if(last_SET > last_UPDATE){			
 					String tname = trimHead.substring(last_UPDATE+"UPDATE".length(),last_SET);//解析 update 和 set 之间的表名 
-					tabNameList.add(tname);
+					tabNameList.add(tname.replace("`", ""));//去除tableName的反引号（MySQL数据库存在此情况，如`iam_service`）
 				}
 			}else if(maxKey == last_GENERATEINSERTSQL){
 				int last_WHERE = trimHead.lastIndexOf("WHERE");
 				if(last_WHERE > last_GENERATEINSERTSQL){			
 					String tname = trimHead.substring(last_GENERATEINSERTSQL+"GENERATEINSERTSQL".length(),last_WHERE);//解析 generateInsertSql 和 WHERE 之间的表名 
-					tabNameList.add(tname);
+					tabNameList.add(tname.replace("`", ""));
 				}
 			}else if(maxKey == last_DELETE){
 				int last_FROM = trimHead.lastIndexOf("FROM");
 				int last_WHERE = trimHead.lastIndexOf("WHERE");
 				if(last_WHERE > last_FROM){			
 					String tname = trimHead.substring(last_FROM+"FROM".length(),last_WHERE);////解析 from 和 where 之间表名
-					tabNameList.add(tname);
+					tabNameList.add(tname.replace("`", ""));
 				}
 			}else if(maxKey == last_SELECT){
 				//SELECT Company, OrderNumber FROM Orders ORDER BY Company DESC, OrderNumber ASC
@@ -2691,13 +2691,12 @@ public class MainFrame extends JFrame{
 					String tnames = trimHead.substring(last_FROM+"FROM".length(),MathUtil.max(last_Order_By,last_WHERE,last_Group_By));////解析 from 和 where 之间表名
 					String tnames_arr[] = tnames.split(",");
 					for (int i = 0; i < tnames_arr.length; i++) {			
-						tabNameList.add(tnames_arr[i]);
+						tabNameList.add(tnames_arr[i].replace("`", ""));
 					}
 				}	
 			}
 			//提示信息格式：  organ_id varchar(20) [pub_organ]	
 			if(tabNameList.size()>0){	
-
 				//SQL Server数据库的场景，通过调用接口来实现。
 				if(dbType.equals("MICROSOFT SQL SERVER")){
 					List<FieldInfo> clos = DBUtil.getTableColums(tabNameList, "");
