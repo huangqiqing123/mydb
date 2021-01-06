@@ -1245,7 +1245,7 @@ public class MainFrame extends JFrame{
             	memo.append("\n\n");
             	memo.append("15、在SQL编辑器中，选择sql语句后，执行【导出】操作，会自动将选择的sql语句复制到弹出的导出对话框中。");
             	memo.append("\n\n");
-            	memo.append("16、关于jre的说明：本软件运行依赖于jre1.6，查找jre顺序：");
+            	memo.append("16、关于jre的说明：本软件运行依赖于jre1.6及以上版本，查找jre顺序：");
             	memo.append("\n");
             	memo.append("    1.应用程序同级目录下的jre文件夹");
             	memo.append("\n");
