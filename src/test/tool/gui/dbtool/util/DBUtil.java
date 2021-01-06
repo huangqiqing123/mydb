@@ -57,18 +57,30 @@ public class DBUtil {
     } 
     /**  
      * 获得以指定前缀的表或视图  
-     * 仅适用sqlserver数据库
+     * 支持SQLServer和PostgreSQL
      */  
     public static List<String> getTableAndViewNamesBeginWith(String pre)   
     {
 		ResultSet rs = null;
 		List<String> list = new ArrayList<String>();
 		try {
+			boolean hasResult = false;
 			rs = ConnUtil.getInstance().getConn().getMetaData().getTables(null,null, pre+"%", new String[] { "TABLE","VIEW" });
 			while (rs.next()) {
+				hasResult = true;
 				String tableName = rs.getString("TABLE_NAME");
 				String tableType = rs.getString("TABLE_TYPE");			
 				list.add(tableName+","+tableType);//以逗号分隔
+			}
+			if(!hasResult){
+				DBUtil.closeResultSetAndPreparedStatement(rs, null);
+				rs = ConnUtil.getInstance().getConn().getMetaData().getTables(null,null, pre.toLowerCase()+"%", new String[] { "TABLE","VIEW" });
+				while (rs.next()) {
+					hasResult = true;
+					String tableName = rs.getString("TABLE_NAME");
+					String tableType = rs.getString("TABLE_TYPE");			
+					list.add(tableName+","+tableType);//以逗号分隔
+				}
 			}
 		} catch (SQLException e) {
 			if ("true".equals(ConfigUtil.getConfInfo().get(Const.IS_LOG) + "")) {
@@ -146,8 +158,10 @@ public class DBUtil {
 		List<FieldInfo> list = new ArrayList<FieldInfo>();
 		for(String tableName:tableNames){		
 			try {
-				rs = ConnUtil.getInstance().getConn().getMetaData().getColumns(null, null, tableName.trim(), pre+"%");   
+				rs = ConnUtil.getInstance().getConn().getMetaData().getColumns(null, null, tableName.trim(), pre+"%");  
+				boolean hasResult = false;
 				while (rs.next()) {
+					hasResult = true;
 					FieldInfo field = new FieldInfo();
 					field.setTableName(tableName);
 					field.setFieldName(rs.getString("COLUMN_NAME"));
@@ -170,6 +184,34 @@ public class DBUtil {
 					}
 					field.setDefaultValue(defaultValue);//默认值
 					list.add(field);
+				}
+				if(!hasResult){//如果没有返回结果，则将表名转换为小写再查一遍。
+					DBUtil.closeResultSetAndPreparedStatement(rs, null);
+					rs = ConnUtil.getInstance().getConn().getMetaData().getColumns(null, null, tableName.trim().toLowerCase(), pre+"%");  
+					while (rs.next()) {
+						FieldInfo field = new FieldInfo();
+						field.setTableName(tableName);
+						field.setFieldName(rs.getString("COLUMN_NAME"));
+						field.setFieldType(rs.getString("TYPE_NAME"));
+						field.setCanBeNull(rs.getInt("NULLABLE")==1?true:false);
+						field.setFieldLength(rs.getString("COLUMN_SIZE"));
+						field.setRemarks(rs.getString("REMARKS"));
+						
+						String defaultValue = rs.getString("COLUMN_DEF");
+						if(defaultValue != null){
+							//sqlserver数据库，默认值一般是由小括弧()括起来的。
+							if(defaultValue.startsWith("(")){
+								defaultValue = defaultValue.substring(1);
+							}
+							if(defaultValue.endsWith(")")){
+								defaultValue = defaultValue.substring(0,defaultValue.length()-1);
+							}
+						}else{
+							defaultValue = "";
+						}
+						field.setDefaultValue(defaultValue);//默认值
+						list.add(field);
+					}
 				}
 			} catch (SQLException e) {
 				if ("true".equals(ConfigUtil.getConfInfo().get(Const.IS_LOG) + "")) {

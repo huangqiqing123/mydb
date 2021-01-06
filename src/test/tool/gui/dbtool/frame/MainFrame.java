@@ -2697,8 +2697,8 @@ public class MainFrame extends JFrame{
 			}
 			//提示信息格式：  organ_id varchar(20) [pub_organ]	
 			if(tabNameList.size()>0){	
-				//SQL Server数据库的场景，通过调用接口来实现。
-				if(dbType.equals("MICROSOFT SQL SERVER")){
+				//SQL Server 和 PG，通过调用接口来实现。
+				if(dbType.equals("MICROSOFT SQL SERVER") || dbType.equals("POSTGRESQL")){
 					List<FieldInfo> clos = DBUtil.getTableColums(tabNameList, "");
 					if(clos.size()==0){
 						jwindow_help.setVisible(false);
@@ -2796,7 +2796,7 @@ public class MainFrame extends JFrame{
 						sql.deleteCharAt(sql.length()-1);
 						sql.append(")");
 					}else{
-						JOptionPane.showMessageDialog(this, "无效的数据库类型！"+dbType);
+						JOptionPane.showMessageDialog(this, "自动补全功能暂不支持："+dbType);
 						return;
 					}
 					List<Map<String, Object>> list =(List<Map<String, Object>>)(DBUtil.executeQuery(sql.toString()).get("result"));
@@ -2985,7 +2985,7 @@ public class MainFrame extends JFrame{
 			String preTemp = currentPre.toUpperCase();
 			
 			//如果是SQL Server数据库
-			if(dbType.equals("MICROSOFT SQL SERVER")){
+			if(dbType.equals("MICROSOFT SQL SERVER") || dbType.equals("POSTGRESQL")){
 				List<String> tableAndViewNames = DBUtil.getTableAndViewNamesBeginWith(preTemp);
 				for(String names:tableAndViewNames){
 					String tempArr[] = names.split(",");

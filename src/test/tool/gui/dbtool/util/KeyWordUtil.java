@@ -59,6 +59,8 @@ public class KeyWordUtil {
 			keyWordList.add("varchar2");
 			keyWordList.add("database");
 			keyWordList.add("check");
+			keyWordList.add("and");
+			keyWordList.add("or");
 			
 			//sqlserver特有关键字
 			if(dbType.contains("MICROSOFT SQL SERVER")){			
