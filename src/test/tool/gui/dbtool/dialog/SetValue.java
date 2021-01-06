@@ -56,6 +56,9 @@ import test.tool.gui.dbtool.util.DataSourceMapUtil;
 import test.tool.gui.dbtool.util.ExceptionUtil;
 import test.tool.gui.dbtool.util.JarLoadUtil;
 import test.tool.gui.dbtool.util.LocationUtil;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.LayoutStyle.ComponentPlacement;
 
 /*
  * 依赖包：
@@ -144,7 +147,6 @@ public class SetValue extends JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         jTextArea_url = new MyJextArea(false);
         jTextArea_url.setLineWrap(true);//自动换行
-		jLabel_tips = new JLabel(" ");
 
 	    jScrollPane1.setViewportView(jList1_help);
         jScrollPane2.setViewportView(jTextArea_url);
@@ -375,76 +377,76 @@ public class SetValue extends JFrame {
 //			cancel.setFont(font);
 		}
 		//---------------------------布局信息 begin----------------------------------------------
-		 org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
+		 GroupLayout layout = new GroupLayout(getContentPane());
+		 layout.setHorizontalGroup(
+		 	layout.createParallelGroup(Alignment.LEADING)
+		 		.addGroup(layout.createSequentialGroup()
+		 			.addGroup(layout.createParallelGroup(Alignment.LEADING)
+		 				.addGroup(layout.createSequentialGroup()
+		 					.addContainerGap()
+		 					.addGroup(layout.createParallelGroup(Alignment.TRAILING)
+		 						.addComponent(jLabel_driver, GroupLayout.PREFERRED_SIZE, 70, GroupLayout.PREFERRED_SIZE)
+		 						.addComponent(jLabel_dbtype, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+		 						.addComponent(jLabel_url, Alignment.LEADING)
+		 						.addComponent(jLabel_pass, GroupLayout.DEFAULT_SIZE, 72, Short.MAX_VALUE)
+		 						.addComponent(jLabel_username, GroupLayout.DEFAULT_SIZE, 72, Short.MAX_VALUE))
+		 					.addPreferredGap(ComponentPlacement.RELATED)
+		 					.addGroup(layout.createParallelGroup(Alignment.TRAILING)
+		 						.addComponent(jComboBox1_dbtype, Alignment.LEADING, 0, 292, Short.MAX_VALUE)
+		 						.addComponent(jTextField_driverClass, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 292, Short.MAX_VALUE)
+		 						.addComponent(jTextField_username, GroupLayout.DEFAULT_SIZE, 292, Short.MAX_VALUE)
+		 						.addComponent(jScrollPane2, GroupLayout.DEFAULT_SIZE, 292, Short.MAX_VALUE)
+		 						.addComponent(jPasswordField_password, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 292, Short.MAX_VALUE))
+		 					.addGap(18)
+		 					.addComponent(jScrollPane1, GroupLayout.PREFERRED_SIZE, 206, GroupLayout.PREFERRED_SIZE))
+		 				.addGroup(layout.createSequentialGroup()
+		 					.addGap(196)
+		 					.addComponent(ok)
+		 					.addPreferredGap(ComponentPlacement.RELATED)
+		 					.addComponent(cancel))
+		 				.addGroup(layout.createSequentialGroup()
+		 					.addContainerGap()
+		 					.addComponent(jLabel_tips, GroupLayout.DEFAULT_SIZE, 592, Short.MAX_VALUE)))
+		 			.addContainerGap())
+		 );
+		 layout.setVerticalGroup(
+		 	layout.createParallelGroup(Alignment.TRAILING)
+		 		.addGroup(layout.createSequentialGroup()
+		 			.addGap(19)
+		 			.addGroup(layout.createParallelGroup(Alignment.LEADING)
+		 				.addGroup(layout.createSequentialGroup()
+		 					.addGroup(layout.createParallelGroup(Alignment.BASELINE)
+		 						.addComponent(jLabel_dbtype, GroupLayout.PREFERRED_SIZE, 25, GroupLayout.PREFERRED_SIZE)
+		 						.addComponent(jComboBox1_dbtype, GroupLayout.PREFERRED_SIZE, 27, GroupLayout.PREFERRED_SIZE))
+		 					.addPreferredGap(ComponentPlacement.RELATED)
+		 					.addGroup(layout.createParallelGroup(Alignment.BASELINE)
+		 						.addComponent(jLabel_driver, GroupLayout.PREFERRED_SIZE, 31, GroupLayout.PREFERRED_SIZE)
+		 						.addComponent(jTextField_driverClass, GroupLayout.PREFERRED_SIZE, 30, GroupLayout.PREFERRED_SIZE))
+		 					.addGroup(layout.createParallelGroup(Alignment.LEADING)
+		 						.addGroup(layout.createSequentialGroup()
+		 							.addGap(32)
+		 							.addComponent(jLabel_url, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE))
+		 						.addGroup(layout.createSequentialGroup()
+		 							.addPreferredGap(ComponentPlacement.RELATED)
+		 							.addComponent(jScrollPane2, GroupLayout.PREFERRED_SIZE, 118, GroupLayout.PREFERRED_SIZE)))
+		 					.addPreferredGap(ComponentPlacement.RELATED)
+		 					.addGroup(layout.createParallelGroup(Alignment.BASELINE)
+		 						.addComponent(jTextField_username, GroupLayout.PREFERRED_SIZE, 30, GroupLayout.PREFERRED_SIZE)
+		 						.addComponent(jLabel_username, GroupLayout.PREFERRED_SIZE, 23, GroupLayout.PREFERRED_SIZE))
+		 					.addPreferredGap(ComponentPlacement.RELATED)
+		 					.addGroup(layout.createParallelGroup(Alignment.BASELINE)
+		 						.addComponent(jLabel_pass, GroupLayout.PREFERRED_SIZE, 24, GroupLayout.PREFERRED_SIZE)
+		 						.addComponent(jPasswordField_password, GroupLayout.PREFERRED_SIZE, 32, GroupLayout.PREFERRED_SIZE))
+		 					.addPreferredGap(ComponentPlacement.UNRELATED)
+		 					.addGroup(layout.createParallelGroup(Alignment.BASELINE)
+		 						.addComponent(ok)
+		 						.addComponent(cancel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+		 				.addComponent(jScrollPane1, GroupLayout.PREFERRED_SIZE, 260, GroupLayout.PREFERRED_SIZE))
+		 			.addPreferredGap(ComponentPlacement.RELATED)
+		 			.addComponent(jLabel_tips)
+		 			.addGap(28))
+		 );
 	        getContentPane().setLayout(layout);
-	        layout.setHorizontalGroup(
-	            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-	            .add(layout.createSequentialGroup()
-	                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-	                    .add(layout.createSequentialGroup()
-	                        .addContainerGap()
-	                        .add(jLabel_tips, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 592, Short.MAX_VALUE))
-	                    .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-	                        .addContainerGap()
-	                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-	                            .add(jLabel_driver, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 70, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-	                            .add(jLabel_dbtype, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-	                            .add(org.jdesktop.layout.GroupLayout.LEADING, jLabel_url)
-	                            .add(jLabel_pass, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 72, Short.MAX_VALUE)
-	                            .add(jLabel_username, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 72, Short.MAX_VALUE))
-	                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-	                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)
-	                            .add(org.jdesktop.layout.GroupLayout.LEADING, jComboBox1_dbtype, 0, 292, Short.MAX_VALUE)
-	                            .add(org.jdesktop.layout.GroupLayout.LEADING, jTextField_driverClass, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 292, Short.MAX_VALUE)
-	                            .add(jTextField_username, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 292, Short.MAX_VALUE)
-	                            .add(jScrollPane2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 292, Short.MAX_VALUE)
-	                            .add(org.jdesktop.layout.GroupLayout.LEADING, jPasswordField_password, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 292, Short.MAX_VALUE))
-	                        .add(18, 18, 18)
-	                        .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 206, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-	                    .add(layout.createSequentialGroup()
-	                        .add(225, 225, 225)
-	                        .add(ok)
-	                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-	                        .add(cancel)))
-	                .addContainerGap())
-	        );
-	        layout.setVerticalGroup(
-	            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-	            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
-	                .add(19, 19, 19)
-	                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-	                    .add(layout.createSequentialGroup()
-	                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-	                            .add(jLabel_dbtype, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 25, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-	                            .add(jComboBox1_dbtype, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 27, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-	                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-	                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-	                            .add(jLabel_driver, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 31, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-	                            .add(jTextField_driverClass, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 30, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-	                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-	                            .add(layout.createSequentialGroup()
-	                                .add(32, 32, 32)
-	                                .add(jLabel_url, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 23, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-	                            .add(layout.createSequentialGroup()
-	                                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-	                                .add(jScrollPane2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 118, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
-	                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-	                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-	                            .add(jTextField_username, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 30, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-	                            .add(jLabel_username, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 23, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-	                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-	                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-	                            .add(jLabel_pass, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 24, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-	                            .add(jPasswordField_password, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 32, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-	                        .add(27, 27, 27)
-	                        .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-	                            .add(cancel)
-	                            .add(ok)))
-	                    .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 260, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-	                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
-	                .add(jLabel_tips)
-	                .addContainerGap())
-	        );
 
 	        pack();
 	    }// </editor-fold>
@@ -675,5 +677,6 @@ public class SetValue extends JFrame {
 		jTextField_driverClass.setText(ds.getDriverClass());
 		jTextArea_url.setText(ds.getUrl());
 		jLabel_tips.setText(null);
+		jLabel_tips.setIcon(null);
 		}
 }

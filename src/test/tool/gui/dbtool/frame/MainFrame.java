@@ -130,7 +130,6 @@ import test.tool.gui.common.SysFontAndFace;
 import test.tool.gui.dbtool.consts.Const;
 import test.tool.gui.dbtool.dialog.CloseChoice;
 import test.tool.gui.dbtool.dialog.ConnectDialog;
-import test.tool.gui.dbtool.dialog.ExportIOPSQL;
 import test.tool.gui.dbtool.dialog.FilterDialog;
 import test.tool.gui.dbtool.dialog.JWindowTips;
 import test.tool.gui.dbtool.dialog.SetDialog;
@@ -321,7 +320,7 @@ public class MainFrame extends JFrame{
 		
 		//初始化组件信息
 		initComponents();
-		this.setSize(800, 600);//设置窗口初始大小
+		this.setSize(1024, 768);//设置窗口初始大小
 		
 		//创建定时器
 		Timer timer = new Timer();
@@ -1051,18 +1050,6 @@ public class MainFrame extends JFrame{
             }
         });
        
-        //菜单项--弹出IOP权限升级SQL对话框
-        jMenuItem1_iop = new JMenuItem("IOP-变更SQL",ImageIcons.sql_png);
-        jMenu_caozuo.add(jMenuItem1_iop);
-        jMenuItem1_iop.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-            	ExportIOPSQL export = ExportIOPSQL.getInstance(instance,false);
-            	int location[] = LocationUtil.getCenterLocation(export);
-            	export.setLocation(location[0], location[1]);
-            	export.setVisible(true);
-            }
-        });
-        
       //菜单项--打开网络天气预报
         jMenuItem1_weather = new JMenuItem("天气预报",ImageIcons.weather_gif);
         jMenu_caozuo.add(jMenuItem1_weather);
