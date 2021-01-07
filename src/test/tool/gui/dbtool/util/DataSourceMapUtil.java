@@ -25,13 +25,22 @@ public class DataSourceMapUtil {
 	 */
 	public static TreeMap<String, DataSourceInfo> getDataSourceTreeMap(){
 		ObjectInputStream oips = null;
-		TreeMap<String,DataSourceInfo> TreeMap = null;
+		TreeMap<String,DataSourceInfo> treeMap = null;
 		File file = new File(Const.DATA_SOURCE_PATH);
 
 		if (file.exists()) {
 			try {
 				oips = new ObjectInputStream(new FileInputStream(Const.DATA_SOURCE_PATH));
-				TreeMap=(TreeMap<String, DataSourceInfo>)oips.readObject();
+				treeMap=(TreeMap<String, DataSourceInfo>)oips.readObject();
+				//数据规范（兼容老数据）
+				if(treeMap != null){
+					for(String key :treeMap.keySet()){
+						DataSourceInfo dataInfo = treeMap.get(key);
+						if(dataInfo.getDbtype().equals("MySql")){
+							dataInfo.setDbtype("MySQL");
+						}
+					}
+				}
 			} catch (Exception e) {
 				if("true".equals(ConfigUtil.getConfInfo().get(Const.IS_LOG)+"")){				
 					log.error("读取文件"+Const.DATA_SOURCE_PATH+"出错！",e);
@@ -48,7 +57,7 @@ public class DataSourceMapUtil {
 					}
 			}
 		}
-		return TreeMap;
+		return treeMap;
 	}
 	/*
 	 * 保存数据源信息至磁盘

@@ -179,7 +179,7 @@ public class MainFrame extends JFrame{
 	private final Dimension miniSize =  new Dimension(0,0);
 	
 	//分隔栏初始位置
-	private int init_left_right_split_location = 150;
+	private int init_left_right_split_location = 200;
 	private int init_top_bottom_split_location = 150;
 	
 	//分隔栏宽度

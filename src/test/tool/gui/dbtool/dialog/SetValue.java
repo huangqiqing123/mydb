@@ -673,7 +673,7 @@ public class SetValue extends JFrame {
 		DataSourceInfo ds = (DataSourceInfo)selectedValue;			
 		jTextField_username.setText(ds.getUsername());
 		jPasswordField_password.setText(ds.getPwd());
-		jComboBox1_dbtype.setSelectedItem(ds.getDbtype());//设置默认选项
+		jComboBox1_dbtype.setSelectedItem(ds.getDbtype());
 		jTextField_driverClass.setText(ds.getDriverClass());
 		jTextArea_url.setText(ds.getUrl());
 		jLabel_tips.setText(null);
