@@ -680,12 +680,6 @@ public class MainFrame extends JFrame{
 							jTextArea1.setSelectionStart(length+1);
 							jTextArea1.setSelectionEnd(length+1+sql.length()+1);
 						}
-						//取得当前选中节点
-						DefaultMutableTreeNode selectNode = (DefaultMutableTreeNode)jTree1.getLastSelectedPathComponent();
-						//获取当前选中节点的父节点
-						DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)selectNode.getParent();
-						//刷新树
-						refreshJtree(parentNode);
 		    	 }
 			}
 		});
@@ -1260,7 +1254,7 @@ public class MainFrame extends JFrame{
             	memo.append("19、本软件同级目录的lib文件下自带有DB2、Oracle、SQLServer驱动，用户如需连接其他类型数据库，可将相应的驱动包放到此lib目录中即可");
               
             	memo.append("\n\n");
-            	memo.append("20、目前一些自定义功能仅支持 DB2、Oracle、SQLServer、MYSQL数据库");
+            	memo.append("20、目前一些自定义功能仅支持 DB2、Oracle、SQLServer、MySQL、PostgreSQL数据库");
             	
             	MyNotePad td = new MyNotePad(getInstance(), "使用说明",memo.toString(),null);
             	td.setVisible(true);
@@ -4682,6 +4676,20 @@ public class MainFrame extends JFrame{
      * @param selectIndex 如果是刷新，则只更新当前索引选项卡的内容
      */
     private void showResult(String key,Object value,boolean isRefresh,int selectIndex){
+    	
+    	//解决右键菜单删除表后，树不更新问题。（需要与其他可视组件放在一个SwingUtilities.invokeAndWait中）
+		DefaultMutableTreeNode selectNode = (DefaultMutableTreeNode)jTree1.getLastSelectedPathComponent();
+		if(selectNode != null){
+			//获取当前选中节点的父节点
+			DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)selectNode.getParent();
+			if(parentNode != null){
+				String nodeValue = parentNode.getUserObject().toString();//获取当前选中节点的value值
+				if("表".equals(nodeValue) || "视图".equals(nodeValue)){
+					//刷新树
+					refreshJtree(parentNode);
+				}
+			}
+		}
     
     	//如果value值是Jtable	
 		if(value instanceof MyJTable) {
@@ -5335,7 +5343,9 @@ public class MainFrame extends JFrame{
 						//获取选中节点
 	    				DefaultMutableTreeNode selectNode = (DefaultMutableTreeNode)jTree1.getLastSelectedPathComponent();
 	    				//更新当前选中节点
-	    				currentSelectedNodeValue = selectNode.getUserObject();
+	    				if(selectNode != null){
+	    					currentSelectedNodeValue = selectNode.getUserObject();
+	    				}
 					}
 	            }
 	        });
@@ -5361,7 +5371,10 @@ public class MainFrame extends JFrame{
 	        jScrollPane_jtree.setMinimumSize(miniSize); //如果不设置最小size为0，会造成jSplitPane_left_right拖到一定大小后就不能拖动了。
 	        jSplitPane_left_right.setLeftComponent(jScrollPane_jtree);
 	        jSplitPane_left_right.setDividerLocation(jSplitPane_left_right.getDividerLocation());//刷新Jtree时，保持分隔面板左侧宽度不变。
-		
+	        
+	        //整个树刷新时，默认展开table列表
+			TreePath tablePath = new TreePath(tableNode.getPath());//根据入参treeNode，构建treepath
+	        expandNode(jTree1, tablePath, true);
 		}else{
 			
 			//部分更新
