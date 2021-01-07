@@ -28,7 +28,6 @@ import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -185,6 +184,17 @@ public class SetValue extends JFrame {
 							} 	
 					    });
 					    jPopupMenu.add(jMenuItem_copy);
+					    JMenuItem jMenuItem_hiddle = new JMenuItem("隐藏");
+					    jMenuItem_hiddle.setIcon(ImageIcons.disable_png_16);
+					    jMenuItem_hiddle.addActionListener(new ActionListener(){
+							public void actionPerformed(ActionEvent e) {
+								jLabel_tips.setToolTipText("");
+								jLabel_tips.setText(null);
+								jLabel_tips.setIcon(null);
+								errorInfo = null;
+							} 	
+					    });
+					    jPopupMenu.add(jMenuItem_hiddle);
 					    jPopupMenu.show(jLabel_tips, e.getX(), e.getY());
 					}
 				}
@@ -260,7 +270,7 @@ public class SetValue extends JFrame {
         jMenuItemReName.setIcon(ImageIcons.rename_gif);
         jMenuItemConnect.setIcon(ImageIcons.ok_png);
         jMenuItem_delete.setIcon(ImageIcons.delete_png);
-        jMenuItemShowPassword.setIcon(ImageIcons.detail_gif);
+        jMenuItemShowPassword.setIcon(ImageIcons.find_png16);
         jPopupMenu_tool.add(jMenuItemReName);
         jPopupMenu_tool.addSeparator();
         jPopupMenu_tool.add(jMenuItemConnect);
@@ -306,7 +316,7 @@ public class SetValue extends JFrame {
         jMenuItemShowPassword.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {      	
         		DataSourceInfo ds = (DataSourceInfo)jList1_help.getSelectedValue();
-        		//jLabel_tips.setToolTipText("密码");
+        		jLabel_tips.setToolTipText("密码");
         		jLabel_tips.setForeground(Color.BLUE);
         		jLabel_tips.setText("<html>"+ds.getPwd()+"</html>");
         		jLabel_tips.setIcon(null);
