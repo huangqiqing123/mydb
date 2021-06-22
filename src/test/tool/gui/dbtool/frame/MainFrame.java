@@ -420,8 +420,10 @@ public class MainFrame extends JFrame{
     //常用工具 菜单
     private JMenu jMenu_caozuo = new JMenu("工具箱");
     private JMenuItem jMenuItem1_notepad;//记事本
-    private JMenuItem jMenuItem1_weather;//天气预报
-    private JMenuItem jMenuItem1_translate;//在线翻译
+    private JMenuItem jMenuItem1_base64;//Base64编码解码
+    private JMenuItem jMenuItem1_jsonformat;//Json格式化
+    private JMenuItem jMenuItem1_timestamp;//时间戳转换
+    private JMenuItem jMenuItem1_urlformat;//URL编码解码
     
     //连接 菜单
     private JMenu jMenu_lianjie = new JMenu("连接");
@@ -978,6 +980,7 @@ public class MainFrame extends JFrame{
             		//行号字体与Jtextarea字体保持一致。
             		jTextArea1.setFont(newFont);
             		lineNumber.setFont(newFont);
+            		Base64Frame.getInstance(instance).setFont(newFont);
             		
             		//更新至磁盘
             		ConfigUtil.getConfInfo().put(Const.SQL_FONT, jTextArea1.getFont());
@@ -1044,38 +1047,50 @@ public class MainFrame extends JFrame{
             }
         });
        
-      //菜单项--打开网络天气预报
-        jMenuItem1_weather = new JMenuItem("天气预报",ImageIcons.weather_gif);
-        jMenu_caozuo.add(jMenuItem1_weather);
-        jMenuItem1_weather.addActionListener(new java.awt.event.ActionListener() {
+        //菜单项--Base64编码解码
+        jMenuItem1_base64 = new JMenuItem("Base64编码解码",ImageIcons.txt_gif);
+        jMenuItem1_base64.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-            	String path = "http://flash.weather.com.cn/wmaps/index.swf?url1=http%3A%2F%2Fwww%2Eweather%2Ecom%2Ecn%2Fweather%2F&url2=%2Eshtml&from=cn";
-            	try {
-            		Desktop desk=Desktop.getDesktop(); //用默认浏览器打开url
-            		desk.browse(new URI(path)); 
-				} catch (IOException e) {
-					JOptionPane.showMessageDialog(null, e.toString());
-				} catch (URISyntaxException e) {
-					JOptionPane.showMessageDialog(null, e.toString());
-				}
+            	Base64Frame.getInstance(instance).showBase64Tab();
+            	Base64Frame.getInstance(instance).setBackColor();
+            	Base64Frame.getInstance(instance).setVisible(true);
+            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
             }
         });
-        //菜单项--打开google在线翻译
-        jMenuItem1_translate = new JMenuItem("在线翻译",ImageIcons.ie_png_16);
-        jMenuItem1_translate.addActionListener(new java.awt.event.ActionListener() {
+        jMenu_caozuo.add(jMenuItem1_base64);
+        //菜单项--json格式化
+        jMenuItem1_jsonformat = new JMenuItem("Json格式化",ImageIcons.txt_gif);
+        jMenuItem1_jsonformat.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-            	String path = "http://translate.google.cn";
-            	try {
-            		Desktop desk=Desktop.getDesktop(); //用默认浏览器打开url
-            		desk.browse(new URI(path)); 
-				} catch (IOException e) {
-					JOptionPane.showMessageDialog(null, e.toString());
-				} catch (URISyntaxException e) {
-					JOptionPane.showMessageDialog(null, e.toString());
-				}
+            	Base64Frame.getInstance(instance).showJsonTab();
+            	Base64Frame.getInstance(instance).setBackColor();
+            	Base64Frame.getInstance(instance).setVisible(true);
+            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
             }
         });
-        jMenu_caozuo.add(jMenuItem1_translate);
+        jMenu_caozuo.add(jMenuItem1_jsonformat);
+        //菜单项--时间戳转换
+        jMenuItem1_timestamp = new JMenuItem("时间戳转换",ImageIcons.txt_gif);
+        jMenuItem1_timestamp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            	Base64Frame.getInstance(instance).showTimeStampTab();
+            	Base64Frame.getInstance(instance).setBackColor();
+            	Base64Frame.getInstance(instance).setVisible(true);
+            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
+            }
+        });
+        jMenu_caozuo.add(jMenuItem1_timestamp);
+        //菜单项--URL编码解码
+        jMenuItem1_urlformat = new JMenuItem("URL编码解码",ImageIcons.txt_gif);
+        jMenuItem1_urlformat.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            	Base64Frame.getInstance(instance).showUrlTab();
+            	Base64Frame.getInstance(instance).setBackColor();
+            	Base64Frame.getInstance(instance).setVisible(true);
+            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
+            }
+        });
+        jMenu_caozuo.add(jMenuItem1_urlformat);
        
         //菜单项--退出
         JMenuItem exit = new JMenuItem("退出",ImageIcons.exit_png);
