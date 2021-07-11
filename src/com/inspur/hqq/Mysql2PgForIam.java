@@ -64,7 +64,8 @@ public class Mysql2PgForIam {
 		//去除BOOT-INF/classes/前缀
 		executeSql("update databasechangelog set filename=replace(filename,'BOOT-INF/classes/db','db')");
 	}
-	
+	//md5sum 值为null
+	//测试 新增changeset 是否正常
 	private static void appendDdlDatabasechangelog(){
 		executeSql("INSERT INTO databasechangelog (id, author, filename, dateexecuted, orderexecuted, exectype, md5sum, description, comments, tag, liquibase, contexts, labels, deployment_id ) VALUES ( 'iam_service_open_policy-20210324', 'huangqiqing', 'db/changelog/iam/master/t202103/20210324-ddl-adduniqueconstraint-hqq.xml', '2021-04-25 01:21:25.004247', 127, 'EXECUTED', '8:8f00dbe3c27a41d2de6fed98f5824dfa', 'addUniqueConstraint constraintName=iam_service_open_policy_unique_key01, tableName=iam_service_open_policy', '', null, '3.5.4', null, null, '9313651516' )");
 		executeSql("INSERT INTO databasechangelog (id, author, filename, dateexecuted, orderexecuted, exectype, md5sum, description, comments, tag, liquibase, contexts, labels, deployment_id ) VALUES ( 'create_security_config_group', 'hqq', 'db/changelog/iam/master/t202105/20210525-ddl-iam-security-config-hqq.xml', '2021-05-28 06:20:58.873763', 255, 'EXECUTED', '8:80623acd71209d44335125ff5dc2c596', 'createTable tableName=security_config_group; createTable tableName=security_config_def; createTable tableName=security_config', '', null, '3.5.4', null, null, '2182858077' )");

@@ -1,4 +1,7 @@
-/lib/
-/log4j.properties
-/test/
+/com/
 /config/
+/db.properties
+/ladon-stru-index.sql
+/ladon-stru.sql
+/lib/
+/test/

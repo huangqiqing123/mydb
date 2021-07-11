@@ -14,7 +14,6 @@ import test.tool.gui.dbtool.util.ConfigUtil;
 public class CloseChoice extends javax.swing.JDialog {
 
 	private static final long serialVersionUID = 1L;
-	private MainFrame parent = null;
 	private static CloseChoice instance = null;
 
 	public static CloseChoice getInstance(Frame parent, boolean modal){
@@ -26,7 +25,6 @@ public class CloseChoice extends javax.swing.JDialog {
 	
 	private CloseChoice(Frame parent, boolean modal) {
         super(parent, modal);
-        this.parent = (MainFrame)parent;
         initComponents();
         
         this.setResizable(false);
@@ -136,7 +134,7 @@ public class CloseChoice extends javax.swing.JDialog {
 			System.exit(0);
 		} else if (jRadioButton_mini2Tray.isSelected()) {//注意先后顺序，先this.dispose(); 然后parent.setVisible(false);
 			this.dispose();
-			parent.setVisible(false);
+			this.getOwner().setVisible(false);
 		} else {
 			JOptionPane.showMessageDialog(this, "出错了，无效的关闭类型!");
 		}

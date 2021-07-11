@@ -12,14 +12,9 @@ import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.MenuItem;
 import java.awt.Point;
-import java.awt.PopupMenu;
 import java.awt.Rectangle;
-import java.awt.SystemTray;
 import java.awt.Toolkit;
-import java.awt.TrayIcon;
-import java.awt.TrayIcon.MessageType;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -43,8 +38,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryUsage;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -56,7 +49,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -129,7 +121,6 @@ import test.tool.gui.common.FontSet;
 import test.tool.gui.common.MyColor;
 import test.tool.gui.common.SysFontAndFace;
 import test.tool.gui.dbtool.consts.Const;
-import test.tool.gui.dbtool.dialog.CloseChoice;
 import test.tool.gui.dbtool.dialog.ConnectDialog;
 import test.tool.gui.dbtool.dialog.FilterDialog;
 import test.tool.gui.dbtool.dialog.JWindowTips;
@@ -189,9 +180,7 @@ public class MainFrame extends JFrame{
 	private int pre_left_right_split_location = 150;
 	private int pre_top_bottom_split_location = 150;
 	
-    // 获得本操作系统托盘的实例
-    private static SystemTray tray = SystemTray.getSystemTray(); 
-    public static TrayIcon trayIcon = null;
+  
     
     //Jtable单元格的默认文本编辑器
     DefaultCellEditor objectDefaultCellEditor = new DefaultCellEditor(new MyJTextField());
@@ -216,43 +205,6 @@ public class MainFrame extends JFrame{
 			instance.setLocation(location[0],location[1]);
 			instance.refreshSQL();// 刷新JTextarea中的sql
 			
-			//设置系统托盘
-	        final PopupMenu pop = new PopupMenu(); // 构造一个右键弹出式菜单
-	        MenuItem show = new MenuItem("Show");
-	        MenuItem exit = new MenuItem("Exit");
-	        pop.add(show);
-	        pop.add(exit);
-	        trayIcon = new TrayIcon(ImageIcons.ico_png.getImage(), "DB工具", pop);
-	        trayIcon.addMouseListener(new MouseAdapter() {
-	            public void mouseClicked(MouseEvent e) {
-	            	if(e.getButton()==1){
-
-	            		//如果当前处于不可见状态，则置为可见。
-	            		if(!instance.isVisible()){
-	            			instance.setVisible(true); 		
-	            		
-	            			//如果当前是可见状态，但是处于最小化任务栏时的场景
-	            		}else if(instance.isVisible() 
-	            				&&(instance.getExtendedState()==1 //正常大小状态时，最小化任务栏
-	            				||instance.getExtendedState()==7)){ //最大化状态时，最小化任务栏
-	            			instance.setState(0);//还原窗口
-	            		}else{
-	            			//如果当前处于正常可见状态，则置为不可见。
-	            			instance.setVisible(false);
-	            		}
-	            	}
-	            }
-	        });
-	        show.addActionListener(new ActionListener() { 
-	            public void actionPerformed(ActionEvent e) {
-	            	 instance.setVisible(true); // 显示窗口
-	            }
-	        });
-	        exit.addActionListener(new ActionListener() { 
-	            public void actionPerformed(ActionEvent e) {
-	                System.exit(0); // 退出程序
-	            }
-	        });
 	        //-------添加全局事件监听，当JtextArea坐标发生变化时，则同步更新提示窗口的位置--------
 	        Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener() {
 				public void eventDispatched(AWTEvent event) {	
@@ -284,19 +236,9 @@ public class MainFrame extends JFrame{
 			instance.info = IN_info;//更新info信息
 			instance.clear(true);//清除缓存信息
 		}
-		 try {
-				tray.add(trayIcon);
-			} catch (AWTException e) {
-				if("true".equals(ConfigUtil.getConfInfo().get(Const.IS_LOG)+"")){				
-					log.error(null, e);
-				}
-				JOptionPane.showMessageDialog(null, "当前系统不支持托盘！");
-			}
-			
-		instance.refreshTitle();//刷新db窗体的标题
-		trayIcon.setToolTip(instance.getTitle());//更新托盘图标的提示信息
-		trayIcon.displayMessage("提示", trayIcon.getToolTip(), MessageType.INFO);//托盘主动提示信息
 		
+		//刷新db窗体的标题
+		instance.refreshTitle();
 		//刷新Jtree
 		instance.refreshJtree(null);
 
@@ -417,16 +359,8 @@ public class MainFrame extends JFrame{
     private JMenuItem jmenuItem_collapse = new JMenuItem("合拢节点");
     private JMenuItem jmenuItem_refresh = new JMenuItem("刷新");
     
-    //常用工具 菜单
-    private JMenu jMenu_caozuo = new JMenu("工具箱");
-    private JMenuItem jMenuItem1_notepad;//记事本
-    private JMenuItem jMenuItem1_base64;//Base64编码解码
-    private JMenuItem jMenuItem1_jsonformat;//Json格式化
-    private JMenuItem jMenuItem1_timestamp;//时间戳转换
-    private JMenuItem jMenuItem1_urlformat;//URL编码解码
-    
     //连接 菜单
-    private JMenu jMenu_lianjie = new JMenu("连接");
+    private JMenu jMenu_lianjie = new JMenu("切换连接");
     private JMenuItem jMenuItem_qiehuanlianjie = new JMenuItem("切换连接",ImageIcons.key_gif);
     
     
@@ -491,21 +425,12 @@ public class MainFrame extends JFrame{
 
     		//windowClosing事件：当用户点击窗口右上角的关闭按钮时触发。
 			public void windowClosing(WindowEvent arg0) {
-				
 				//1、保存sql脚本
 				saveSql();
-				
-				//2、判断是否有默认关闭方式
-				String action = ConfigUtil.getConfInfo().get(Const.CLOSE_ACTION)+"";
-				if("1".equals(action)){
-					ConnUtil.getInstance().closeConnection();//关闭数据库连接
-					System.exit(0);//退出应用程序
-				}else if("2".equals(action)){
-					instance.setVisible(false);
-				}else{			
-					//3、如果没有默认关闭方式，则弹出"选择关闭方式"对话框，供用户选择。
-					CloseChoice.getInstance(getInstance(), true).setVisible(true);
-				}		
+				//2、关闭数据库连接
+				ConnUtil.getInstance().closeConnection();
+				//3、关闭窗口
+				getInstance().dispose();
 			}
     	});
     	this.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -1036,73 +961,6 @@ public class MainFrame extends JFrame{
 				changeConn();
 			}
         });
-
-        //菜单项--打开记事本
-        jMenuItem1_notepad = new JMenuItem("记事本",ImageIcons.txt_gif);
-        jMenu_caozuo.add(jMenuItem1_notepad);
-        jMenuItem1_notepad.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-            	MyNotePad notePad = new MyNotePad(getInstance(),null,null,null);
-            	notePad.setVisible(true);
-            }
-        });
-       
-        //菜单项--Base64编码解码
-        jMenuItem1_base64 = new JMenuItem("Base64编码解码",ImageIcons.txt_gif);
-        jMenuItem1_base64.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-            	Base64Frame.getInstance(instance).showBase64Tab();
-            	Base64Frame.getInstance(instance).setBackColor();
-            	Base64Frame.getInstance(instance).setVisible(true);
-            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
-            }
-        });
-        jMenu_caozuo.add(jMenuItem1_base64);
-        //菜单项--json格式化
-        jMenuItem1_jsonformat = new JMenuItem("Json格式化",ImageIcons.txt_gif);
-        jMenuItem1_jsonformat.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-            	Base64Frame.getInstance(instance).showJsonTab();
-            	Base64Frame.getInstance(instance).setBackColor();
-            	Base64Frame.getInstance(instance).setVisible(true);
-            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
-            }
-        });
-        jMenu_caozuo.add(jMenuItem1_jsonformat);
-        //菜单项--时间戳转换
-        jMenuItem1_timestamp = new JMenuItem("时间戳转换",ImageIcons.txt_gif);
-        jMenuItem1_timestamp.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-            	Base64Frame.getInstance(instance).showTimeStampTab();
-            	Base64Frame.getInstance(instance).setBackColor();
-            	Base64Frame.getInstance(instance).setVisible(true);
-            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
-            }
-        });
-        jMenu_caozuo.add(jMenuItem1_timestamp);
-        //菜单项--URL编码解码
-        jMenuItem1_urlformat = new JMenuItem("URL编码解码",ImageIcons.txt_gif);
-        jMenuItem1_urlformat.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-            	Base64Frame.getInstance(instance).showUrlTab();
-            	Base64Frame.getInstance(instance).setBackColor();
-            	Base64Frame.getInstance(instance).setVisible(true);
-            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
-            }
-        });
-        jMenu_caozuo.add(jMenuItem1_urlformat);
-       
-        //菜单项--退出
-        JMenuItem exit = new JMenuItem("退出",ImageIcons.exit_png);
-        exit.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e) {
-				
-				saveSql();//退出之前，首先保存sql编辑器中的sql脚本
-				System.exit(0);
-			}	
-        });
-        jMenu_caozuo.addSeparator();
-        jMenu_caozuo.add(exit);
         
         //初始化 导入菜单
         jMenu_import = new JMenu();
@@ -1181,7 +1039,6 @@ public class MainFrame extends JFrame{
         
         
         //将菜单放入菜单栏
-        jMenuBar1.add(jMenu_caozuo);//将“常用工具”菜单放入菜单栏
         jMenuBar1.add(jMenu_lianjie);//将“连接”菜单放入菜单栏
         jMenuBar1.add(jMenu_export);//将导出菜单放入菜单栏
         jMenuBar1.add(jMenu_import);//将导入菜单放入菜单栏
@@ -2505,9 +2362,6 @@ public class MainFrame extends JFrame{
     	if(ExportFrame.hasInstance()){
     		ExportFrame.getInstance(null).dispose();
     	}
-    	
-    	//移除托盘图标
-    	tray.remove(trayIcon);
     	
     	//设置SetValue窗体可见
 		SetValue.getInstance().setVisible(true);

@@ -16,9 +16,11 @@ import org.jvnet.substance.theme.SubstanceBottleGreenTheme;
 import org.jvnet.substance.theme.SubstanceBrownTheme;
 import org.jvnet.substance.theme.SubstanceLightAquaTheme;
 import org.jvnet.substance.theme.SubstanceLimeGreenTheme;
+
 import test.tool.gui.common.SysFontAndFace;
 import test.tool.gui.dbtool.consts.Const;
 import test.tool.gui.dbtool.dialog.SetValue;
+import test.tool.gui.dbtool.frame.IndexFrame;
 import test.tool.gui.dbtool.util.ConfigUtil;
 
 public class Index {
@@ -112,7 +114,7 @@ public class Index {
 					System.setProperty("java.awt.im.style", "on-the-spot");
 
 					//显示设置连接窗口
-					SetValue.getInstance().setVisible(true);
+					IndexFrame.getInstance().setVisible(true);
 
 					// 关闭欢迎信息
 					SplashScreen ss = SplashScreen.getSplashScreen();

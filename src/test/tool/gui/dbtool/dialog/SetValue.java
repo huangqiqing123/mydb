@@ -130,7 +130,7 @@ public class SetValue extends JFrame {
 	private void initComponents() {
 		
 		ok = new JButton("确定",ImageIcons.ok_png);
-		cancel = new JButton("退出",ImageIcons.exit_png);	
+		cancel = new JButton("关闭",ImageIcons.exit_png);	
 		jLabel_dbtype = new javax.swing.JLabel("数据库类型：");
         jLabel_driver = new javax.swing.JLabel("  驱动类：");
         jLabel_url = new javax.swing.JLabel(" 连接 URL：");
@@ -151,7 +151,7 @@ public class SetValue extends JFrame {
         jScrollPane2.setViewportView(jTextArea_url);
 	    jList1_help.setDragEnabled(true);//设置可拖动   
 		
-		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		setTitle("通用数据库查询分析器");//窗口标题
 
 		//提示信息标签，右键菜单
@@ -212,7 +212,7 @@ public class SetValue extends JFrame {
 		cancel.addMouseListener(new java.awt.event.MouseAdapter() {
 			public void mouseClicked(java.awt.event.MouseEvent evt) {
 				ConnUtil.getInstance().closeConnection();
-				System.exit(0);
+				getInstance().dispose();
 			}
 		});
 		//数据库类型从配置文件properties中读取，数据库类型变动时，驱动程序、url同步跟着变化。
