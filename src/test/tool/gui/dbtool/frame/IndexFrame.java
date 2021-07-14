@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import sun.security.jca.GetInstance.Instance;
 import test.tool.gui.common.MyColor;
+import test.tool.gui.common.SysFontAndFace;
 import test.tool.gui.dbtool.consts.Const;
 import test.tool.gui.dbtool.dialog.CloseChoice;
 import test.tool.gui.dbtool.dialog.SetValue;
@@ -87,8 +88,7 @@ public class IndexFrame extends JFrame {
 		if(parent != null){
 			this.setLocationRelativeTo(parent);//设置父组件
 		}
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 800, 600);
+		setBounds(100, 100, 600, 400);
 		
 		this.setIconImage(ImageIcons.ico_png.getImage());
 		this.setTitle("工具箱");
@@ -97,12 +97,19 @@ public class IndexFrame extends JFrame {
 		GridLayout layout = new GridLayout(0,3,5,5);
 		getContentPane().setLayout(layout);
 		JButton dbtool = new JButton("数据库工具");
+		dbtool.setFont(SysFontAndFace.font14);
 		JButton jwttool = new JButton("JWT解码");
+		jwttool.setFont(SysFontAndFace.font14);
 		JButton notepad = new JButton("记事本");
+		notepad.setFont(SysFontAndFace.font14);
 		JButton base64 = new JButton("Base64编码解码");
+		base64.setFont(SysFontAndFace.font14);
 		JButton url = new JButton("URL编码解码");
+		url.setFont(SysFontAndFace.font14);
 		JButton datetime = new JButton("时间戳转换");
+		datetime.setFont(SysFontAndFace.font14);
 		JButton json = new JButton("JSON格式化");
+		json.setFont(SysFontAndFace.font14);
 		getContentPane().add(dbtool);
 		getContentPane().add(jwttool);
 		getContentPane().add(notepad);
@@ -122,7 +129,7 @@ public class IndexFrame extends JFrame {
 		jwttool.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if(e.getSource() instanceof JButton){
-					Base64Frame.getInstance(instance).showBase64Tab();
+					Base64Frame.getInstance(instance).showJwtTab();
 	            	Base64Frame.getInstance(instance).setBackColor();
 	            	Base64Frame.getInstance(instance).setVisible(true);
 	            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
@@ -231,7 +238,16 @@ public class IndexFrame extends JFrame {
         	
     		//windowClosing事件：当用户点击窗口右上角的关闭按钮时触发。
 			public void windowClosing(WindowEvent arg0) {
-				CloseChoice.getInstance(getInstance(), true).setVisible(true);
+				//（1：关闭，2：最小化到托盘，3：弹出供用户选择）
+				String action = ConfigUtil.getConfInfo().get(Const.CLOSE_ACTION)+"";
+				if ("1".equals(action)) {
+					ConnUtil.getInstance().closeConnection();
+					System.exit(0);
+				} else if ("2".equals(action)) {
+					IndexFrame.getInstance().dispose();
+				}else{
+					CloseChoice.getInstance(getInstance(), true).setVisible(true);
+				} 
 			}
     	});
 	}

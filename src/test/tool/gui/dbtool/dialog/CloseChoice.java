@@ -5,11 +5,13 @@ import java.awt.Frame;
 import javax.swing.ButtonGroup;
 import javax.swing.JOptionPane;
 import javax.swing.WindowConstants;
+
 import test.tool.gui.common.SysFontAndFace;
 import test.tool.gui.dbtool.consts.Const;
 import test.tool.gui.dbtool.frame.MainFrame;
 import test.tool.gui.dbtool.image.ImageIcons;
 import test.tool.gui.dbtool.util.ConfigUtil;
+import test.tool.gui.dbtool.util.ConnUtil;
 
 public class CloseChoice extends javax.swing.JDialog {
 
@@ -131,6 +133,7 @@ public class CloseChoice extends javax.swing.JDialog {
 	   
 		// 退出应用程序，还是最小化托盘
 		if (jRadioButton_exit.isSelected()) {
+			ConnUtil.getInstance().closeConnection();
 			System.exit(0);
 		} else if (jRadioButton_mini2Tray.isSelected()) {//注意先后顺序，先this.dispose(); 然后parent.setVisible(false);
 			this.dispose();

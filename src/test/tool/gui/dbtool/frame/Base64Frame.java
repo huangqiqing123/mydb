@@ -2,7 +2,6 @@ package test.tool.gui.dbtool.frame;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Font;
 
@@ -12,12 +11,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.ButtonGroup;
 import javax.swing.JRadioButton;
-import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JButton;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,7 +24,6 @@ import test.tool.gui.dbtool.consts.Const;
 import test.tool.gui.dbtool.image.ImageIcons;
 import test.tool.gui.dbtool.mycomponent.MyJTextField;
 import test.tool.gui.dbtool.mycomponent.MyJextArea;
-import test.tool.gui.dbtool.mycomponent.MyTableModel;
 import test.tool.gui.dbtool.util.ConfigUtil;
 
 import java.awt.event.ActionListener;
@@ -62,33 +58,40 @@ public class Base64Frame extends JFrame {
 		return frame;
 	}
 	
-	public void showBase64Tab(){
+	public void showJwtTab(){
 		getInstance().tabbedPane.setSelectedIndex(0);
 	}
-	public void showJsonTab(){
+	public void showBase64Tab(){
 		getInstance().tabbedPane.setSelectedIndex(1);
 	}
-	public void showTimeStampTab(){
+	public void showJsonTab(){
 		getInstance().tabbedPane.setSelectedIndex(2);
 	}
-	public void showUrlTab(){
+	public void showTimeStampTab(){
 		getInstance().tabbedPane.setSelectedIndex(3);
+	}
+	public void showUrlTab(){
+		getInstance().tabbedPane.setSelectedIndex(4);
 	}
 	public void setBackColor(){
 		MyColor mycolor = (MyColor)ConfigUtil.getConfInfo().get(Const.EYE_SAFETY_COLOR);
+		originTextJwt.setBackground(mycolor.getColor());
 		originTextBase64.setBackground(mycolor.getColor());
 		originTextJson.setBackground(mycolor.getColor());
 		originTextUrl.setBackground(mycolor.getColor());
 	
+		targetTextJwt.setBackground(mycolor.getColor());
 		targetTextBase64.setBackground(mycolor.getColor());
 		targetTextJson.setBackground(mycolor.getColor());
 		targetTextUrl.setBackground(mycolor.getColor());
 	}
 	public void setFont(Font font){
+		originTextJwt.setFont(font);
 		originTextBase64.setFont(font);
 		originTextJson.setFont(font);
 		originTextUrl.setFont(font);
 	
+		targetTextJwt.setFont(font);
 		targetTextBase64.setFont(font);
 		targetTextJson.setFont(font);
 		targetTextUrl.setFont(font);
@@ -110,10 +113,8 @@ public class Base64Frame extends JFrame {
 		
 		//整体JTabbedPane，一个JTabbedPane中可以加入多个选项卡。
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
-		
-		//将 base64Panel 加入选项卡panel
-		tabbedPane.insertTab("Base64编码解码", ImageIcons.txt_gif, initBase64Tab(), "Base64编码解码", 0);
-		
+		tabbedPane.addTab("JWT解码", ImageIcons.txt_gif, initJwtTab(), "JWT编码解码");
+		tabbedPane.addTab("Base64编码解码", ImageIcons.txt_gif, initBase64Tab(), "Base64编码解码");
 		tabbedPane.addTab("Json格式化", ImageIcons.txt_gif, initJsonFormatTab(), "Json格式化");
 		tabbedPane.addTab("时间戳转换", ImageIcons.txt_gif, initTimeStampFormatTab(), "时间戳转换");
 		tabbedPane.addTab("URL编码解码", ImageIcons.txt_gif, initUrlEncodeTab(), "URL编码解码");
@@ -373,6 +374,121 @@ public class Base64Frame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				originTextJson.setText("");
 				targetTextJson.setText("");
+			}
+		});
+		buttonPannel.add(emptyAll);
+
+		// 将buttonPannel加入jsonPanel
+		jsonPanel.add(buttonPannel, BorderLayout.SOUTH);
+		return jsonPanel;
+	}
+	final MyJextArea originTextJwt = new MyJextArea(true);
+	final MyJextArea targetTextJwt = new MyJextArea(true);
+	private JPanel initJwtTab() {
+		JPanel jsonPanel = new JPanel(new BorderLayout());
+
+		// 分隔栏面板
+		JSplitPane splitPane = new JSplitPane();
+		splitPane.setContinuousLayout(true);
+		splitPane.setOneTouchExpandable(true);
+		splitPane.setBorder(null);
+		splitPane.setDividerSize(8);// 分隔栏宽度
+		splitPane.setMinimumSize(new Dimension(0, 0)); // 最小可以为0
+		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);// 上下分割
+		splitPane.setDividerLocation(150);// 分隔栏初始位置
+
+		final String originTextDefaultValue = "待解码JWT";
+		originTextJwt.setText(originTextDefaultValue);
+		originTextJwt.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(originTextDefaultValue.equals(originTextJwt.getText())){
+					originTextJwt.setText("");
+				}
+			}
+		});
+		originTextJwt.setLineWrap(true);// 自动换行
+		originTextJwt.find.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				showFindReplaceDialog(originTextJwt);
+			}   	
+        });    
+		// 将JTextArea放入JScrollPane可以解决滚动条不展示的问题
+		splitPane.setTopComponent(new JScrollPane(originTextJwt));
+		targetTextJwt.setLineWrap(true);
+		splitPane.setBottomComponent(new JScrollPane(targetTextJwt));
+		originTextJwt.find.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				showFindReplaceDialog(targetTextJwt);
+			}   	
+        });    
+
+		//将分隔栏面板加入jsonPanel
+		jsonPanel.add(splitPane, BorderLayout.CENTER);
+
+
+		// 按钮区域，流式布局，居中对齐
+		JPanel buttonPannel = new JPanel(new FlowLayout(FlowLayout.CENTER));// 按钮居中对齐
+		JButton button = new JButton("解码");
+		button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (originTextJwt.getText() == null || originTextJwt.getText().isEmpty()) {
+					JOptionPane.showMessageDialog(frame, "请输入待解码JWT！");
+					return;
+				}
+				String jwt = originTextJwt.getText().trim();
+				if(jwt.startsWith("bearer") || jwt.startsWith("Bearer")){
+					jwt = jwt.substring("bearer".length());
+					jwt = jwt.trim();
+				}
+				String arr[] = jwt.split("\\.");
+				if(arr.length != 3){
+					JOptionPane.showMessageDialog(frame, "JWT格式不正确【应该是.分割的三段】");
+					return;
+				}
+				targetTextJwt.setText("----header信息----\n");
+				String header = arr[0];
+				try {
+					header = new String(Base64.getUrlDecoder().decode(header.getBytes("utf-8")),"utf-8");
+					ObjectMapper mapper = new ObjectMapper();
+					Map map = mapper.readValue(header, Map.class);
+					header = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map);;
+					targetTextJwt.append(header);
+				} catch (Exception e1) {
+					targetTextJwt.setText(e1.toString());
+					return;
+				}
+				targetTextJwt.append("\n----payload信息----\n");
+				String payload = arr[1];
+				try {
+					payload = new String(Base64.getUrlDecoder().decode(payload.getBytes("utf-8")),"utf-8");
+					ObjectMapper mapper = new ObjectMapper();
+					Map map = mapper.readValue(payload, Map.class);
+					payload = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(map);;
+					targetTextJwt.append(payload);
+				} catch (Exception e1) {
+					targetTextJwt.setText(e1.toString());
+					return;
+				}
+				targetTextJwt.append("\n----signature信息----\n");
+				String signature = arr[2];
+				targetTextJwt.append(signature);
+			}
+		});
+		buttonPannel.add(button);
+
+		JButton emptyResult = new JButton("清空结果");
+		emptyResult.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				targetTextJwt.setText("");
+			}
+		});
+		buttonPannel.add(emptyResult);
+		JButton emptyAll = new JButton("清空全部");
+		emptyAll.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				originTextJwt.setText("");
+				targetTextJwt.setText("");
 			}
 		});
 		buttonPannel.add(emptyAll);
