@@ -110,6 +110,8 @@ public class IndexFrame extends JFrame {
 		datetime.setFont(SysFontAndFace.font14);
 		JButton json = new JButton("JSON格式化");
 		json.setFont(SysFontAndFace.font14);
+		JButton sql = new JButton("SQL格式化");
+		sql.setFont(SysFontAndFace.font14);
 		getContentPane().add(dbtool);
 		getContentPane().add(jwttool);
 		getContentPane().add(notepad);
@@ -117,6 +119,7 @@ public class IndexFrame extends JFrame {
 		getContentPane().add(url);
 		getContentPane().add(datetime);
 		getContentPane().add(json);
+		getContentPane().add(sql);
 		
 		dbtool.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -155,6 +158,14 @@ public class IndexFrame extends JFrame {
 		json.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Base64Frame.getInstance(instance).showJsonTab();
+            	Base64Frame.getInstance(instance).setBackColor();
+            	Base64Frame.getInstance(instance).setVisible(true);
+            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
+			}
+		});
+		sql.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Base64Frame.getInstance(instance).showSqlTab();
             	Base64Frame.getInstance(instance).setBackColor();
             	Base64Frame.getInstance(instance).setVisible(true);
             	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));

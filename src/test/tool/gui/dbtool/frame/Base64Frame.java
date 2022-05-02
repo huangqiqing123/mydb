@@ -25,6 +25,8 @@ import test.tool.gui.dbtool.image.ImageIcons;
 import test.tool.gui.dbtool.mycomponent.MyJTextField;
 import test.tool.gui.dbtool.mycomponent.MyJextArea;
 import test.tool.gui.dbtool.util.ConfigUtil;
+import test.tool.gui.dbtool.util.SQLFormaterBasic;
+import test.tool.gui.dbtool.util.SQLFormaterDDL;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -67,33 +69,40 @@ public class Base64Frame extends JFrame {
 	public void showJsonTab(){
 		getInstance().tabbedPane.setSelectedIndex(2);
 	}
-	public void showTimeStampTab(){
+	public void showSqlTab(){
 		getInstance().tabbedPane.setSelectedIndex(3);
 	}
-	public void showUrlTab(){
+	public void showTimeStampTab(){
 		getInstance().tabbedPane.setSelectedIndex(4);
+	}
+	public void showUrlTab(){
+		getInstance().tabbedPane.setSelectedIndex(5);
 	}
 	public void setBackColor(){
 		MyColor mycolor = (MyColor)ConfigUtil.getConfInfo().get(Const.EYE_SAFETY_COLOR);
 		originTextJwt.setBackground(mycolor.getColor());
 		originTextBase64.setBackground(mycolor.getColor());
 		originTextJson.setBackground(mycolor.getColor());
+		originTextSql.setBackground(mycolor.getColor());
 		originTextUrl.setBackground(mycolor.getColor());
 	
 		targetTextJwt.setBackground(mycolor.getColor());
 		targetTextBase64.setBackground(mycolor.getColor());
 		targetTextJson.setBackground(mycolor.getColor());
+		targetTextSql.setBackground(mycolor.getColor());
 		targetTextUrl.setBackground(mycolor.getColor());
 	}
 	public void setFont(Font font){
 		originTextJwt.setFont(font);
 		originTextBase64.setFont(font);
 		originTextJson.setFont(font);
+		originTextSql.setFont(font);
 		originTextUrl.setFont(font);
 	
 		targetTextJwt.setFont(font);
 		targetTextBase64.setFont(font);
 		targetTextJson.setFont(font);
+		targetTextSql.setFont(font);
 		targetTextUrl.setFont(font);
 	}
 	
@@ -116,6 +125,7 @@ public class Base64Frame extends JFrame {
 		tabbedPane.addTab("JWT解码", ImageIcons.txt_gif, initJwtTab(), "JWT编码解码");
 		tabbedPane.addTab("Base64编码解码", ImageIcons.txt_gif, initBase64Tab(), "Base64编码解码");
 		tabbedPane.addTab("Json格式化", ImageIcons.txt_gif, initJsonFormatTab(), "Json格式化");
+		tabbedPane.addTab("SQL格式化", ImageIcons.txt_gif, initSqlFormatTab(), "SQL格式化");
 		tabbedPane.addTab("时间戳转换", ImageIcons.txt_gif, initTimeStampFormatTab(), "时间戳转换");
 		tabbedPane.addTab("URL编码解码", ImageIcons.txt_gif, initUrlEncodeTab(), "URL编码解码");
 		getContentPane().add(tabbedPane, BorderLayout.CENTER);
@@ -335,7 +345,7 @@ public class Base64Frame extends JFrame {
 					JOptionPane.showMessageDialog(frame, "请输入待格式化json文本！");
 					return;
 				}
-				if(originTextJson.getText().startsWith("{")){
+				if(originTextJson.getText().trim().startsWith("{")){
 					ObjectMapper mapper = new ObjectMapper();
 					try {
 						Map map = mapper.readValue(originTextJson.getText(), Map.class);
@@ -345,7 +355,7 @@ public class Base64Frame extends JFrame {
 						JOptionPane.showMessageDialog(frame, e2.getMessage());
 						return;
 					}
-				}else if(originTextJson.getText().startsWith("[")){
+				}else if(originTextJson.getText().trim().startsWith("[")){
 					ObjectMapper mapper = new ObjectMapper();
 					try {
 						List list = mapper.readValue(originTextJson.getText(), List.class);
@@ -382,6 +392,107 @@ public class Base64Frame extends JFrame {
 		jsonPanel.add(buttonPannel, BorderLayout.SOUTH);
 		return jsonPanel;
 	}
+	//====================================================
+	final MyJextArea originTextSql = new MyJextArea(true);
+	final MyJextArea targetTextSql = new MyJextArea(true);
+	private JPanel initSqlFormatTab() {
+		// jsonpanel中区域划分为两部分，上部分是分隔栏面板(上栏是待格式化数据，下栏是格式化结果)，下部分是按钮区域。
+		JPanel jsonPanel = new JPanel(new BorderLayout());
+
+		// 分隔栏面板
+		JSplitPane splitPane = new JSplitPane();
+		splitPane.setContinuousLayout(true);
+		splitPane.setOneTouchExpandable(true);
+		splitPane.setBorder(null);
+		splitPane.setDividerSize(8);// 分隔栏宽度
+		splitPane.setMinimumSize(new Dimension(0, 0)); // 最小可以为0
+		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);// 上下分割
+		splitPane.setDividerLocation(150);// 分隔栏初始位置
+
+		final String originTextDefaultValue = "待格式化SQL文本";
+		originTextSql.setName("sql-origin");
+		originTextSql.setText(originTextDefaultValue);
+		originTextSql.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(originTextDefaultValue.equals(originTextSql.getText())){
+					originTextSql.setText("");
+				}
+			}
+		});
+		originTextSql.setLineWrap(true);// 自动换行
+		originTextSql.find.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				showFindReplaceDialog(originTextSql);
+			}   	
+        });    
+		// 将JTextArea放入JScrollPane可以解决滚动条不展示的问题
+		splitPane.setTopComponent(new JScrollPane(originTextSql));
+		targetTextSql.setLineWrap(true);
+		splitPane.setBottomComponent(new JScrollPane(targetTextSql));
+		targetTextSql.find.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				showFindReplaceDialog(targetTextSql);
+			}   	
+        });    
+
+		//将分隔栏面板加入jsonPanel
+		jsonPanel.add(splitPane, BorderLayout.CENTER);
+
+
+		// 按钮区域，流式布局，居中对齐
+		JPanel buttonPannel = new JPanel(new FlowLayout(FlowLayout.CENTER));// 按钮居中对齐
+		JButton button = new JButton("格式化");
+		button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (originTextSql.getText() == null || originTextSql.getText().isEmpty()) {
+					JOptionPane.showMessageDialog(frame, "请输入待格式化SQL文本！");
+					return;
+				}
+				String sql = originTextSql.getText().trim();
+				String sqlTmp = sql.toLowerCase();
+				if(sqlTmp.startsWith("select") 
+						|| sqlTmp.startsWith("on")
+						||sqlTmp.startsWith("insert")
+						||sqlTmp.startsWith("delete")
+						||sqlTmp.startsWith("update")){
+					
+					targetTextSql.setText(new SQLFormaterBasic().format(sql).trim());
+					
+				}else if(sqlTmp.startsWith("alter") 
+						|| sqlTmp.startsWith("create")
+						||sqlTmp.startsWith("comment")){
+					
+					targetTextSql.setText(SQLFormaterDDL.INSTANCE.format(sql).trim());
+					
+				}else{
+					targetTextSql.setText(sql);
+				}
+			}
+		});
+		buttonPannel.add(button);
+
+		JButton emptyResult = new JButton("清空结果");
+		emptyResult.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				targetTextJson.setText("");
+			}
+		});
+		buttonPannel.add(emptyResult);
+		JButton emptyAll = new JButton("清空全部");
+		emptyAll.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				originTextSql.setText("");
+				targetTextSql.setText("");
+			}
+		});
+		buttonPannel.add(emptyAll);
+
+		// 将buttonPannel加入jsonPanel
+		jsonPanel.add(buttonPannel, BorderLayout.SOUTH);
+		return jsonPanel;
+	}
+	//===============================================
 	final MyJextArea originTextJwt = new MyJextArea(true);
 	final MyJextArea targetTextJwt = new MyJextArea(true);
 	private JPanel initJwtTab() {
