@@ -112,14 +112,18 @@ public class IndexFrame extends JFrame {
 		json.setFont(SysFontAndFace.font14);
 		JButton sql = new JButton("SQL格式化");
 		sql.setFont(SysFontAndFace.font14);
+		JButton hash = new JButton("哈希计算");
+		hash.setFont(SysFontAndFace.font14);
 		getContentPane().add(dbtool);
 		getContentPane().add(jwttool);
 		getContentPane().add(notepad);
 		getContentPane().add(base64);
 		getContentPane().add(url);
+		getContentPane().add(hash);
 		getContentPane().add(datetime);
-		getContentPane().add(json);
 		getContentPane().add(sql);
+		getContentPane().add(json);
+		
 		
 		dbtool.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -182,6 +186,14 @@ public class IndexFrame extends JFrame {
 		url.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
             	Base64Frame.getInstance(instance).showUrlTab();
+            	Base64Frame.getInstance(instance).setBackColor();
+            	Base64Frame.getInstance(instance).setVisible(true);
+            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
+            }
+		});
+		hash.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+            	Base64Frame.getInstance(instance).showHashTab();
             	Base64Frame.getInstance(instance).setBackColor();
             	Base64Frame.getInstance(instance).setVisible(true);
             	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));

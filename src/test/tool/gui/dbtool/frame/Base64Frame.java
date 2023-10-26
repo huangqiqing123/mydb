@@ -17,6 +17,8 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import test.tool.gui.common.MyColor;
@@ -78,6 +80,9 @@ public class Base64Frame extends JFrame {
 	public void showUrlTab(){
 		getInstance().tabbedPane.setSelectedIndex(5);
 	}
+	public void showHashTab(){
+		getInstance().tabbedPane.setSelectedIndex(6);
+	}
 	public void setBackColor(){
 		MyColor mycolor = (MyColor)ConfigUtil.getConfInfo().get(Const.EYE_SAFETY_COLOR);
 		originTextJwt.setBackground(mycolor.getColor());
@@ -85,12 +90,14 @@ public class Base64Frame extends JFrame {
 		originTextJson.setBackground(mycolor.getColor());
 		originTextSql.setBackground(mycolor.getColor());
 		originTextUrl.setBackground(mycolor.getColor());
+		originTextHash.setBackground(mycolor.getColor());
 	
 		targetTextJwt.setBackground(mycolor.getColor());
 		targetTextBase64.setBackground(mycolor.getColor());
 		targetTextJson.setBackground(mycolor.getColor());
 		targetTextSql.setBackground(mycolor.getColor());
 		targetTextUrl.setBackground(mycolor.getColor());
+		targetTextHash.setBackground(mycolor.getColor());
 	}
 	public void setFont(Font font){
 		originTextJwt.setFont(font);
@@ -98,12 +105,13 @@ public class Base64Frame extends JFrame {
 		originTextJson.setFont(font);
 		originTextSql.setFont(font);
 		originTextUrl.setFont(font);
+		originTextHash.setFont(font);
 	
 		targetTextJwt.setFont(font);
 		targetTextBase64.setFont(font);
 		targetTextJson.setFont(font);
 		targetTextSql.setFont(font);
-		targetTextUrl.setFont(font);
+		targetTextHash.setFont(font);
 	}
 	
 
@@ -128,6 +136,7 @@ public class Base64Frame extends JFrame {
 		tabbedPane.addTab("SQL格式化", ImageIcons.txt_gif, initSqlFormatTab(), "SQL格式化");
 		tabbedPane.addTab("时间戳转换", ImageIcons.txt_gif, initTimeStampFormatTab(), "时间戳转换");
 		tabbedPane.addTab("URL编码解码", ImageIcons.txt_gif, initUrlEncodeTab(), "URL编码解码");
+		tabbedPane.addTab("哈希计算", ImageIcons.txt_gif, initHashTab(), "哈希计算");
 		getContentPane().add(tabbedPane, BorderLayout.CENTER);
 		
 	}
@@ -803,6 +812,146 @@ public class Base64Frame extends JFrame {
 		// 将bottomPanel加入base64Panel
 		urlpanel.add(bottomPanel, BorderLayout.SOUTH);
 		return urlpanel;
+	}
+	final MyJextArea originTextHash = new MyJextArea(true);
+	final MyJextArea targetTextHash = new MyJextArea(true);
+	private JPanel initHashTab() {
+		
+		//分为两部分，上部分是分隔栏，下部分是设置和按钮区域。
+		JPanel hashpanel = new JPanel(new BorderLayout());
+
+		// 分隔栏
+		JSplitPane splitPane = new JSplitPane();
+		splitPane.setContinuousLayout(true);
+		splitPane.setOneTouchExpandable(true);
+		splitPane.setBorder(null);
+		splitPane.setDividerSize(8);// 分隔栏宽度
+		splitPane.setMinimumSize(new Dimension(0, 0)); // 最小可以为0
+		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);// 上下分割
+		splitPane.setDividerLocation(150);// 分隔栏初始位置
+
+		final String originTextDefaultValue = "原值";
+		originTextHash.setText(originTextDefaultValue);
+		originTextHash.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(originTextDefaultValue.equals(originTextHash.getText())){
+					originTextHash.setText("");
+				}
+			}
+		});
+		originTextHash.setLineWrap(true);// 自动换行
+		originTextHash.find.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				showFindReplaceDialog(originTextUrl);
+			}   	
+        });    
+		// 将JTextArea放入JScrollPane可以解决滚动条不展示的问题
+		splitPane.setTopComponent(new JScrollPane(originTextHash));
+		targetTextHash.setLineWrap(true);
+		splitPane.setBottomComponent(new JScrollPane(targetTextHash));
+		targetTextHash.find.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				showFindReplaceDialog(targetTextHash);
+			}   	
+        });    
+
+		hashpanel.add(splitPane, BorderLayout.CENTER);
+
+		// bottomPanel，东南西北布局， 包含设置区域、按钮区域
+		JPanel bottomPanel = new JPanel(new BorderLayout());
+
+		// 设置区域，流式布局，居中对齐
+		JPanel settingsPannel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		ButtonGroup buttonGroup = new ButtonGroup();
+		final JRadioButton md5Radio = new JRadioButton("MD5");
+		final JRadioButton sha1Radio = new JRadioButton("SHA1");
+		final JRadioButton sha256Radio = new JRadioButton("SHA256");
+		final JRadioButton sha384Radio = new JRadioButton("SHA384");
+		final JRadioButton sha512Radio = new JRadioButton("SHA512");
+		md5Radio.setSelected(true);// 默认选中MD5模式
+		buttonGroup.add(md5Radio);
+		buttonGroup.add(sha1Radio);
+		buttonGroup.add(sha256Radio);
+		buttonGroup.add(sha384Radio);
+		buttonGroup.add(sha512Radio);
+		settingsPannel.add(md5Radio);
+		settingsPannel.add(sha1Radio);
+		settingsPannel.add(sha384Radio);
+		settingsPannel.add(sha256Radio);
+		settingsPannel.add(sha512Radio);
+
+		// 按钮区域，流式布局，居中对齐
+		JPanel buttonPannel = new JPanel(new FlowLayout(FlowLayout.CENTER));// 按钮居中对齐
+		JButton button = new JButton("计算");
+		button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (originTextHash.getText() == null || originTextHash.getText().isEmpty()) {
+					JOptionPane.showMessageDialog(frame, "请输入原值！");
+				}
+				if (md5Radio.isSelected()) {
+					try {
+						String result = DigestUtils.md5Hex(originTextHash.getText().getBytes("utf-8"));
+						targetTextHash.setText(result);
+					} catch (Exception e1) {
+						targetTextHash.setText(e1.toString());
+					}
+				} else if (sha1Radio.isSelected()) {
+					try {
+						String result = DigestUtils.sha1Hex(originTextHash.getText().getBytes("utf-8"));
+						targetTextHash.setText(result);
+					} catch (Exception e1) {
+						targetTextHash.setText(e1.toString());
+					}
+				}else if (sha256Radio.isSelected()) {
+					try {
+						String result = DigestUtils.sha256Hex(originTextHash.getText().getBytes("utf-8"));
+						targetTextHash.setText(result);
+					} catch (Exception e1) {
+						targetTextHash.setText(e1.toString());
+					}
+				} else if (sha512Radio.isSelected()) {
+					try {
+						String result = DigestUtils.sha512Hex(originTextHash.getText().getBytes("utf-8"));
+						targetTextHash.setText(result);
+					} catch (Exception e1) {
+						targetTextHash.setText(e1.toString());
+					}
+				} else if (sha384Radio.isSelected()) {
+					try {
+						String result = DigestUtils.sha384Hex(originTextHash.getText().getBytes("utf-8"));
+						targetTextHash.setText(result);
+					} catch (Exception e1) {
+						targetTextHash.setText(e1.toString());
+					}
+				}
+			}
+		});
+		buttonPannel.add(button);
+
+		JButton emptyResult = new JButton("清空结果");
+		emptyResult.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				targetTextHash.setText("");
+			}
+		});
+		buttonPannel.add(emptyResult);
+		JButton emptyAll = new JButton("清空全部");
+		emptyAll.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				originTextHash.setText("");
+				targetTextHash.setText("");
+			}
+		});
+		buttonPannel.add(emptyAll);
+
+		// 将设置区域、按钮区域加入bottomPanel
+		bottomPanel.add(settingsPannel, BorderLayout.NORTH);
+		bottomPanel.add(buttonPannel, BorderLayout.SOUTH);
+
+		// 将bottomPanel加入base64Panel
+		hashpanel.add(bottomPanel, BorderLayout.SOUTH);
+		return hashpanel;
 	}
 
 	private void showFindReplaceDialog(MyJextArea area) {

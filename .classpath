@@ -19,5 +19,6 @@
 	<classpathentry kind="lib" path="lib/sqljdbc4.jar"/>
 	<classpathentry kind="lib" path="lib/substance.jar"/>
 	<classpathentry kind="lib" path="lib/swing-layout-1.0.3.jar"/>
+	<classpathentry kind="lib" path="lib/commons-codec.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
