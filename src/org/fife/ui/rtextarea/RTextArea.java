@@ -1730,7 +1730,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 		@Override
 		public void mouseReleased(MouseEvent e) {
 			if (e.isPopupTrigger()) {
-				showPopup(e);
+				//showPopup(e);//不弹出右键菜单，避免与MyTextArea的右键菜单冲突 hqq 20231028
 			}
 		}
 
