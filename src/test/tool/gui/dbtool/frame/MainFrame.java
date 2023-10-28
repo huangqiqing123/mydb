@@ -115,6 +115,7 @@ import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.excel.XlsDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.operation.DatabaseOperation;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.jvnet.substance.SubstanceDefaultTreeCellRenderer;
 
 import test.tool.gui.common.FontSet;
@@ -133,6 +134,7 @@ import test.tool.gui.dbtool.mycomponent.MyJTableCellJCheckBoxRender;
 import test.tool.gui.dbtool.mycomponent.MyJTableHeaderCellJCheckBoxRender;
 import test.tool.gui.dbtool.mycomponent.MyJTextField;
 import test.tool.gui.dbtool.mycomponent.MyJextArea;
+import test.tool.gui.dbtool.mycomponent.MyJextAreaColor;
 import test.tool.gui.dbtool.mycomponent.MyTableModel;
 import test.tool.gui.dbtool.util.CSVUtil;
 import test.tool.gui.dbtool.util.ColorUtil;
@@ -302,7 +304,7 @@ public class MainFrame extends JFrame{
 	private Map<String, RowSorter<MyTableModel>> jtableSorterMap = new LinkedHashMap<String, RowSorter<MyTableModel>> ();
 	
 	private IDatabaseConnection dbUnitconnection = null;
-	private MyJextArea jTextArea1 = new MyJextArea(true);
+	private MyJextAreaColor jTextArea1 = new MyJextAreaColor(true);
     private JButton jButton_do = new JButton("执行",ImageIcons.go_png_24);
     private JButton jButton_connect = new JButton("切换连接",ImageIcons.key_png24);
     private JButton jButton_clear = new JButton("清空",ImageIcons.empty_png_24);;
@@ -834,6 +836,8 @@ public class MainFrame extends JFrame{
         //设置默认背景色
         MyColor defaultColor = (MyColor)ConfigUtil.getConfInfo().get(Const.EYE_SAFETY_COLOR);
         jTextArea1.setBackground(defaultColor.getColor());
+        jTextArea1.setCodeFoldingEnabled(true);//开启代码折叠
+        jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);//设置SQL语言高亮
         
         //动态生成menuItem
         ButtonGroup btgp_color = new ButtonGroup();
@@ -5672,10 +5676,24 @@ public class MainFrame extends JFrame{
 		area.showFindDialog(getInstance());
 	}
 	/**
+	 * 弹出查找替换对话框
+	 * @param area
+	 */
+	private void showFindDialog(MyJextAreaColor area){
+		area.showFindDialog(getInstance());
+	}
+	/**
 	 * 弹出定位行对话框
 	 * @param area
 	 */
 	private void showLocationLineDialog(MyJextArea area){
+		area.showLocationLineDialog(getInstance());
+	}
+	/**
+	 * 弹出定位行对话框
+	 * @param area
+	 */
+	private void showLocationLineDialog(MyJextAreaColor area){
 		area.showLocationLineDialog(getInstance());
 	}
 	/**
