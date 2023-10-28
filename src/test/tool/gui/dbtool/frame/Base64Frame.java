@@ -111,6 +111,7 @@ public class Base64Frame extends JFrame {
 		targetTextBase64.setFont(font);
 		targetTextJson.setFont(font);
 		targetTextSql.setFont(font);
+		targetTextUrl.setFont(font);
 		targetTextHash.setFont(font);
 	}
 	
@@ -745,6 +746,7 @@ public class Base64Frame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				if (originTextUrl.getText() == null || originTextUrl.getText().isEmpty()) {
 					JOptionPane.showMessageDialog(frame, "请输入待编码URL！");
+					return;
 				}
 				if (utf8Radio.isSelected()) {
 					try {
@@ -769,6 +771,7 @@ public class Base64Frame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				if (originTextUrl.getText() == null || originTextUrl.getText().isEmpty()) {
 					JOptionPane.showMessageDialog(frame, "请输入待解码URL！");
+					return;
 				}
 				if (utf8Radio.isSelected()) {
 					try {
@@ -888,6 +891,7 @@ public class Base64Frame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				if (originTextHash.getText() == null || originTextHash.getText().isEmpty()) {
 					JOptionPane.showMessageDialog(frame, "请输入原值！");
+					return;
 				}
 				if (md5Radio.isSelected()) {
 					try {
