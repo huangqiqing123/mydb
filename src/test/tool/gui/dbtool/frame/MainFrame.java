@@ -1071,6 +1071,8 @@ public class MainFrame extends JFrame{
             	memo.append("\n");
             	memo.append("    Ctrl+F：弹出查找、替换对话框");
             	memo.append("\n");
+            	memo.append("    Ctrl+Shift+F：对选中的SQL语句进行格式化");
+            	memo.append("\n");
             	memo.append("    Ctrl+L：弹出定位行对话框");
             	memo.append("\n");
             	memo.append("    Ctrl+T：启用、暂停自动补全功能(启用自动补全功能后，SQL编辑器中将只支持英文输入，如需中文输入，须暂停自动补全功能)");
