@@ -880,8 +880,8 @@ public class Base64Frame extends JFrame {
 		buttonGroup.add(sha512Radio);
 		settingsPannel.add(md5Radio);
 		settingsPannel.add(sha1Radio);
-		settingsPannel.add(sha384Radio);
 		settingsPannel.add(sha256Radio);
+		settingsPannel.add(sha384Radio);
 		settingsPannel.add(sha512Radio);
 
 		// 按钮区域，流式布局，居中对齐
