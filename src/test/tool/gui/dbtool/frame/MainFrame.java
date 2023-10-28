@@ -146,6 +146,7 @@ import test.tool.gui.dbtool.util.KeyWordUtil;
 import test.tool.gui.dbtool.util.LocationUtil;
 import test.tool.gui.dbtool.util.MathUtil;
 import test.tool.gui.dbtool.util.SkinUtil;
+import test.tool.gui.dbtool.util.SqlUtil;
 import test.tool.gui.dbtool.beans.DataSourceInfo;
 import test.tool.gui.dbtool.beans.FieldInfo;
 import test.tool.gui.dbtool.beans.IndexBean;
@@ -396,6 +397,7 @@ public class MainFrame extends JFrame{
     private JButton jButton_autoCommit = new JButton("事务自动提交");//事务自动提交
     private JButton jButton_saveAs= new JButton("另存为",ImageIcons.saveas_png_24);
     private JButton jButton_zhushi= new JButton("注释",ImageIcons.disable_png_24);
+    private JButton jButton_format= new JButton("格式化",ImageIcons.format_png_24);
     private JButton jButton_redo = new JButton("恢复",ImageIcons.redo_png_24);
     private JButton jButton_undo = new JButton("撤销",ImageIcons.undo_png_24);
     private JButton jButton_find = new JButton("查找/替换",ImageIcons.find_png24);
@@ -742,16 +744,22 @@ public class MainFrame extends JFrame{
          * 4、Ctrl+F  弹出查找替换对话框
          * 5、Ctrl+S  弹出另存为对话框
          * 6、Ctrl+T  启用  or 禁用智能提示
+         * 7、Ctrl+shift+F 执行sql代码格式化
          */
         jTextArea1.addKeyListener(new java.awt.event.KeyAdapter() {
         	
         	//键盘按下
 			public void keyPressed(java.awt.event.KeyEvent evt) {
-
-				if (evt.isControlDown()) {
+				if (evt.isControlDown()) {//ctrl键按下
+					if(evt.isShiftDown()){//shift键按下
+						if (evt.getKeyCode() == KeyEvent.VK_F) {// ctrl+shift+f// 执行sql格式化
+							formatSqlText();
+							return;
+						}
+					}
 					if (evt.getKeyCode() == KeyEvent.VK_ENTER) {// ctrl+enter 执行sql
 						doAction(null, false, 0, null);	
-					}else if (evt.getKeyCode() == KeyEvent.VK_F) {// ctrl+f 执行查找替换													// 
+					}else if (evt.getKeyCode() == KeyEvent.VK_F) {// ctrl+f 执行查找替换													
 						showFindDialog(jTextArea1);
 					} else if (evt.getKeyCode() == KeyEvent.VK_SLASH) {//Ctrl+“/”  添加删除注释
 						addDeleteZhuShi();
@@ -1177,6 +1185,13 @@ public class MainFrame extends JFrame{
             }
         });
 
+        //格式化
+        jButton_format.setToolTipText("快捷键：Ctrl+Shift+F");
+        jButton_format.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            	formatSqlText();
+            }
+        });
 	    //清空
 	    jButton_clear.addActionListener(new java.awt.event.ActionListener() {
 	       public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -1801,6 +1816,7 @@ public class MainFrame extends JFrame{
 		jToolBar1.add(jButton_saveAs); // 保存
 		jToolBar1.add(jButton_clear);//清空
 		jToolBar1.add(jButton_zhushi);//注释
+		jToolBar1.add(jButton_format);//注释
 		jToolBar1.add(jButton_find);//查找替换
 		jToolBar1.add(jButton_gotoline);//定位行
 		jToolBar1.add(jButton_undo);//撤销
@@ -5737,6 +5753,37 @@ public class MainFrame extends JFrame{
 		}
 		return tableName;
 	}
+	
+	/**
+	 * 格式化
+	 */
+	private void formatSqlText(){
+		if(jTextArea1.getSelectedText() == null || jTextArea1.getSelectedText().isEmpty()){
+			JOptionPane.showMessageDialog(null, "请选择要格式化的SQL语句，注意：一次只能格式化一条SQL语句！");
+		}
+		String formatedSql = SqlUtil.formatSql(jTextArea1.getSelectedText());
+		if(formatedSql == null || jTextArea1.getSelectedText().trim().equals(formatedSql)){
+			return ;
+		}
+		formatedSql = formatedSql+System.lineSeparator();
+		try {
+			//取得选中行的起始行号
+			int startRow = jTextArea1.getLineOfOffset(jTextArea1.getSelectionStart());
+			//取得选中行的结束行号
+			int endRow = jTextArea1.getLineOfOffset(jTextArea1.getSelectionEnd());
+			//取得选中行的起始位置
+			int startCur = jTextArea1.getLineStartOffset(startRow);
+			//取得选中行的结束位置
+			int endCur = jTextArea1.getLineEndOffset(endRow);
+			//删除选中行内容
+			jTextArea1.replaceRange(null, startCur, endCur);
+			//将新内容插入当前行的起始位置
+			jTextArea1.insert(formatedSql, startCur);
+		} catch (BadLocationException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	/**
 	 * 启用 或 禁用 sql编辑器的智能提示
 	 */

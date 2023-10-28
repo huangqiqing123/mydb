@@ -67,4 +67,7 @@ public class ImageIcons {
 	public static ImageIcon font_png24 = new ImageIcon(ImageIcons.class.getResource("font24.png"));
 	public static ImageIcon wait_gif32 = new ImageIcon(ImageIcons.class.getResource("wait32.gif"));
 	
+	public static ImageIcon format_png_24 = new ImageIcon(ImageIcons.class.getResource("format24.png"));
+	public static ImageIcon format_png_16 = new ImageIcon(ImageIcons.class.getResource("format16.png"));
+	
 }

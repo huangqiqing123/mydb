@@ -29,7 +29,6 @@ import javax.swing.WindowConstants;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import sun.security.jca.GetInstance.Instance;
 import test.tool.gui.common.MyColor;
 import test.tool.gui.common.SysFontAndFace;
 import test.tool.gui.dbtool.consts.Const;
