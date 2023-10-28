@@ -18,6 +18,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -26,6 +27,7 @@ import test.tool.gui.dbtool.consts.Const;
 import test.tool.gui.dbtool.image.ImageIcons;
 import test.tool.gui.dbtool.mycomponent.MyJTextField;
 import test.tool.gui.dbtool.mycomponent.MyJextArea;
+import test.tool.gui.dbtool.mycomponent.MyJextAreaColor;
 import test.tool.gui.dbtool.util.ConfigUtil;
 import test.tool.gui.dbtool.util.SQLFormaterBasic;
 import test.tool.gui.dbtool.util.SQLFormaterDDL;
@@ -299,8 +301,8 @@ public class Base64Frame extends JFrame {
 		return base64Panel;
 	}
 	
-	final MyJextArea originTextJson = new MyJextArea(true);
-	final MyJextArea targetTextJson = new MyJextArea(true);
+	final MyJextAreaColor originTextJson = new MyJextAreaColor(true);
+	final MyJextAreaColor targetTextJson = new MyJextAreaColor(true);
 	private JPanel initJsonFormatTab() {
 		// jsonpanel中区域划分为两部分，上部分是分隔栏面板(上栏是待格式化数据，下栏是格式化结果)，下部分是按钮区域。
 		JPanel jsonPanel = new JPanel(new BorderLayout());
@@ -327,6 +329,8 @@ public class Base64Frame extends JFrame {
 			}
 		});
 		originTextJson.setLineWrap(true);// 自动换行
+		originTextJson.setCodeFoldingEnabled(true);
+		originTextJson.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON_WITH_COMMENTS);
 		originTextJson.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(originTextJson);
@@ -335,6 +339,8 @@ public class Base64Frame extends JFrame {
 		// 将JTextArea放入JScrollPane可以解决滚动条不展示的问题
 		splitPane.setTopComponent(new JScrollPane(originTextJson));
 		targetTextJson.setLineWrap(true);
+		targetTextJson.setCodeFoldingEnabled(true);
+		targetTextJson.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON_WITH_COMMENTS);
 		splitPane.setBottomComponent(new JScrollPane(targetTextJson));
 		targetTextJson.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
@@ -504,7 +510,7 @@ public class Base64Frame extends JFrame {
 	}
 	//===============================================
 	final MyJextArea originTextJwt = new MyJextArea(true);
-	final MyJextArea targetTextJwt = new MyJextArea(true);
+	final MyJextAreaColor targetTextJwt = new MyJextAreaColor(true);
 	private JPanel initJwtTab() {
 		JPanel jsonPanel = new JPanel(new BorderLayout());
 
@@ -537,6 +543,8 @@ public class Base64Frame extends JFrame {
 		// 将JTextArea放入JScrollPane可以解决滚动条不展示的问题
 		splitPane.setTopComponent(new JScrollPane(originTextJwt));
 		targetTextJwt.setLineWrap(true);
+		targetTextJwt.setCodeFoldingEnabled(true);
+		targetTextJwt.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT);//设置json语言高亮
 		splitPane.setBottomComponent(new JScrollPane(targetTextJwt));
 		originTextJwt.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
@@ -959,6 +967,9 @@ public class Base64Frame extends JFrame {
 	}
 
 	private void showFindReplaceDialog(MyJextArea area) {
+		area.showFindDialog(this);
+	}
+	private void showFindReplaceDialog(MyJextAreaColor area) {
 		area.showFindDialog(this);
 	}
 }
