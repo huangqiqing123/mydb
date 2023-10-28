@@ -154,29 +154,30 @@ public class MyJextAreaColor extends RSyntaxTextArea implements DropTargetListen
 				textIsChanged = true;
 			}
         });
-		
-    	//为this设置键盘监听事件
-        this.addKeyListener(new java.awt.event.KeyAdapter() {
-        	
-        	//键盘按下
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-           
-            	if(myself.isEditable()){
-            		//ctrl+z 执行撤销
-            		if ((evt.getKeyCode() == KeyEvent.VK_Z) && (evt.isControlDown())) {
-            			if (undomang.canUndo()){
-            				undomang.undo();	
-            			}
-            		//alt+下方向键 执行下移操作
-            		} else if(evt.isAltDown() && evt.getKeyCode() == KeyEvent.VK_DOWN){
-            			moveDown();
-            		//alt+上方向键 执行上移操作
-            		}else if(evt.isAltDown() && evt.getKeyCode() == KeyEvent.VK_UP){
-            			moveUp();
-            		}
-            	}
-            }
-        }); 
+//--->>>>	父类RSyntaxTextArea已具有	ctrl+z 执行撤销 alt+下方向键 上下移动功能，不需要自行实现了。
+//    	//为this设置键盘监听事件
+//        this.addKeyListener(new java.awt.event.KeyAdapter() {
+//        	
+//        	//键盘按下
+//            public void keyPressed(java.awt.event.KeyEvent evt) {
+//           
+//            	if(myself.isEditable()){
+//            		//ctrl+z 执行撤销
+//            		if ((evt.getKeyCode() == KeyEvent.VK_Z) && (evt.isControlDown())) {
+//            			if (undomang.canUndo()){
+//            				undomang.undo();	
+//            			}
+//            		//alt+下方向键 执行下移操作
+//            		} else if(evt.isAltDown() && evt.getKeyCode() == KeyEvent.VK_DOWN){
+//            			moveDown();
+//            		//alt+上方向键 执行上移操作
+//            		}else if(evt.isAltDown() && evt.getKeyCode() == KeyEvent.VK_UP){
+//            			moveUp();
+//            		}
+//            	}
+//            }
+//        }); 
+//    	<-----///
 	}	
 	
 	@Override
