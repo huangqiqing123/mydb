@@ -1,16 +1,19 @@
 
 package test.tool.gui.dbtool.frame;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FileDialog;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
@@ -19,21 +22,29 @@ import java.util.TimeZone;
 
 import javax.swing.Icon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 
 import org.apache.log4j.Logger;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.themes.ThemesUtil;
 
 import test.tool.gui.common.FontSet;
 import test.tool.gui.common.MyColor;
 import test.tool.gui.dbtool.consts.Const;
 import test.tool.gui.dbtool.image.ImageIcons;
 import test.tool.gui.dbtool.mycomponent.MyJextArea;
+import test.tool.gui.dbtool.mycomponent.MyJextAreaColor;
 import test.tool.gui.dbtool.util.ConfigUtil;
+import test.tool.gui.dbtool.util.DBDriverUtil;
 import test.tool.gui.dbtool.util.DocUtil;
 
 //简单记事本，用于查看、编辑文本信息
@@ -43,11 +54,14 @@ public class MyNotePad extends javax.swing.JFrame {
 	private static Logger log = Logger.getLogger(MyNotePad.class);
 	private JToolBar jToolBar1 = new JToolBar();
 	private JScrollPane jScrollPane1;
-	private MyJextArea jTextArea1;
+	private MyJextAreaColor jTextArea1;
 	public JLabel status = new JLabel();
+	public JLabel row_col_status = new JLabel();
+	public JLabel encode_status = new JLabel();
     private LineNumber lineNumber = new LineNumber(); //行号
     private JButton jButton_new = new JButton("新建",ImageIcons.newtext_png_24);
     private JButton jButton_open = new JButton("打开",ImageIcons.open_png_24);
+    private JButton jButton_reload = new JButton("重新载入",ImageIcons.reload_png24);
     private JButton jButton_save = new JButton("保存",ImageIcons.save_png_24);
     private JButton jButton_saveAs = new JButton("另存为",ImageIcons.saveas_png_24);
     private JButton jButton_clear = new JButton("清空",ImageIcons.empty_png_24);;
@@ -55,6 +69,8 @@ public class MyNotePad extends javax.swing.JFrame {
     private JButton jButton_gotoline = new JButton("定位行",ImageIcons.gotoline_png24);
     private JButton jButton_redo = new JButton("恢复",ImageIcons.redo_png_24);
     private JButton jButton_undo = new JButton("撤销",ImageIcons.undo_png_24);
+    
+    private JComboBox syntaxStyle = new JComboBox();//语法样式
     
     private JButton jButton_moveup = new JButton("上移",ImageIcons.moveup_png24);
     private JButton jButton_movedown = new JButton("下移",ImageIcons.movedown_png24);
@@ -84,7 +100,7 @@ public class MyNotePad extends javax.swing.JFrame {
     	
     	this.setResizable(true);//允许手动调整大小
     	this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-    	this.setSize(750, 500);//设置窗口初始大小
+    	this.setSize(800, 500);//设置窗口初始大小
     	this.setIconImage(ImageIcons.ico_png.getImage());//设置标题栏图标 
     	this.setLocationRelativeTo(parent);//设置父组件
         
@@ -180,7 +196,12 @@ public class MyNotePad extends javax.swing.JFrame {
 	       	open(null);
 	        }
 	    });
-	    
+		//重新载入
+		jButton_reload.addActionListener(new java.awt.event.ActionListener() {
+	    public void actionPerformed(java.awt.event.ActionEvent evt) {
+	       	reload();
+	        }
+	    });
 		//保存按钮
 		jButton_save.setToolTipText("快捷键：Ctrl+S");
 	    jButton_save.addActionListener(new java.awt.event.ActionListener() {
@@ -291,8 +312,39 @@ public class MyNotePad extends javax.swing.JFrame {
             	fontSet();
             	}
         });
+		//语法样式设置
+		syntaxStyle.setToolTipText("选择语法样式");
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_C);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_CSS);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_CSV);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_DTD);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_DOCKERFILE);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_GO);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_GROOVY);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_HTML);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_HOSTS);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_INI);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_JAVA);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_JSON_WITH_COMMENTS);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_JSP);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_LUA);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_PHP);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_PERL);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_PROPERTIES_FILE);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_PYTHON);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_NONE);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_RUBY);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_SQL);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_TYPESCRIPT);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_UNIX_SHELL);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_XML);
+		syntaxStyle.addItem(SyntaxConstants.SYNTAX_STYLE_YAML);
+		syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_NONE);//默认选中普通文本
     	
         //将按钮添加到工具栏
+		jToolBar1.add(jButton_reload); //重新载入
 	    jToolBar1.add(jButton_new); //新建
 	    jToolBar1.add(jButton_open); //打开
         jToolBar1.add(jButton_save); //保存
@@ -331,21 +383,70 @@ public class MyNotePad extends javax.swing.JFrame {
 		
 		//JTextarea展示内容
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTextArea1 = new MyJextArea(true);
+        jTextArea1 = new MyJextAreaColor(true);
         jScrollPane1.setViewportView(jTextArea1);
     	jTextArea1.setBackground(((MyColor)( ConfigUtil.getConfInfo().get(Const.EYE_SAFETY_COLOR))).getColor());
     	
-    	//设置jtextArea 与 lineNumber 字体保持一致
-    	jTextArea1.setFont((Font)( ConfigUtil.getConfInfo().get(Const.NOTEPAD_FONT)));
-    	lineNumber.setFont(jTextArea1.getFont());
+    	//添加插入符侦听器，以便侦听任何插入符的更改通知。 
+		jTextArea1.addCaretListener(new CaretListener() {
+            public void caretUpdate(CaretEvent e) {
+                try {
+                    //e.getDot() 获得插入符的位置。 
+                    int offset = e.getDot() ;
+                 
+                    //getLineOfOffset(int offset)  将组件文本中的偏移量转换为行号
+                    int row = jTextArea1.getLineOfOffset(offset);
+                    
+                    //getLineStartOffset(int line)   取得给定行起始处的偏移量。
+                    //getLineEndOffset(int line)     取得给定行结尾处的偏移量。
+                    int column = e.getDot() - jTextArea1.getLineStartOffset(row);
+                   
+                    // 在状态栏中显示当前光标所在行号、所在列号
+                    row_col_status.setText("第" + (row + 1) + "行，第" + (column+1)+"列");
+                    
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
     	
     	//设置行号 
         jScrollPane1.setRowHeaderView(lineNumber);
+        
+        //设置主题
+        ThemesUtil.updateTheme(jTextArea1, ThemesUtil.IDEA);
+		syntaxStyle.addItemListener(new ItemListener(){
+				public void itemStateChanged(ItemEvent e) {
+					String value = e.getItem().toString();
+					jTextArea1.setSyntaxEditingStyle(value);//设置语言高亮  SyntaxConstants.SYNTAX_STYLE_SQL
+				}   	
+	        });
+		
+		//设置jtextArea 与 lineNumber 字体保持一致
+    	jTextArea1.setFont((Font)( ConfigUtil.getConfInfo().get(Const.NOTEPAD_FONT)));
+    	lineNumber.setFont(jTextArea1.getFont());
+    	jTextArea1.setCodeFoldingEnabled(true);
       
     	//东西南北布局
     	getContentPane().add(jScrollPane1, java.awt.BorderLayout.CENTER);
         getContentPane().add(jToolBar1, java.awt.BorderLayout.NORTH);
-        getContentPane().add(status, java.awt.BorderLayout.SOUTH);
+        //底部 左对齐 流布局
+  		JPanel bottom_leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT ));
+  		bottom_leftPanel.add(status);
+  		//底部 右对齐 流布局
+  		JPanel bottom_rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT ));
+  		bottom_rightPanel.add(syntaxStyle);
+  		bottom_rightPanel.add(encode_status);
+  		//底部 居中对齐 流布局
+  		JPanel bottom_centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER ));
+  		bottom_centerPanel.add(row_col_status);
+  		//bottomPanel指定东西南北布局，在西部区域加“左对齐布局panel”，中部区域添加“居中对齐布局panel”，右部区域加”右对齐布局panel“
+  		JPanel bottomPanel = new JPanel(new BorderLayout());
+  		bottomPanel.add(bottom_leftPanel,BorderLayout.WEST);
+  		bottomPanel.add(bottom_centerPanel,BorderLayout.CENTER);
+  		bottomPanel.add(bottom_rightPanel,BorderLayout.EAST);
+  		//底部区域 添加BorderLayout布局的面板 bottomPanel
+  		getContentPane().add(bottomPanel, BorderLayout.SOUTH);
         pack();
     }
  
@@ -371,6 +472,87 @@ public class MyNotePad extends javax.swing.JFrame {
  			this.setTitle(str[0]);
  			jTextArea1.setText(str[1]);
  			this.status.setText("当前文件编码："+str[2]);
+ 			
+ 			//根据文件后缀，设置语法样式
+ 			if(path.endsWith(".java")||path.endsWith(".JAVA")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);//设置语言高亮 
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_JAVA);
+ 			}else if(path.endsWith(".js")||path.endsWith(".JS")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT);
+ 			}else if(path.endsWith(".c")||path.endsWith(".C")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_C);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_C);
+ 			}else if(path.endsWith(".css")||path.endsWith(".CSS")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CSS);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_CSS);
+ 			}else if(path.endsWith(".csv")||path.endsWith(".CSV")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CSV);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_CSV);
+ 			}else if(path.endsWith(".dtd")||path.endsWith(".DTD")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_DTD);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_DTD);
+ 			}else if(path.endsWith(".dockerfile")||path.endsWith(".DOCKERFILE")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_DOCKERFILE);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_DOCKERFILE);
+ 			}else if(path.endsWith(".go")||path.endsWith(".GO")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GO);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_GO);
+ 			}else if(path.endsWith(".groovy")||path.endsWith(".GROOVY")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_GROOVY);
+ 			}else if(path.endsWith(".html")||path.endsWith(".HTML")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_HTML);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_HTML);
+ 			}else if(path.endsWith(".hosts")||path.endsWith(".HOSTS")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_HOSTS);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_HOSTS);
+ 			}else if(path.endsWith(".ini")||path.endsWith(".INI")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_INI);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_INI);
+ 			}else if(path.endsWith(".jsp")||path.endsWith(".JSP")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSP);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_JSP);
+ 			}else if(path.endsWith(".json")||path.endsWith(".JSON")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON_WITH_COMMENTS);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_JSON_WITH_COMMENTS);
+ 			}else if(path.endsWith(".lua")||path.endsWith(".LUA")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_LUA);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_LUA);
+ 			}else if(path.endsWith(".md")||path.endsWith(".MD")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
+ 			}else if(path.endsWith(".php")||path.endsWith(".PHP")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PHP);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_PHP);
+ 			}else if(path.endsWith(".perl")||path.endsWith(".PERL")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PERL);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_PERL);
+ 			}else if(path.endsWith(".properties")||path.endsWith(".PROPERTIES")||path.endsWith(".conf")||path.endsWith(".CONF")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PROPERTIES_FILE);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_PROPERTIES_FILE);
+ 			}else if(path.endsWith(".py")||path.endsWith(".PY")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PYTHON);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_PYTHON);
+ 			}else if(path.endsWith(".rb")||path.endsWith(".RB")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_RUBY);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_RUBY);
+ 			}else if(path.endsWith(".sql")||path.endsWith(".SQL")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_SQL);
+ 			}else if(path.endsWith(".sh")||path.endsWith(".SH")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_UNIX_SHELL);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_UNIX_SHELL);
+ 			}else if(path.endsWith(".xml")||path.endsWith(".XML")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_XML);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_XML);
+ 			}else if(path.endsWith(".yaml")||path.endsWith(".YAML")||path.endsWith(".yml")||path.endsWith(".YML")){
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_YAML);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_YAML);
+ 			}else{
+ 				jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+ 				syntaxStyle.setSelectedItem(SyntaxConstants.SYNTAX_STYLE_NONE);
+ 			}
  			
  			//新打开文档，textIsChanged重置为false
  			jTextArea1.textIsChanged = false;
@@ -482,6 +664,9 @@ public class MyNotePad extends javax.swing.JFrame {
 	private void showLocationLineDialog(MyJextArea area){
 		area.showLocationLineDialog(this);
 	}
+	private void showLocationLineDialog(MyJextAreaColor area){
+		area.showLocationLineDialog(this);
+	}
     /**
      * 当显示的是文档（即filepath不为空时），并且文档被修改时，窗口关闭前的处理
      */
@@ -533,4 +718,34 @@ public class MyNotePad extends javax.swing.JFrame {
     		ConfigUtil.updateConfInfo();
     	}	
     }
+    /**
+     * 重新载入
+     */
+     public void reload() {
+
+    	if(this.filePath != null){
+    		if(jTextArea1.textIsChanged){
+        		int select = JOptionPane.showConfirmDialog(this,"文档内容已更改，重新载入将会覆盖当前文档内容，是否继续？","确认对话框", JOptionPane.YES_NO_OPTION);
+        		if(select == JOptionPane.YES_OPTION){
+        			String str[] = DocUtil.getCharDocContent(this.filePath);
+        			jTextArea1.setText(str[1]);
+        			this.encode_status.setText("当前文件编码：" + str[2] + "");
+
+        			// 新打开文档，textIsChanged重置为false
+        			jTextArea1.textIsChanged = false;
+        			status.setText("重新载入完成！");
+        		}
+        	}else{
+    			String str[] = DocUtil.getCharDocContent(this.filePath);
+    			jTextArea1.setText(str[1]);
+    			this.encode_status.setText("当前文件编码：" + str[2] + "");
+
+    			// 新打开文档，textIsChanged重置为false
+    			jTextArea1.textIsChanged = false;
+    			status.setText("重新载入完成！");
+    		}
+    	 }else{
+    		 status.setText("尚未打开文档，无需重新载入！");
+    	 }
+	}
 }

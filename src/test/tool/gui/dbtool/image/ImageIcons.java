@@ -70,4 +70,6 @@ public class ImageIcons {
 	public static ImageIcon format_png_24 = new ImageIcon(ImageIcons.class.getResource("format24.png"));
 	public static ImageIcon format_png_16 = new ImageIcon(ImageIcons.class.getResource("format16.png"));
 	
+	public static ImageIcon reload_png24 = new ImageIcon(ImageIcons.class.getResource("reload24.png"));
+	
 }
