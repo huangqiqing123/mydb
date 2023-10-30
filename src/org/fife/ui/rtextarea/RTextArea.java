@@ -1777,7 +1777,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 		@Override
 		public void mouseReleased(MouseEvent e) {
 			if (e.isPopupTrigger()) {
-				showPopup(e);
+				//showPopup(e);
 			}
 		}
 
