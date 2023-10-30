@@ -5,7 +5,7 @@
  * JWindows created by the AutoComplete library.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -15,7 +15,7 @@ import javax.swing.JWindow;
 /**
  * A hook allowing hosting applications to decorate JWindows created by the
  * AutoComplete library.  For example, you could use the
- * <a href="http://jgoodies.com/">JGoodies</a> library to add drop shadows
+ * <a href="https://www.jgoodies.com/">JGoodies</a> library to add drop shadows
  * to the windows.
  *
  * @author Robert Futrell

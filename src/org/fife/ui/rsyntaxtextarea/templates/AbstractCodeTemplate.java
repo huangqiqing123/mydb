@@ -4,7 +4,7 @@
  * AbstractCodeTemplate.java - Base class for code templates.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.templates;
 
@@ -49,7 +49,7 @@ public abstract class AbstractCodeTemplate implements CodeTemplate {
 	@Override
 	public Object clone() {
 		// This method can't be abstract as compilers don't like concrete
-		// subclassses calling super.clone() on  an abstract super.
+		// subclasses calling super.clone() on  an abstract super.
 		try {
 			return super.clone();
 		} catch (CloneNotSupportedException e) {

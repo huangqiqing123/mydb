@@ -4,7 +4,7 @@
  * Token.java - A token used in syntax highlighting.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -253,11 +253,6 @@ public interface Token extends TokenTypes {
 	 * @return The last document position that will fit in the specified amount
 	 *         of pixels.
 	 */
-	/*
-	 * @see #getTokenListOffsetBeforeX
-	 * FIXME:  This method does not compute correctly!  It needs to be abstract
-	 * and implemented by subclasses.
-	 */
 	int getOffsetBeforeX(RSyntaxTextArea textArea, TabExpander e,
 							float startX, float endBeforeX);
 
@@ -430,12 +425,12 @@ public interface Token extends TokenTypes {
 
 
 	/**
-	 * Returns whether or not this token is "paintable;" i.e., whether or not
+	 * Returns whether this token is "paintable;" i.e., whether
 	 * the type of this token is one such that it has an associated syntax
 	 * style.  What this boils down to is whether the token type is greater
 	 * than <code>Token.NULL</code>.
 	 *
-	 * @return Whether or not this token is paintable.
+	 * @return Whether this token is paintable.
 	 */
 	boolean isPaintable();
 
@@ -464,7 +459,7 @@ public interface Token extends TokenTypes {
 
 
 	/**
-	 * Returns whether or not this token is whitespace.
+	 * Returns whether this token is whitespace.
 	 *
 	 * @return <code>true</code> iff this token is whitespace.
 	 * @see #isComment()

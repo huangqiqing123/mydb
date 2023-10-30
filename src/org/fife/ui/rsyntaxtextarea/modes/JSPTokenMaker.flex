@@ -4,12 +4,13 @@
  * JSPTokenMaker.java - Generates tokens for JSP syntax highlighting.
  * 
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.modes;
 
 import java.io.*;
 import javax.swing.text.Segment;
+import java.util.Stack;
 
 import org.fife.ui.rsyntaxtextarea.*;
 
@@ -18,10 +19,10 @@ import org.fife.ui.rsyntaxtextarea.*;
  * Scanner for JSP files (supporting HTML 5).
  *
  * This implementation was created using
- * <a href="http://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
+ * <a href="https://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
  * was modified for performance.  Memory allocation needs to be almost
  * completely removed to be competitive with the handwritten lexers (subclasses
- * of <code>AbstractTokenMaker</code>, so this class has been modified so that
+ * of <code>AbstractTokenMaker</code>), so this class has been modified so that
  * Strings are never allocated (via yytext()), and the scanner never has to
  * worry about refilling its buffer (needlessly copying chars around).
  * We can achieve this because RText always scans exactly 1 line of tokens at a
@@ -66,14 +67,14 @@ import org.fife.ui.rsyntaxtextarea.*;
 	 * Type specific to JSPTokenMaker denoting a line ending with an unclosed
 	 * double-quote attribute.
 	 */
-	private static final int INTERNAL_ATTR_DOUBLE			= -1;
+	static final int INTERNAL_ATTR_DOUBLE			= -1;
 
 
 	/**
 	 * Type specific to JSPTokenMaker denoting a line ending with an unclosed
 	 * single-quote attribute.
 	 */
-	private static final int INTERNAL_ATTR_SINGLE			= -2;
+	static final int INTERNAL_ATTR_SINGLE			= -2;
 
 
 	/**
@@ -81,43 +82,43 @@ import org.fife.ui.rsyntaxtextarea.*;
 	 * ended a line with an unclosed HTML tag; thus a new line is beginning
 	 * still inside of the tag.
 	 */
-	private static final int INTERNAL_INTAG					= -3;
+	static final int INTERNAL_INTAG					= -3;
 
 	/**
 	 * Token type specific to JSPTokenMaker; this signals that the user has
 	 * ended a line with an unclosed <code>&lt;script&gt;</code> tag.
 	 */
-	private static final int INTERNAL_INTAG_SCRIPT			= -4;
+	static final int INTERNAL_INTAG_SCRIPT			= -4;
 
 	/**
-	 * Token type specifying we're in a double-qouted attribute in a
+	 * Token type specifying we're in a double-quoted attribute in a
 	 * script tag.
 	 */
-	private static final int INTERNAL_ATTR_DOUBLE_QUOTE_SCRIPT = -5;
+	static final int INTERNAL_ATTR_DOUBLE_QUOTE_SCRIPT = -5;
 
 	/**
-	 * Token type specifying we're in a single-qouted attribute in a
+	 * Token type specifying we're in a single-quoted attribute in a
 	 * script tag.
 	 */
-	private static final int INTERNAL_ATTR_SINGLE_QUOTE_SCRIPT = -6;
+	static final int INTERNAL_ATTR_SINGLE_QUOTE_SCRIPT = -6;
 
 	/**
 	 * Token type specifying that the user has
 	 * ended a line with an unclosed <code>&lt;style&gt;</code> tag.
 	 */
-	private static final int INTERNAL_INTAG_STYLE			= -7;
+	static final int INTERNAL_INTAG_STYLE			= -7;
 
 	/**
-	 * Token type specifying we're in a double-qouted attribute in a
+	 * Token type specifying we're in a double-quoted attribute in a
 	 * style tag.
 	 */
-	private static final int INTERNAL_ATTR_DOUBLE_QUOTE_STYLE = -8;
+	static final int INTERNAL_ATTR_DOUBLE_QUOTE_STYLE = -8;
 
 	/**
-	 * Token type specifying we're in a single-qouted attribute in a
+	 * Token type specifying we're in a single-quoted attribute in a
 	 * style tag.
 	 */
-	private static final int INTERNAL_ATTR_SINGLE_QUOTE_STYLE = -9;
+	static final int INTERNAL_ATTR_SINGLE_QUOTE_STYLE = -9;
 
 	/**
 	 * Token type specifying we're in a JSP hidden comment ("<%-- ... --%>").
@@ -138,65 +139,75 @@ import org.fife.ui.rsyntaxtextarea.*;
 	/**
 	 * Token type specifying we're in a JavaScript multi-line comment.
 	 */
-	private static final int INTERNAL_IN_JS_MLC				= -13;
+	static final int INTERNAL_IN_JS_MLC				= -13;
 
 	/**
 	 * Token type specifying we're in an invalid multi-line JS string.
 	 */
-	private static final int INTERNAL_IN_JS_STRING_INVALID	= -14;
+	static final int INTERNAL_IN_JS_STRING_INVALID	= -14;
 
 	/**
 	 * Token type specifying we're in a valid multi-line JS string.
 	 */
-	private static final int INTERNAL_IN_JS_STRING_VALID		= -15;
+	static final int INTERNAL_IN_JS_STRING_VALID		= -15;
 
 	/**
 	 * Token type specifying we're in an invalid multi-line JS single-quoted string.
 	 */
-	private static final int INTERNAL_IN_JS_CHAR_INVALID	= -16;
+	static final int INTERNAL_IN_JS_CHAR_INVALID	= -16;
 
 	/**
 	 * Token type specifying we're in a valid multi-line JS single-quoted string.
 	 */
-	private static final int INTERNAL_IN_JS_CHAR_VALID		= -17;
+	static final int INTERNAL_IN_JS_CHAR_VALID		= -17;
 
 	/**
 	 * Internal type denoting a line ending in CSS.
 	 */
-	private static final int INTERNAL_CSS					= -18;
+	static final int INTERNAL_CSS					= -18;
 
 	/**
 	 * Internal type denoting a line ending in a CSS property.
 	 */
-	private static final int INTERNAL_CSS_PROPERTY			= -19;
+	static final int INTERNAL_CSS_PROPERTY			= -19;
 
 	/**
 	 * Internal type denoting a line ending in a CSS property value.
 	 */
-	private static final int INTERNAL_CSS_VALUE				= -20;
+	static final int INTERNAL_CSS_VALUE				= -20;
+
+	/**
+	 * Token type specifying we're in a valid multi-line template literal.
+	 */
+	static final int INTERNAL_IN_JS_TEMPLATE_LITERAL_VALID = -23;
+
+	/**
+	 * Token type specifying we're in an invalid multi-line template literal.
+	 */
+	static final int INTERNAL_IN_JS_TEMPLATE_LITERAL_INVALID = -24;
 
 	/**
 	 * Internal type denoting line ending in a CSS double-quote string.
 	 * The state to return to is embedded in the actual end token type.
 	 */
-	private static final int INTERNAL_CSS_STRING				= -(1<<11);
+	static final int INTERNAL_CSS_STRING				= -(1<<11);
 
 	/**
 	 * Internal type denoting line ending in a CSS single-quote string.
 	 * The state to return to is embedded in the actual end token type.
 	 */
-	private static final int INTERNAL_CSS_CHAR				= -(2<<11);
+	static final int INTERNAL_CSS_CHAR				= -(2<<11);
 
 	/**
 	 * Internal type denoting line ending in a CSS multi-line comment.
 	 * The state to return to is embedded in the actual end token type.
 	 */
-	private static final int INTERNAL_CSS_MLC				= -(3<<11);
+	static final int INTERNAL_CSS_MLC				= -(3<<11);
 
 	/**
 	 * Token type specifying we're in a Java documentation comment.
 	 */
-	private static final int INTERNAL_IN_JAVA_DOCCOMMENT		= -(4<<11);
+	static final int INTERNAL_IN_JAVA_DOCCOMMENT		= -(4<<11);
 
 	/**
 	 * Token type specifying we're in Java code.
@@ -206,7 +217,7 @@ import org.fife.ui.rsyntaxtextarea.*;
 	/**
 	 * Token type specifying we're in Java multiline comment.
 	 */
-	private static final int INTERNAL_IN_JAVA_MLC			= -(6<<11);
+	static final int INTERNAL_IN_JAVA_MLC			= -(6<<11);
 
 	/**
 	 * The state previous CSS-related state we were in before going into a CSS
@@ -232,17 +243,19 @@ import org.fife.ui.rsyntaxtextarea.*;
 	/**
 	 * Language state set on HTML tokens.  Must be 0.
 	 */
-	private static final int LANG_INDEX_DEFAULT = 0;
+	static final int LANG_INDEX_DEFAULT = 0;
 
 	/**
 	 * Language state set on JavaScript tokens.
 	 */
-	private static final int LANG_INDEX_JS = 1;
+	static final int LANG_INDEX_JS = 1;
 
 	/**
 	 * Language state set on CSS tokens.
 	 */
-	private static final int LANG_INDEX_CSS = 2;
+	static final int LANG_INDEX_CSS = 2;
+
+	private Stack<Boolean> varDepths;
 
 
 	/**
@@ -399,6 +412,7 @@ import org.fife.ui.rsyntaxtextarea.*;
 	 * @return The first <code>Token</code> in a linked list representing
 	 *         the syntax highlighted text.
 	 */
+	@Override
 	public Token getTokenList(Segment text, int initialTokenType, int startOffset) {
 
 		resetTokenList();
@@ -492,6 +506,16 @@ import org.fife.ui.rsyntaxtextarea.*;
 				state = CSS_VALUE;
 				languageIndex = LANG_INDEX_CSS;
 				break;
+			case INTERNAL_IN_JS_TEMPLATE_LITERAL_VALID:
+				state = JS_TEMPLATE_LITERAL;
+				languageIndex = LANG_INDEX_JS;
+				validJSString = true;
+				break;
+			case INTERNAL_IN_JS_TEMPLATE_LITERAL_INVALID:
+				state = JS_TEMPLATE_LITERAL;
+				languageIndex = LANG_INDEX_JS;
+				validJSString = false;
+				break;
 			default:
 				if (initialTokenType<-1024) {
 					// INTERNAL_IN_JAVAxxx - jspInState or
@@ -546,6 +570,15 @@ import org.fife.ui.rsyntaxtextarea.*;
 			return new TokenImpl();
 		}
 
+	}
+
+
+	/**
+	 * Overridden to accept letters, digits, underscores, and hyphens.
+	 */
+	@Override
+	public boolean isIdentifierChar(int languageIndex, char ch) {
+		return Character.isLetterOrDigit(ch) || ch=='-' || ch=='.' || ch=='_';
 	}
 
 
@@ -639,7 +672,7 @@ AnyCharacterButApostropheOrBackSlash	= ([^\\'])
 AnyCharacterButDoubleQuoteOrBackSlash	= ([^\\\"\n])
 EscapedSourceCharacter				= ("u"{HexDigit}{HexDigit}{HexDigit}{HexDigit})
 Escape							= ("\\"(([btnfr\"'\\])|([0123]{OctalDigit}?{OctalDigit}?)|({OctalDigit}{OctalDigit}?)|{EscapedSourceCharacter}))
-NonSeparator						= ([^\t\f\r\n\ \(\)\{\}\[\]\;\,\.\=\>\<\!\~\?\:\+\-\*\/\&\|\^\%\"\']|"#"|"\\")
+NonSeparator						= ([^\t\f\r\n\ \(\)\{\}\[\]\;\,\.\=\>\<\!\~\?\:\+\-\*\/\&\|\^\%\"\'\`]|"#"|"\\")
 IdentifierStart					= ({LetterOrUnderscore}|"$")
 IdentifierPart						= ({IdentifierStart}|{Digit}|("\\"{EscapedSourceCharacter}))
 WhiteSpace				= ([ \t\f])
@@ -686,7 +719,7 @@ NonAssignmentOperator		= ("+"|"-"|"<="|"^"|"++"|"<"|"*"|">="|"%"|"--"|">"|"/"|"!
 AssignmentOperator			= ("="|"-="|"*="|"/="|"|="|"&="|"^="|"+="|"%="|"<<="|">>="|">>>=")
 Operator					= ({NonAssignmentOperator}|{AssignmentOperator})
 JIdentifier				= ({IdentifierStart}{IdentifierPart}*)
-ErrorIdentifier			= ({NonSeparator}+)
+ErrorIdentifier			= (({NonSeparator}|\`)+)
 Annotation				= ("@"{JIdentifier}?)
 PrimitiveTypes				= ("boolean"|"byte"|"char"|"double" |"float"|"int"|"long"|"short")
 
@@ -715,9 +748,10 @@ JS_Separator				= ({Separator})
 JS_Separator2				= ({Separator2})
 JS_Operator				= ({Operator})
 JS_Identifier				= ({JIdentifier})
-JS_ErrorIdentifier			= ({ErrorIdentifier})
+JS_ErrorIdentifier			= ({NonSeparator}+)
 JS_Regex					= ("/"([^\*\\/]|\\.)([^/\\]|\\.)*"/"[gim]*)
 
+JS_TemplateLiteralExprStart	= ("${")
 
 
 // CSS stuff.
@@ -766,6 +800,8 @@ CSS_Number					= ({CSS_Digits}|{CSS_Hex})
 %state CSS_STRING
 %state CSS_CHAR_LITERAL
 %state CSS_C_STYLE_COMMENT
+%state JS_TEMPLATE_LITERAL
+%state JS_TEMPLATE_LITERAL_EXPR
 
 
 %%
@@ -811,6 +847,15 @@ CSS_Number					= ({CSS_Digits}|{CSS_Hex})
 <COMMENT> {
 	[^hwf\n\-]+				{}
 	{URL}					{ int temp=zzStartRead; addToken(start,zzStartRead-1, Token.MARKUP_COMMENT); addHyperlinkToken(temp,zzMarkedPos-1, Token.MARKUP_COMMENT); start = zzMarkedPos; }
+	{URL}					{
+                                int temp = zzStartRead;
+                                if (start <= zzStartRead - 1) {
+                                    addToken(start,zzStartRead-1, TokenTypes.MARKUP_COMMENT);
+                                }
+                                addHyperlinkToken(temp,zzMarkedPos-1, TokenTypes.MARKUP_COMMENT);
+                                start = zzMarkedPos;
+                                start = zzMarkedPos;
+                            }
 	[hwf]					{}
 	"-->"					{ yybegin(YYINITIAL); addToken(start,zzStartRead+2, Token.MARKUP_COMMENT); }
 	"-"						{}
@@ -1146,6 +1191,7 @@ CSS_Number					= ({CSS_Digits}|{CSS_Hex})
 	/* String/Character literals. */
 	[\']							{ start = zzMarkedPos-1; validJSString = true; yybegin(JS_CHAR); }
 	[\"]							{ start = zzMarkedPos-1; validJSString = true; yybegin(JS_STRING); }
+	[\`]							{ start = zzMarkedPos-1; validJSString = true; yybegin(JS_TEMPLATE_LITERAL); }
 
 	/* Comment literals. */
 	"/**/"						{ addToken(Token.COMMENT_MULTILINE); }
@@ -1250,6 +1296,77 @@ CSS_Number					= ({CSS_Digits}|{CSS_Hex})
 }
 
 
+<JS_TEMPLATE_LITERAL> {
+	[^\n\\\$\`]+				{}
+	\\x{HexDigit}{2}		{}
+	\\x						{ /* Invalid latin-1 character \xXX */ validJSString = false; }
+	\\u{HexDigit}{4}		{}
+	\\u						{ /* Invalid Unicode character \\uXXXX */ validJSString = false; }
+	\\.						{ /* Skip all escaped chars. */ }
+
+	{JS_TemplateLiteralExprStart}	{
+								addToken(start, zzStartRead - 1, Token.LITERAL_BACKQUOTE);
+								start = zzMarkedPos-2;
+								if (varDepths==null) {
+									varDepths = new Stack<>();
+								}
+								else {
+									varDepths.clear();
+								}
+								varDepths.push(Boolean.TRUE);
+								yybegin(JS_TEMPLATE_LITERAL_EXPR);
+							}
+	"$"						{ /* Skip valid '$' that is not part of template literal expression start */ }
+	
+	\`						{ int type = validJSString ? Token.LITERAL_BACKQUOTE : Token.ERROR_STRING_DOUBLE; addToken(start,zzStartRead, type); yybegin(JAVASCRIPT); }
+
+	/* Line ending in '\' => continue to next line, though not necessary in template strings. */
+	\\						{
+								if (validJSString) {
+									addToken(start,zzStartRead, Token.LITERAL_BACKQUOTE);
+									addEndToken(INTERNAL_IN_JS_TEMPLATE_LITERAL_VALID);
+								}
+								else {
+									addToken(start,zzStartRead, Token.ERROR_STRING_DOUBLE);
+									addEndToken(INTERNAL_IN_JS_TEMPLATE_LITERAL_INVALID);
+								}
+								return firstToken;
+							}
+	\n |
+	<<EOF>>					{
+								if (validJSString) {
+									addToken(start, zzStartRead - 1, Token.LITERAL_BACKQUOTE);
+									addEndToken(INTERNAL_IN_JS_TEMPLATE_LITERAL_VALID);
+								}
+								else {
+									addToken(start,zzStartRead - 1, Token.ERROR_STRING_DOUBLE);
+									addEndToken(INTERNAL_IN_JS_TEMPLATE_LITERAL_INVALID);
+								}
+								return firstToken;
+							}
+}
+
+<JS_TEMPLATE_LITERAL_EXPR> {
+	[^\}\$\n]+			{}
+	"}"					{
+							if (!varDepths.empty()) {
+								varDepths.pop();
+								if (varDepths.empty()) {
+									addToken(start,zzStartRead, Token.VARIABLE);
+									start = zzMarkedPos;
+									yybegin(JS_TEMPLATE_LITERAL);
+								}
+							}
+						}
+	{JS_TemplateLiteralExprStart} { varDepths.push(Boolean.TRUE); }
+	"$"					{}
+	\n |
+	<<EOF>>				{
+							// TODO: This isn't right.  The expression and its depth should continue to the next line.
+							addToken(start,zzStartRead-1, Token.VARIABLE); addEndToken(INTERNAL_IN_JS_TEMPLATE_LITERAL_INVALID); return firstToken;
+						}
+}
+
 <JS_MLC> {
 	// JavaScript MLC's.  This state is essentially Java's MLC state.
 	[^hwf<\n\*]+				{}
@@ -1323,6 +1440,7 @@ CSS_Number					= ({CSS_Digits}|{CSS_Hex})
 						  addToken(zzMarkedPos-1,zzMarkedPos-1, Token.MARKUP_TAG_DELIMITER);
 						}
 	{CSS_Property}		{ addToken(Token.RESERVED_WORD); }
+	"{"					{ addToken(Token.SEPARATOR); /* helps with auto-closing curlies when editing CSS */ }
 	"}"					{ addToken(Token.SEPARATOR); yybegin(CSS); }
 	":"					{ addToken(Token.OPERATOR); yybegin(CSS_VALUE); }
 	{Whitespace}		{ addToken(Token.WHITESPACE); }
@@ -1340,7 +1458,7 @@ CSS_Number					= ({CSS_Digits}|{CSS_Hex})
 						  addToken(zzMarkedPos-1,zzMarkedPos-1, Token.MARKUP_TAG_DELIMITER);
 						}
 	{CSS_Value}			{ addToken(Token.IDENTIFIER); }
-	"!important"		{ addToken(Token.ANNOTATION); }
+	"!important"		{ addToken(Token.PREPROCESSOR); }
 	{CSS_Function}		{ int temp = zzMarkedPos - 2;
 						  addToken(zzStartRead, temp, Token.FUNCTION);
 						  addToken(zzMarkedPos-1, zzMarkedPos-1, Token.SEPARATOR);
@@ -1824,12 +1942,32 @@ CSS_Number					= ({CSS_Digits}|{CSS_Hex})
 <JAVA_DOCCOMMENT> {
 
 	[^hwf\@\{\n\<\*]+			{}
-	{URL}						{ int temp=zzStartRead; addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION); addHyperlinkToken(temp,zzMarkedPos-1, Token.COMMENT_DOCUMENTATION); start = zzMarkedPos; }
+	{URL}						{
+                                    int temp=zzStartRead;
+                                    if (start <= zzStartRead - 1) {
+                                        addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION);
+                                    }
+                                    addHyperlinkToken(temp,zzMarkedPos-1, Token.COMMENT_DOCUMENTATION);
+                                    start = zzMarkedPos;
+                                }
 	[hwf]						{}
 
-	"@"{BlockTag}				{ int temp=zzStartRead; addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION); addToken(temp,zzMarkedPos-1, Token.COMMENT_KEYWORD); start = zzMarkedPos; }
+	"@"{BlockTag}				{
+                                    int temp=zzStartRead;
+                                    if (start <= zzStartRead - 1) {
+                                        addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION);
+                                    }
+                                    addToken(temp,zzMarkedPos-1, Token.COMMENT_KEYWORD);
+                                    start = zzMarkedPos; }
 	"@"							{}
-	"{@"{InlineTag}[^\}]*"}"	{ int temp=zzStartRead; addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION); addToken(temp,zzMarkedPos-1, Token.COMMENT_KEYWORD); start = zzMarkedPos; }
+	"{@"{InlineTag}[^\}]*"}"	{
+                                    int temp=zzStartRead;
+                                    if (start <= zzStartRead - 1) {
+                                        addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION);
+                                    }
+                                    addToken(temp,zzMarkedPos-1, Token.COMMENT_KEYWORD);
+                                    start = zzMarkedPos;
+                                }
 	"{"							{}
 	\n							{ addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION); addEndToken(INTERNAL_IN_JAVA_DOCCOMMENT - jspInState); return firstToken; }
 	"<"[/]?({Letter}[^\>]*)?">"	{ int temp=zzStartRead; addToken(start,zzStartRead-1, Token.COMMENT_DOCUMENTATION); addToken(temp,zzMarkedPos-1, Token.COMMENT_MARKUP); start = zzMarkedPos; }

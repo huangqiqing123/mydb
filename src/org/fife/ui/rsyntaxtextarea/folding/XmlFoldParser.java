@@ -4,7 +4,7 @@
  * XmlFoldParser.java - Fold parser for XML.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.folding;
 
@@ -32,13 +32,10 @@ public class XmlFoldParser implements FoldParser {
 	private static final char[] MLC_END = { '-', '-', '>' };
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public List<Fold> getFolds(RSyntaxTextArea textArea) {
 
-		List<Fold> folds = new ArrayList<Fold>();
+		List<Fold> folds = new ArrayList<>();
 
 		Fold currentFold = null;
 		int lineCount = textArea.getLineCount();
@@ -79,7 +76,7 @@ public class XmlFoldParser implements FoldParser {
 
 						else {
 							// If we're an MLC that ends on a later line...
-							if (t.getType()==Token.COMMENT_MULTILINE && !t.endsWith(MLC_END)) {
+							if (t.getType()==Token.MARKUP_COMMENT && !t.endsWith(MLC_END)) {
 								inMLC = true;
 								mlcStart = t.getOffset();
 							}

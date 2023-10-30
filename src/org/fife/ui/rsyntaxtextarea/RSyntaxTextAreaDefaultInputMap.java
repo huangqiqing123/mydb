@@ -5,7 +5,7 @@
  * RSyntaxTextAreas.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -15,6 +15,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.KeyStroke;
 
 import org.fife.ui.rtextarea.RTADefaultInputMap;
+import org.fife.ui.rtextarea.RTextArea;
 
 
 /**
@@ -28,7 +29,7 @@ import org.fife.ui.rtextarea.RTADefaultInputMap;
  * @author Robert Futrell
  * @version 1.0
  */
-@SuppressWarnings({ "checkstyle:linelength" })
+@SuppressWarnings("checkstyle:linelength")
 public class RSyntaxTextAreaDefaultInputMap extends RTADefaultInputMap {
 
 	/**
@@ -36,29 +37,33 @@ public class RSyntaxTextAreaDefaultInputMap extends RTADefaultInputMap {
 	 */
 	public RSyntaxTextAreaDefaultInputMap() {
 
-		int defaultMod = getDefaultModifier();
-		//int ctrl = InputEvent.CTRL_MASK;
-		int shift = InputEvent.SHIFT_MASK;
-		//int alt = InputEvent.ALT_MASK;
+		int defaultMod = RTextArea.getDefaultModifier();
+		int shift = InputEvent.SHIFT_DOWN_MASK;
 		int defaultShift = defaultMod|shift;
 
 		put(KeyStroke.getKeyStroke(KeyEvent.VK_TAB,   shift),				RSyntaxTextAreaEditorKit.rstaDecreaseIndentAction);
-		put(KeyStroke.getKeyStroke('}'),									RSyntaxTextAreaEditorKit.rstaCloseCurlyBraceAction);
+		put(KeyStroke.getKeyStroke('}'),							RSyntaxTextAreaEditorKit.rstaCloseCurlyBraceAction);
+		put(KeyStroke.getKeyStroke('('),							RSyntaxTextAreaEditorKit.rstaOpenParenAction);
+		put(KeyStroke.getKeyStroke('['),							RSyntaxTextAreaEditorKit.rstaOpenSquareBracketAction);
+		put(KeyStroke.getKeyStroke('{'),							RSyntaxTextAreaEditorKit.rstaOpenCurlyAction);
+		put(KeyStroke.getKeyStroke('\''),							RSyntaxTextAreaEditorKit.rstaSingleQuoteAction);
+		put(KeyStroke.getKeyStroke('"'),							RSyntaxTextAreaEditorKit.rstaDoubleQuoteAction);
+		put(KeyStroke.getKeyStroke('`'),							RSyntaxTextAreaEditorKit.rstaBacktickAction);
 
-		put(KeyStroke.getKeyStroke('/'), 									RSyntaxTextAreaEditorKit.rstaCloseMarkupTagAction);
+		put(KeyStroke.getKeyStroke('/'), 							RSyntaxTextAreaEditorKit.rstaCloseMarkupTagAction);
 		int os = RSyntaxUtilities.getOS();
 		if (os==RSyntaxUtilities.OS_WINDOWS || os==RSyntaxUtilities.OS_MAC_OSX) {
 			// *nix causes trouble with CloseMarkupTagAction and ToggleCommentAction.
 			// It triggers both KEY_PRESSED ctrl+'/' and KEY_TYPED '/' events when the
 			// user presses ctrl+'/', but Windows and OS X do not.  If we try to "move"
 			// the KEY_TYPED event for '/' to KEY_PRESSED, it'll work for Linux boxes
-			// with QWERTY keyboard layouts, but non-QUERTY users won't be able to type
+			// with QWERTY keyboard layouts, but non-QWERTY users won't be able to type
 			// a '/' character at all then (!).  Rather than try to hack together a
 			// solution by trying to detect the IM locale and do different things for
 			// different OSes & keyboard layouts, we do the simplest thing and
 			// (unfortunately) don't have a ToggleCommentAction for *nix out-of-the-box.
 			// Applications can add one easily enough if they want one.
-			//put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, defaultMod),		RSyntaxTextAreaEditorKit.rstaToggleCommentAction);
+			put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, defaultMod),		RSyntaxTextAreaEditorKit.rstaToggleCommentAction);
 		}
 
 		put(KeyStroke.getKeyStroke(KeyEvent.VK_OPEN_BRACKET, defaultMod),	RSyntaxTextAreaEditorKit.rstaGoToMatchingBracketAction);
@@ -68,12 +73,23 @@ public class RSyntaxTextAreaDefaultInputMap extends RTADefaultInputMap {
 		put(KeyStroke.getKeyStroke(KeyEvent.VK_MULTIPLY, defaultMod),		RSyntaxTextAreaEditorKit.rstaExpandAllFoldsAction);
 
 		// NOTE:  no modifiers => mapped to keyTyped.  If we had "0" as a second
-		// second parameter, we'd get the template action (keyPressed) AND the
+		// parameter, we'd get the template action (keyPressed) AND the
 		// default space action (keyTyped).
 		//put(KeyStroke.getKeyStroke(' '),			RSyntaxTextAreaEditorKit.rstaPossiblyInsertTemplateAction);
 		put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, defaultShift),		RSyntaxTextAreaEditorKit.rstaPossiblyInsertTemplateAction);
 
 	}
 
+
+	@Override
+	protected String getCopyAction() {
+		return RSyntaxTextAreaEditorKit.rstaCopyAsStyledTextAction;
+	}
+
+
+	@Override
+	protected String getCutAction() {
+		return RSyntaxTextAreaEditorKit.rstaCutAsStyledTextAction;
+	}
 
 }

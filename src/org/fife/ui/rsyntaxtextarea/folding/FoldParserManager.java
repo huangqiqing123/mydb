@@ -5,7 +5,7 @@
  * for each language it supports.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.folding;
 
@@ -67,8 +67,11 @@ public final class FoldParserManager implements SyntaxConstants {
 	 */
 	private Map<String, FoldParser> createFoldParserMap() {
 
-		Map<String, FoldParser> map = new HashMap<String, FoldParser>();
+		Map<String, FoldParser> map = new HashMap<>();
 
+		map.put(SYNTAX_STYLE_ACTIONSCRIPT,		new CurlyFoldParser());
+		map.put(SYNTAX_STYLE_ASSEMBLER_6502,	new LinesWithContentFoldParser());
+		map.put(SYNTAX_STYLE_ASSEMBLER_X86,		new LinesWithContentFoldParser());
 		map.put(SYNTAX_STYLE_C,					new CurlyFoldParser());
 		map.put(SYNTAX_STYLE_CPLUSPLUS,			new CurlyFoldParser());
 		map.put(SYNTAX_STYLE_CSHARP,			new CurlyFoldParser());
@@ -76,6 +79,7 @@ public final class FoldParserManager implements SyntaxConstants {
 		map.put(SYNTAX_STYLE_CSS,				new CurlyFoldParser());
 		map.put(SYNTAX_STYLE_D,					new CurlyFoldParser());
 		map.put(SYNTAX_STYLE_DART,				new CurlyFoldParser());
+		map.put(SYNTAX_STYLE_GO,				new CurlyFoldParser());
 		map.put(SYNTAX_STYLE_GROOVY,			new CurlyFoldParser());
 		map.put(SYNTAX_STYLE_HTACCESS,			new XmlFoldParser());
 		map.put(SYNTAX_STYLE_HTML,				new HtmlFoldParser(HtmlFoldParser.LANGUAGE_HTML));
@@ -84,6 +88,7 @@ public final class FoldParserManager implements SyntaxConstants {
 		map.put(SYNTAX_STYLE_JSON,				new JsonFoldParser());
 		map.put(SYNTAX_STYLE_JSON_WITH_COMMENTS,new JsonFoldParser());
 		map.put(SYNTAX_STYLE_JSP,				new HtmlFoldParser(HtmlFoldParser.LANGUAGE_JSP));
+		map.put(SYNTAX_STYLE_KOTLIN,			new CurlyFoldParser(true, true));
 		map.put(SYNTAX_STYLE_LATEX,				new LatexFoldParser());
 		map.put(SYNTAX_STYLE_LESS,				new CurlyFoldParser());
 		map.put(SYNTAX_STYLE_LISP,				new LispFoldParser());
@@ -91,9 +96,12 @@ public final class FoldParserManager implements SyntaxConstants {
 		map.put(SYNTAX_STYLE_NSIS,				new NsisFoldParser());
 		map.put(SYNTAX_STYLE_PERL,				new CurlyFoldParser());
 		map.put(SYNTAX_STYLE_PHP,				new HtmlFoldParser(HtmlFoldParser.LANGUAGE_PHP));
+		map.put(SYNTAX_STYLE_PROTO,				new CurlyFoldParser());
+		map.put(SYNTAX_STYLE_PYTHON,			new PythonFoldParser());
 		map.put(SYNTAX_STYLE_SCALA,				new CurlyFoldParser());
 		map.put(SYNTAX_STYLE_TYPESCRIPT,		new CurlyFoldParser());
 		map.put(SYNTAX_STYLE_XML,				new XmlFoldParser());
+		map.put(SYNTAX_STYLE_YAML,				new YamlFoldParser());
 
 		return map;
 

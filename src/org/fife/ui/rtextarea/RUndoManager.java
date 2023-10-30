@@ -4,7 +4,7 @@
  * RUndoManager.java - Handles undo/redo behavior for RTextArea.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -111,9 +111,6 @@ public class RUndoManager extends UndoManager {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void redo() {
 		super.redo();
@@ -130,9 +127,6 @@ public class RUndoManager extends UndoManager {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void undo() {
 		super.undo();
@@ -172,7 +166,7 @@ public class RUndoManager extends UndoManager {
 		}
 
 		// This happens when this UndoableEdit didn't occur at the
-		// character just after the previous undlabeledit.  Since an
+		// character just after the previous undoable edit.  Since an
 		// undo has already occurred, there is no need to update our
 		// actions here either.
 		compoundEdit.end();

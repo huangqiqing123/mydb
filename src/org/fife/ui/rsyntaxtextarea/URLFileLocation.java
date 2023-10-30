@@ -4,7 +4,7 @@
  * URLFileLocation.java - The location of a file at a (remote) URL.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -95,36 +95,24 @@ class URLFileLocation extends FileLocation {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String getFileFullPath() {
 		return fileFullPath;
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String getFileName() {
 		return fileName;
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected InputStream getInputStream() throws IOException {
 		return url.openStream();
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected OutputStream getOutputStream() throws IOException {
 		return url.openConnection().getOutputStream();

@@ -2,15 +2,15 @@
  * 04/23/2014
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
 
 /**
  * Provides various ways to render a caret such as {@link ConfigurableCaret}..
- *
- * Currently supported renderings include:
+ * <p>
+ * Supported renderings include:
  *
  * <ol>
  *    <li>As a vertical line (like <code>DefaultCaret</code>)</li>
@@ -33,6 +33,6 @@ public enum CaretStyle {
 
 	BLOCK_BORDER_STYLE,
 
-	THICK_VERTICAL_LINE_STYLE;
+	THICK_VERTICAL_LINE_STYLE
 
 }

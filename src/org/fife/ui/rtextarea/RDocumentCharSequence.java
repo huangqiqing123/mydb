@@ -5,7 +5,7 @@
  * document.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -53,9 +53,6 @@ class RDocumentCharSequence implements CharSequence {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public char charAt(int index) {
 		if (index<0 || index>=length()) {
@@ -70,18 +67,12 @@ class RDocumentCharSequence implements CharSequence {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public int length() {
 		return end - start;
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public CharSequence subSequence(int start, int end) {
 		if (start<0) {
@@ -106,9 +97,6 @@ class RDocumentCharSequence implements CharSequence {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String toString() {
 		try {

@@ -1,13 +1,14 @@
-<!-- DTD for RSyntaxTextArea Theme XML. See /themes folder for examples. -->
+<!-- DTD for RSyntaxTextArea Theme XML. See org.fife.ui.rsyntaxtextarea.themes package for examples. -->
 <!ELEMENT RSyntaxTheme (baseFont?, background, caret, selection,
-      currentLineHighlight, marginLine, markAllHighlight, markOccurrencesHighlight,
-      matchedBracket, hyperlinks, secondaryLanguages, gutterBorder, lineNumbers,
+      currentLineHighlight, tabLine?, marginLine, markAllHighlight, markOccurrencesHighlight,
+      matchedBracket, hyperlinks, secondaryLanguages, gutterBackground?, gutterBorder, lineNumbers,
       foldIndicator, iconRowHeader?, tokenStyles)>
 <!ELEMENT background EMPTY>
 <!ELEMENT baseFont EMPTY>
 <!ELEMENT caret EMPTY>
 <!ELEMENT selection EMPTY>
 <!ELEMENT currentLineHighlight EMPTY>
+<!ELEMENT tabLine EMPTY>
 <!ELEMENT marginLine EMPTY>
 <!ELEMENT markAllHighlight EMPTY>
 <!ELEMENT markOccurrencesHighlight EMPTY>
@@ -15,6 +16,7 @@
 <!ELEMENT hyperlinks EMPTY>
 <!ELEMENT secondaryLanguages (language+)>
 <!ELEMENT language EMPTY>
+<!ELEMENT gutterBackground EMPTY>
 <!ELEMENT gutterBorder EMPTY>
 <!ELEMENT lineNumbers EMPTY>
 <!ELEMENT foldIndicator EMPTY>
@@ -39,6 +41,8 @@
 <!ATTLIST currentLineHighlight
       color     CDATA #REQUIRED
       fade      (true|false) "false">
+<!ATTLIST tabLine
+      color     CDATA #REQUIRED>
 <!ATTLIST marginLine
       fg         CDATA #REQUIRED>
 <!ATTLIST markAllHighlight
@@ -56,15 +60,20 @@
 <!ATTLIST language
       index      (1|2|3) #REQUIRED
       bg         CDATA   #REQUIRED>
+<!ATTLIST gutterBackground
+      color      CDATA #REQUIRED>
 <!ATTLIST gutterBorder
       color      CDATA #REQUIRED>
 <!ATTLIST lineNumbers
       fg         CDATA #REQUIRED
+      currentFG  CDATA #IMPLIED
       fontFamily CDATA #IMPLIED
       fontSize   CDATA #IMPLIED>
 <!ATTLIST foldIndicator
-      fg         CDATA #REQUIRED
-      iconBg     CDATA #REQUIRED>
+      fg          CDATA #REQUIRED
+      armedFg     CDATA #IMPLIED
+      iconBg      CDATA #REQUIRED
+      iconArmedBg CDATA #IMPLIED>
 <!ATTLIST iconRowHeader
       activeLineRange CDATA #REQUIRED
       inheritsGutterBG (true|false) "false">

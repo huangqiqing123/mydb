@@ -5,7 +5,7 @@
  * disabled.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -66,7 +66,7 @@ public class SyntaxView extends View implements TabExpander,
 	/**
 	 * Cached values to speed up the painting a tad.
 	 */
-	private int lineHeight = 0;
+	private int lineHeight;
 	private int ascent;
 	private int clipStart;
 	private int clipEnd;
@@ -135,9 +135,9 @@ public class SyntaxView extends View implements TabExpander,
 	 * Repaint the given line range.
 	 *
 	 * @param line0 The starting line number to repaint.  This must
-	 *   be a valid line number in the model.
+	 *        be a valid line number in the model.
 	 * @param line1 The ending line number to repaint.  This must
-	 *   be a valid line number in the model.
+	 *        be a valid line number in the model.
 	 * @param a  The region allocated for the view to render into.
 	 * @param host The component hosting the view (used to call repaint).
 	 */
@@ -297,7 +297,6 @@ public class SyntaxView extends View implements TabExpander,
 	/**
 	 * Calculates the width of the line represented by the given element.
 	 *
-	 * @param line The line for which to get the length.
 	 * @param lineNumber The line number of the specified line in the document.
 	 * @return The width of the line.
 	 */
@@ -314,17 +313,17 @@ public class SyntaxView extends View implements TabExpander,
 	 * Provides a way to determine the next visually represented model
 	 * location that one might place a caret.  Some views may not be visible,
 	 * they might not be in the same order found in the model, or they just
-	 * might not allow access to some of the locations in the model.
+	 * might not allow access to some locations in the model.
 	 *
 	 * @param pos the position to convert &gt;= 0
 	 * @param a the allocated region to render into
 	 * @param direction the direction from the current position that can
-	 *  be thought of as the arrow keys typically found on a keyboard.
-	 *  This may be SwingConstants.WEST, SwingConstants.EAST,
-	 *  SwingConstants.NORTH, or SwingConstants.SOUTH.
+	 *        be thought of as the arrow keys typically found on a keyboard.
+	 *        This may be {@code SwingConstants.WEST}, {@code SwingConstants.EAST},
+	 *        {@code SwingConstants.NORTH}, or {@code SwingConstants.SOUTH}.
 	 * @return the location within the model that best represents the next
-	 *  location visual position.
-	 * @exception BadLocationException
+	 *         location visual position.
+	 * @exception BadLocationException If the offset specified is invalid.
 	 * @exception IllegalArgumentException for an invalid direction
 	 */
 	@Override
@@ -342,7 +341,7 @@ public class SyntaxView extends View implements TabExpander,
 	 *
 	 * @param axis may be either View.X_AXIS or View.Y_AXIS
 	 * @return   the span the view would like to be rendered into &gt;= 0.
-	 *           Typically the view is told to render into the span
+	 *           Typically, the view is told to render into the span
 	 *           that is returned, although there is no guarantee.
 	 *           The parent may choose to resize or break the view.
 	 * @exception IllegalArgumentException for an invalid axis
@@ -362,12 +361,12 @@ public class SyntaxView extends View implements TabExpander,
 				// called, lineHeight isn't initialized.  If we don't do it
 				// here, we get no vertical scrollbar (as lineHeight==0).
 				lineHeight = host!=null ? host.getLineHeight() : lineHeight;
-//				return getElement().getElementCount() * lineHeight;
-                int visibleLineCount = getElement().getElementCount();
-                if (host.isCodeFoldingEnabled()) {
-                    visibleLineCount -= host.getFoldManager().getHiddenLineCount();
-                }
-                return visibleLineCount * (float) lineHeight;
+				// return getElement().getElementCount() * lineHeight;
+				int visibleLineCount = getElement().getElementCount();
+				if (host.isCodeFoldingEnabled()) {
+					visibleLineCount -= host.getFoldManager().getHiddenLineCount();
+				}
+				return visibleLineCount * (float) lineHeight;
 			default:
 				throw new IllegalArgumentException("Invalid axis: " + axis);
 		}
@@ -397,7 +396,7 @@ public class SyntaxView extends View implements TabExpander,
 	private int getTabSize() {
 		Integer i = (Integer)getDocument().getProperty(
 									PlainDocument.tabSizeAttribute);
-		int size = (i != null) ? i.intValue() : 5;
+		int size = (i != null) ? i : 5;
 		return size;
 	}
 
@@ -418,23 +417,20 @@ public class SyntaxView extends View implements TabExpander,
 	public Token getTokenListForPhysicalLineAbove(int offset) {
 		RSyntaxDocument document = (RSyntaxDocument)getDocument();
 		Element map = document.getDefaultRootElement();
-int line = map.getElementIndex(offset);
-FoldManager fm = host.getFoldManager();
-if (fm==null) {
-	line--;
-	if (line>=0) {
-		return document.getTokenListForLine(line);
-	}
-}
-else {
-	line = fm.getVisibleLineAbove(line);
-	if (line>=0) {
-		return document.getTokenListForLine(line);
-	}
-}
-//		int line = map.getElementIndex(offset) - 1;
-//		if (line>=0)
-//			return document.getTokenListForLine(line);
+		int line = map.getElementIndex(offset);
+		FoldManager fm = host.getFoldManager();
+		if (fm==null) {
+			line--;
+			if (line>=0) {
+				return document.getTokenListForLine(line);
+			}
+		}
+		else {
+			line = fm.getVisibleLineAbove(line);
+			if (line>=0) {
+				return document.getTokenListForLine(line);
+			}
+		}
 		return null;
 	}
 
@@ -456,23 +452,23 @@ else {
 		RSyntaxDocument document = (RSyntaxDocument)getDocument();
 		Element map = document.getDefaultRootElement();
 		int lineCount = map.getElementCount();
-int line = map.getElementIndex(offset);
-if (!host.isCodeFoldingEnabled()) {
-	if (line<lineCount-1) {
-		return document.getTokenListForLine(line+1);
-	}
-}
-else {
-	FoldManager fm = host.getFoldManager();
-	line = fm.getVisibleLineBelow(line);
-	if (line>=0 && line<lineCount) {
-		return document.getTokenListForLine(line);
-	}
-}
-//		int line = map.getElementIndex(offset);
-//		int lineCount = map.getElementCount();
-//		if (line<lineCount-1)
-//			return document.getTokenListForLine(line+1);
+		int line = map.getElementIndex(offset);
+		if (!host.isCodeFoldingEnabled()) {
+			if (line<lineCount-1) {
+				return document.getTokenListForLine(line+1);
+			}
+		}
+		else {
+			FoldManager fm = host.getFoldManager();
+			line = fm.getVisibleLineBelow(line);
+			if (line>=0 && line<lineCount) {
+				return document.getTokenListForLine(line);
+			}
+		}
+		//		int line = map.getElementIndex(offset);
+		//		int lineCount = map.getElementCount();
+		//		if (line<lineCount-1)
+		//			return document.getTokenListForLine(line+1);
 		return null;
 	}
 
@@ -526,8 +522,8 @@ else {
 	 * @param pos the position to convert &gt;= 0
 	 * @param a the allocated region to render into
 	 * @return the bounding box of the given position
-	 * @exception BadLocationException  if the given position does not
-	 *   represent a valid location in the associated document
+	 * @throws BadLocationException  if the given position does not
+	 *         represent a valid location in the associated document
 	 * @see View#modelToView
 	 */
 	@Override
@@ -574,21 +570,21 @@ else {
 	 *        character or the next character represented by the offset, in
 	 *        case the position is a boundary of two views; <code>b0</code>
 	 *        will have one of these values:
-	 * <ul>
-	 *    <li> <code>Position.Bias.Forward</code>
-	 *    <li> <code>Position.Bias.Backward</code>
-	 * </ul>
+	 *        <ul>
+	 *           <li> <code>Position.Bias.Forward</code>
+	 *           <li> <code>Position.Bias.Backward</code>
+	 *        </ul>
 	 * @param p1 the position of the last character (&gt;=0)
 	 * @param b1 the bias for the second character position, defined
-	 *		one of the legal values shown above
+	 *        one of the legal values shown above
 	 * @param a the area of the view, which encompasses the requested region
 	 * @return the bounding box which is a union of the region specified
-	 *		by the first and last character positions
-	 * @exception BadLocationException  if the given position does
-	 *   not represent a valid location in the associated document
-	 * @exception IllegalArgumentException if <code>b0</code> or
-	 *		<code>b1</code> are not one of the
-	 *		legal <code>Position.Bias</code> values listed above
+	 *         by the first and last character positions
+	 * @throws BadLocationException  if the given position does
+	 *         not represent a valid location in the associated document
+	 * @throws IllegalArgumentException if <code>b0</code> or
+	 *		   <code>b1</code> are not one of the
+	 *		   legal <code>Position.Bias</code> values listed above
 	 * @see View#viewToModel
 	 */
 	@Override
@@ -649,7 +645,7 @@ else {
 	 *
 	 * @param x the current position &gt;= 0
 	 * @param tabOffset the position within the text stream
-	 *   that the tab occurred at &gt;= 0.
+	 *        that the tab occurred at &gt;= 0.
 	 * @return the tab stop, measured in points &gt;= 0
 	 */
 	@Override
@@ -657,8 +653,8 @@ else {
 		if (tabSize == 0) {
 			return x;
 		}
-		int ntabs = (((int)x) - tabBase) / tabSize;
-		return tabBase + ((ntabs + 1f) * tabSize);
+		int tabCount = (((int)x) - tabBase) / tabSize;
+		return tabBase + ((tabCount + 1f) * tabSize);
 	}
 
 
@@ -734,6 +730,11 @@ else {
 				//System.out.println("Drawing line with selection: " + line);
 				drawLineWithSelection(painter,token,g2d, x,y, selStart, selEnd);
 			}
+
+			// Paint parser highlights (typically squiggle-underlines) after
+			// text and selection
+			h.paintParserHighlights(g2d, startOffset, endOffset,
+				a, host, this);
 
 			if (fold!=null && fold.isCollapsed()) {
 
@@ -837,8 +838,8 @@ else {
 				}
 			}
 			if (removed != null) {
-				for (int i = 0; i < removed.length; i++) {
-					if (removed[i] == longLine) {
+				for (Element element : removed) {
+					if (element == longLine) {
 						longLineWidth = -1; // Must do this!!
 						calculateLongestLine();
 						break;
@@ -867,7 +868,7 @@ else {
 				// longest line.
 				Element e = map.getElement(line);
 				if (e == longLine) {
-					// We must recalculate longest line's width here
+					// We must recalculate the longest line's width here
 					// because it has gotten longer.
 					longLineWidth = getLineWidth(line);
 					preferenceChanged(null, true, false);
@@ -913,7 +914,7 @@ else {
 	 * @param fy the Y coordinate &gt;= 0
 	 * @param a the allocated region to render into
 	 * @return the location within the model that best represents the
-	 *  given point in the view &gt;= 0
+	 *         given point in the view &gt;= 0
 	 */
 	@Override
 	public int viewToModel(float fx, float fy, Shape a, Position.Bias[] bias) {
@@ -946,11 +947,12 @@ else {
 		else {
 
 			Element map = doc.getDefaultRootElement();
+			lineHeight = host.getLineHeight();
 			int lineIndex = Math.abs((y - alloc.y) / lineHeight);//metrics.getHeight() );
-FoldManager fm = host.getFoldManager();
-//System.out.print("--- " + lineIndex);
-lineIndex += fm.getHiddenLineCountAbove(lineIndex, true);
-//System.out.println(" => " + lineIndex);
+			FoldManager fm = host.getFoldManager();
+			//System.out.print("--- " + lineIndex);
+			lineIndex += fm.getHiddenLineCountAbove(lineIndex, true);
+			//System.out.println(" => " + lineIndex);
 			if (lineIndex >= map.getElementCount()) {
 				return host.getLastVisibleOffset();
 			}
@@ -980,11 +982,8 @@ lineIndex += fm.getHiddenLineCountAbove(lineIndex, true);
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
-	public int yForLine(Rectangle alloc, int line) throws BadLocationException {
+	public int yForLine(Rectangle alloc, int line) {
 
 		//Rectangle lineArea = lineToRect(alloc, lineIndex);
 		updateMetrics();
@@ -1007,9 +1006,6 @@ lineIndex += fm.getHiddenLineCountAbove(lineIndex, true);
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public int yForLineContaining(Rectangle alloc, int offs)
 							throws BadLocationException {

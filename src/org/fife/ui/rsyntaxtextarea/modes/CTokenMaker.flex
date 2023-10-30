@@ -6,7 +6,7 @@
  * language.
  * 
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.modes;
 
@@ -20,10 +20,10 @@ import org.fife.ui.rsyntaxtextarea.*;
  * Scanner for the C programming language.
  *
  * This implementation was created using
- * <a href="http://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
+ * <a href="https://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
  * was modified for performance.  Memory allocation needs to be almost
  * completely removed to be competitive with the handwritten lexers (subclasses
- * of <code>AbstractTokenMaker</code>, so this class has been modified so that
+ * of <code>AbstractTokenMaker</code>), so this class has been modified so that
  * Strings are never allocated (via yytext()), and the scanner never has to
  * worry about refilling its buffer (needlessly copying chars around).
  * We can achieve this because RText always scans exactly 1 line of tokens at a
@@ -538,6 +538,27 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
 	{WhiteSpace}+					{ addToken(Token.WHITESPACE); }
 
 	/* Preprocessor directives */
+	/* Special-case <includes> for uniform appearance with "string" includes "*/
+	"#"{WhiteSpace}*"include"{WhiteSpace}*"<"[A-Za-z0-9_./-]+">" {
+                                                     // It's allowed, but discouraged, to have spaces after the '#'
+                                                     int start = zzStartRead;
+                                                     int end = start + 1;
+                                                     while (Character.isWhitespace(zzBuffer[end])) {
+                                                         end++;
+                                                     }
+                                                     end += "include".length() - 1;
+                                                     addToken(start, end, TokenTypes.PREPROCESSOR);
+
+                                                     // Arbitrary space between the #include and the header.
+                                                     // Bounds check isn't necessary since our regex was matched.
+                                                     start = end = end + 1;
+                                                     while (Character.isWhitespace(zzBuffer[end + 1])) {
+                                                         end++;
+                                                     }
+                                                     addToken(start, end, TokenTypes.WHITESPACE);
+
+                                                     addToken(end + 1, zzMarkedPos - 1, TokenTypes.LITERAL_STRING_DOUBLE_QUOTE);
+                                                 }
 	"#"{WhiteSpace}*{PreprocessorWord}	{ addToken(Token.PREPROCESSOR); }
 
 	/* String/Character Literals. */

@@ -4,7 +4,7 @@
  * HtmlFoldParser.java - Fold parser for HTML 5 and PHP.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.folding;
 
@@ -77,7 +77,7 @@ public class HtmlFoldParser implements FoldParser {
 	private static final char[] JSP_COMMENT_END   = "--%>".toCharArray();
 
 	static {
-		FOLDABLE_TAGS = new HashSet<String>();
+		FOLDABLE_TAGS = new HashSet<>();
 		FOLDABLE_TAGS.add("body");
 		FOLDABLE_TAGS.add("canvas");
 		FOLDABLE_TAGS.add("div");
@@ -111,14 +111,11 @@ public class HtmlFoldParser implements FoldParser {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public List<Fold> getFolds(RSyntaxTextArea textArea) {
 
-		List<Fold> folds = new ArrayList<Fold>();
-		Stack<String> tagNameStack = new Stack<String>();
+		List<Fold> folds = new ArrayList<>();
+		Stack<String> tagNameStack = new Stack<>();
 		boolean inSublanguage = false;
 
 		Fold currentFold = null;
@@ -207,7 +204,7 @@ public class HtmlFoldParser implements FoldParser {
 								// another line.
 							}
 
-							// Starting a MLC that ends on a later line...
+							// Starting an MLC that ends on a later line...
 							else if (t.startsWith(MLC_START) && !t.endsWith(MLC_END)) {
 								if (currentFold==null) {
 									currentFold = new Fold(FoldType.COMMENT, textArea, t.getOffset());
@@ -350,7 +347,7 @@ public class HtmlFoldParser implements FoldParser {
 	 */
 	private static boolean isEndOfLastFold(Stack<String> tagNameStack,
 			Token tagNameToken) {
-		if (tagNameToken!=null && !tagNameStack.isEmpty()) {
+		if (tagNameToken!=null && tagNameToken.getLexeme() != null && !tagNameStack.isEmpty()) {
 			return tagNameToken.getLexeme().equalsIgnoreCase(tagNameStack.peek());
 		}
 		return false;
@@ -364,7 +361,7 @@ public class HtmlFoldParser implements FoldParser {
 	 * @return Whether this tag can be a foldable region.
 	 */
 	private static boolean isFoldableTag(Token tagNameToken) {
-		return tagNameToken!=null &&
+		return tagNameToken!=null && tagNameToken.getLexeme() != null &&
 				FOLDABLE_TAGS.contains(tagNameToken.getLexeme().toLowerCase());
 	}
 

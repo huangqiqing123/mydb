@@ -4,7 +4,7 @@
  * CodeTemplate.java - A "template" (macro) for commonly-typed code.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.templates;
 
@@ -70,7 +70,7 @@ public class StaticCodeTemplate extends AbstractCodeTemplate {
 
 
 	/**
-	 * Constructor.  This constructor only exists to support persistance
+	 * Constructor.  This constructor only exists to support persistence
 	 * through serialization.
 	 */
 	public StaticCodeTemplate() {
@@ -149,12 +149,12 @@ public class StaticCodeTemplate extends AbstractCodeTemplate {
 		if (firstNewline==-1) {
 			return text;
 		}
-		int pos = 0;
+		int pos;
 		int old = firstNewline+1;
 		StringBuilder sb = new StringBuilder(text.substring(0, old));
 		sb.append(indent);
 		while ((pos=text.indexOf('\n', old))>-1) {
-			sb.append(text.substring(old, pos+1));
+			sb.append(text, old, pos+1);
 			sb.append(indent);
 			old = pos+1;
 		}
@@ -218,7 +218,7 @@ public class StaticCodeTemplate extends AbstractCodeTemplate {
 											IOException  {
 		in.defaultReadObject();
 		// "Resetting" before and after text to the same values will replace
-		// nulls with empty srings, and set transient "first*Newline" values.
+		// nulls with empty strings, and set transient "first*Newline" values.
 		setBeforeCaretText(this.beforeCaret);
 		setAfterCaretText(this.afterCaret);
 	}

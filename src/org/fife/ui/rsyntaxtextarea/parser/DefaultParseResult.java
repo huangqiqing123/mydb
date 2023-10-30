@@ -4,7 +4,7 @@
  * DefaultParseResult.java - A basic implementation of a ParseResult.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.parser;
 
@@ -32,7 +32,7 @@ public class DefaultParseResult implements ParseResult {
 
 	public DefaultParseResult(Parser parser) {
 		this.parser = parser;
-		notices = new ArrayList<ParserNotice>();
+		notices = new ArrayList<>();
 	}
 
 
@@ -57,54 +57,36 @@ public class DefaultParseResult implements ParseResult {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public Exception getError() {
 		return error;
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public int getFirstLineParsed() {
 		return firstLineParsed;
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public int getLastLineParsed() {
 		return lastLineParsed;
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public List<ParserNotice> getNotices() {
 		return notices;
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public Parser getParser() {
 		return parser;
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public long getParseTime() {
 		return parseTime;

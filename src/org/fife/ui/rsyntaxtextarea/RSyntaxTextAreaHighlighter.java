@@ -4,7 +4,7 @@
  * RSyntaxTextAreaHighlighter.java - Highlighter for RSyntaxTextAreas.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -63,19 +63,19 @@ public class RSyntaxTextAreaHighlighter extends RTextAreaHighlighter {
 	 * Constructor.
 	 */
 	public RSyntaxTextAreaHighlighter() {
-		markedOccurrences = new ArrayList<SyntaxLayeredHighlightInfoImpl>();
-		parserHighlights = new ArrayList<SyntaxLayeredHighlightInfoImpl>(0); // Often unused
+		markedOccurrences = new ArrayList<>();
+		parserHighlights = new ArrayList<>(0); // Often unused
 	}
 
 
 	/**
 	 * Adds a special "marked occurrence" highlight.
 	 *
-	 * @param start
-	 * @param end
-	 * @param p
+	 * @param start The start offset.
+	 * @param end  The end offset, exclusive.
+	 * @param p The painter to use.
 	 * @return A tag to reference the highlight later.
-	 * @throws BadLocationException
+	 * @throws BadLocationException If the specified range is invalid.
 	 * @see #clearMarkOccurrencesHighlights()
 	 */
 	Object addMarkedOccurrenceHighlight(int start, int end,
@@ -101,7 +101,8 @@ public class RSyntaxTextAreaHighlighter extends RTextAreaHighlighter {
 	 *
 	 * @param notice The notice from a {@link Parser}.
 	 * @return A tag with which to reference the highlight.
-	 * @throws BadLocationException
+	 * @throws BadLocationException If the specified notice references
+	 *         invalid offsets.
 	 * @see #clearParserHighlights()
 	 * @see #clearParserHighlights(Parser)
 	 */
@@ -166,15 +167,15 @@ public class RSyntaxTextAreaHighlighter extends RTextAreaHighlighter {
 	void clearParserHighlights() {
 		// Don't remove via an iterator; since our List is an ArrayList, this
 		// implies tons of System.arrayCopy()s
-		for (int i=0; i<parserHighlights.size(); i++) {
-			repaintListHighlight(parserHighlights.get(i));
+		for (SyntaxLayeredHighlightInfoImpl parserHighlight : parserHighlights) {
+			repaintListHighlight(parserHighlight);
 		}
 		parserHighlights.clear();
 	}
 
 
 	/**
-	 * Removes all of the highlights for a specific parser.
+	 * Removes all the highlights for a specific parser.
 	 *
 	 * @param parser The parser.
 	 */
@@ -197,9 +198,6 @@ public class RSyntaxTextAreaHighlighter extends RTextAreaHighlighter {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void deinstall(JTextComponent c) {
 		super.deinstall(c);
@@ -216,7 +214,7 @@ public class RSyntaxTextAreaHighlighter extends RTextAreaHighlighter {
 	 *         contents of this list will be of type {@link DocumentRange}.
 	 */
 	public List<DocumentRange> getMarkedOccurrences() {
-		List<DocumentRange> list = new ArrayList<DocumentRange>(markedOccurrences.size());
+		List<DocumentRange> list = new ArrayList<>(markedOccurrences.size());
 		for (HighlightInfo info : markedOccurrences) {
 			int start = info.getStartOffset();
 			int end = info.getEndOffset() + 1; // HACK
@@ -233,11 +231,39 @@ public class RSyntaxTextAreaHighlighter extends RTextAreaHighlighter {
 	}
 
 
+	/**
+	 * Paints the "marked occurrences" highlights, then any other standard
+	 * layered highlights (e.g. the text selection).
+	 *
+	 * @param g The graphics context.
+	 * @param lineStart The starting offset of the line.
+	 * @param lineEnd The end offset of the line.
+	 * @param viewBounds The bounds of the view.
+	 * @param editor The parent text component.
+	 * @param view The view instance being rendered.
+	 * @see #paintParserHighlights(Graphics, int, int, Shape, JTextComponent, View)
+	 */
 	@Override
 	public void paintLayeredHighlights(Graphics g, int lineStart, int lineEnd,
 						Shape viewBounds, JTextComponent editor, View view) {
 		paintListLayered(g, lineStart,lineEnd, viewBounds, editor, view, markedOccurrences);
 		super.paintLayeredHighlights(g, lineStart, lineEnd, viewBounds, editor, view);
+	}
+
+
+	/**
+	 * Paints any highlights from {@code Parser}s.
+	 *
+	 * @param g The graphics context.
+	 * @param lineStart The starting offset of the line.
+	 * @param lineEnd The end offset of the line.
+	 * @param viewBounds The bounds of the view.
+	 * @param editor The parent text component.
+	 * @param view The view instance being rendered.
+	 * @see #paintLayeredHighlights(Graphics, int, int, Shape, JTextComponent, View)
+	 */
+	public void paintParserHighlights(Graphics g, int lineStart, int lineEnd,
+									   Shape viewBounds, JTextComponent editor, View view) {
 		paintListLayered(g, lineStart,lineEnd, viewBounds, editor, view, parserHighlights);
 	}
 
@@ -261,11 +287,10 @@ public class RSyntaxTextAreaHighlighter extends RTextAreaHighlighter {
 	private static class SyntaxLayeredHighlightInfoImpl extends
 			LayeredHighlightInfoImpl {
 
-		private ParserNotice notice;//Color color; // Used only by Parser highlights.
+		private ParserNotice notice;
 
 		@Override
 		public Color getColor() {
-			//return color;
 			Color color = null;
 			if (notice!=null) {
 				color = notice.getColor();

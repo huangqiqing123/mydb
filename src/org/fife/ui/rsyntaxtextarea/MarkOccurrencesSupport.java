@@ -5,7 +5,7 @@
  * currently selected identifier in a text area.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -47,7 +47,7 @@ class MarkOccurrencesSupport implements CaretListener, ActionListener {
 
 
 	/**
-	 * Constructor.  Creates a listener with a 1 second delay.
+	 * Constructor.  Creates a listener with a 1-second delay.
 	 */
 	MarkOccurrencesSupport() {
 		this(DEFAULT_DELAY_MS);
@@ -114,8 +114,7 @@ class MarkOccurrencesSupport implements CaretListener, ActionListener {
 
 				Token t = occurrenceMarker.getTokenToMark(textArea);
 
-				if (t!=null && occurrenceMarker.isValidType(textArea, t) &&
-						!RSyntaxUtilities.isNonWordChar(t)) {
+				if (t!=null && occurrenceMarker.isValidType(textArea, t)) {
 					clear();
 					RSyntaxTextAreaHighlighter h = (RSyntaxTextAreaHighlighter)
 							textArea.getHighlighter();
@@ -124,12 +123,12 @@ class MarkOccurrencesSupport implements CaretListener, ActionListener {
 					// TODO: Do a textArea.repaint() instead of repainting each
 					// marker as it's added if count is huge
 					occurrencesChanged = true;
+				} else {
+					clear();
 				}
 
 			} finally {
 				doc.readUnlock();
-				//time = System.currentTimeMillis() - time;
-				//System.out.println("MarkOccurrencesSupport took: " + time + " ms");
 			}
 
 		}
@@ -244,8 +243,8 @@ class MarkOccurrencesSupport implements CaretListener, ActionListener {
 
 	/**
 	 * Sets the delay between the last caret position change and when the
-	 * text is scanned for matching identifiers.  A delay is needed to prevent
-	 * repeated scanning while the user is typing.
+	 * text is scanned for matching identifiers.  A delay is recommended to
+	 * prevent repeated scanning while the user is typing.
 	 *
 	 * @param delay The new delay.
 	 * @see #getDelay()
@@ -280,6 +279,7 @@ class MarkOccurrencesSupport implements CaretListener, ActionListener {
 	 */
 	public void uninstall() {
 		if (textArea!=null) {
+			timer.stop();
 			clear();
 			textArea.removeCaretListener(this);
 		}

@@ -1,11 +1,11 @@
 /*
  * 11/10/2004
  *
- * ChangableHighlightPainter.java - A highlight painter whose color you can
+ * ChangeableHighlightPainter.java - A highlight painter whose color you can
  * change.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -76,7 +76,7 @@ public class ChangeableHighlightPainter
 
 
 	/**
-	 * Creates a new <code>ChangableHighlightPainter</code> that paints
+	 * Creates a new <code>ChangeableHighlightPainter</code> that paints
 	 * highlights with the text area's selection color (i.e., behaves exactly
 	 * like
 	 * <code>javax.swing.text.DefaultHighlighter.DefaultHighlightPainter
@@ -376,8 +376,8 @@ public class ChangeableHighlightPainter
 	 * Deserializes a painter.
 	 *
 	 * @param s The stream to read from.
-	 * @throws ClassNotFoundException
-	 * @throws IOException
+	 * @throws ClassNotFoundException If something bad happens.
+	 * @throws IOException If an IO error occurs.
 	 */
 	private void readObject(ObjectInputStream s)
 						throws ClassNotFoundException, IOException {
@@ -403,9 +403,8 @@ public class ChangeableHighlightPainter
 	 * @see #getAlpha
 	 */
 	public void setAlpha(float alpha) {
-		this.alpha = alpha;
 		this.alpha = Math.max(alpha, 0.0f);
-		this.alpha = Math.min(1.0f, alpha);
+		this.alpha = Math.min(1.0f, this.alpha);
 		alphaComposite = null; // So it is recreated with new alpha.
 	}
 

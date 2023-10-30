@@ -4,7 +4,7 @@
  * SyntaxConstants.java - Constants used by RSyntaxTextArea and friends.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -20,7 +20,7 @@ package org.fife.ui.rsyntaxtextarea;
  * overwritten) on a per-text area basis.  What languages can be rendered is
  * actually managed by the {@link TokenMakerFactory} installed on the text
  * area's {@link RSyntaxDocument}.  By default, all
- * <code>RSyntaxDocumenet</code>s have a factory installed capable of handling
+ * <code>RSyntaxDocument</code>s have a factory installed capable of handling
  * all of these languages.
  *
  * @author Robert Futrell
@@ -44,6 +44,12 @@ public interface SyntaxConstants {
 	 * Style for highlighting x86 assembler.
 	 */
 	String SYNTAX_STYLE_ASSEMBLER_X86	= "text/asm";
+
+
+	/**
+	 * Style for highlighting x86 assembler.
+	 */
+	String SYNTAX_STYLE_ASSEMBLER_6502	= "text/asm6502";
 
 
 	/**
@@ -83,6 +89,12 @@ public interface SyntaxConstants {
 
 
 	/**
+	 * Style for highlighting CSV.
+	 */
+	String SYNTAX_STYLE_CSV			= "text/csv";
+
+
+	/**
 	 * Syntax style for highlighting D.
 	 */
 	String SYNTAX_STYLE_D			= "text/d";
@@ -119,9 +131,21 @@ public interface SyntaxConstants {
 
 
 	/**
+	 * Style for highlighting go.
+	 */
+	String SYNTAX_STYLE_GO				= "text/golang";
+
+
+	/**
 	 * Style for highlighting Groovy.
 	 */
 	String SYNTAX_STYLE_GROOVY			= "text/groovy";
+
+
+	/**
+	 * Style for highlighting Handlebars files.
+	 */
+	String SYNTAX_STYLE_HANDLEBARS		= "text/handlebars";
 
 
 	/**
@@ -140,6 +164,12 @@ public interface SyntaxConstants {
 	 * Style for highlighting HTML.
 	 */
 	String SYNTAX_STYLE_HTML			= "text/html";
+
+
+	/**
+	 * Style for highlighting INI files.
+	 */
+	String SYNTAX_STYLE_INI			= "text/ini";
 
 
 	/**
@@ -174,6 +204,12 @@ public interface SyntaxConstants {
 
 
 	/**
+	 * Style for highlighting Kotlin.
+	 */
+	String SYNTAX_STYLE_KOTLIN		= "text/kotlin";
+
+
+	/**
 	 * Style for highlighting LaTeX.
 	 */
 	String SYNTAX_STYLE_LATEX		= "text/latex";
@@ -204,6 +240,12 @@ public interface SyntaxConstants {
 
 
 	/**
+	 * Style for highlighting markdown.
+	 */
+	String SYNTAX_STYLE_MARKDOWN		= "text/markdown";
+
+
+	/**
 	 * Style for highlighting MXML.
 	 */
 	String SYNTAX_STYLE_MXML			= "text/mxml";
@@ -225,6 +267,12 @@ public interface SyntaxConstants {
 	 * Style for highlighting PHP.
 	 */
 	String SYNTAX_STYLE_PHP				= "text/php";
+
+
+	/**
+	 * Style for highlighbting proto files.
+	 */
+	String SYNTAX_STYLE_PROTO			= "text/proto";
 
 
 	/**
@@ -297,6 +345,12 @@ public interface SyntaxConstants {
 	 * Style for highlighting XML.
 	 */
 	String SYNTAX_STYLE_XML			= "text/xml";
+
+
+	/**
+	 * Syntax style for highlighting YAML.
+	 */
+	String SYNTAX_STYLE_YAML		= "text/yaml";
 
 
 }

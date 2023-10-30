@@ -4,7 +4,7 @@
  * MakefileTokenMaker.java - Scanner for makefiles.
  * 
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.modes;
 
@@ -19,10 +19,10 @@ import org.fife.ui.rsyntaxtextarea.*;
  * Scanner for makefiles.<p>
  *
  * This implementation was created using
- * <a href="http://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
+ * <a href="https://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
  * was modified for performance.  Memory allocation needs to be almost
  * completely removed to be competitive with the handwritten lexers (subclasses
- * of <code>AbstractTokenMaker</code>, so this class has been modified so that
+ * of <code>AbstractTokenMaker</code>), so this class has been modified so that
  * Strings are never allocated (via yytext()), and the scanner never has to
  * worry about refilling its buffer (needlessly copying chars around).
  * We can achieve this because RText always scans exactly 1 line of tokens at a
@@ -210,7 +210,7 @@ import org.fife.ui.rsyntaxtextarea.*;
 
 Letter					= [A-Za-z]
 Digit					= [0-9]
-IdentifierStart			= ({Letter}|[_\.])
+IdentifierStart			= ({Letter}|[_\-\.])
 IdentifierPart			= ({IdentifierStart}|{Digit})
 Identifier				= ({IdentifierStart}{IdentifierPart}*)
 Label					= ({Identifier}":")
@@ -287,8 +287,8 @@ Operator				= ([\:\+\?]?"=")
 	{BacktickLiteral}				{ addToken(Token.ERROR_STRING_DOUBLE); addNullToken(); return firstToken; }
 
 	/* Variables. */
-	{CurlyVarStart}					{ if (varDepths==null) { varDepths = new Stack<Boolean>(); } else { varDepths.clear(); } varDepths.push(Boolean.TRUE); start = zzMarkedPos-2; yybegin(VAR); }
-	{ParenVarStart}					{ if (varDepths==null) { varDepths = new Stack<Boolean>(); } else { varDepths.clear(); } varDepths.push(Boolean.FALSE); start = zzMarkedPos-2; yybegin(VAR); }
+	{CurlyVarStart}					{ if (varDepths==null) { varDepths = new Stack<>(); } else { varDepths.clear(); } varDepths.push(Boolean.TRUE); start = zzMarkedPos-2; yybegin(VAR); }
+	{ParenVarStart}					{ if (varDepths==null) { varDepths = new Stack<>(); } else { varDepths.clear(); } varDepths.push(Boolean.FALSE); start = zzMarkedPos-2; yybegin(VAR); }
 
 	/* Comment literals. */
 	{LineCommentBegin}.*			{ addToken(Token.COMMENT_EOL); addNullToken(); return firstToken; }
@@ -310,7 +310,7 @@ Operator				= ([\:\+\?]?"=")
 <VAR> {
 	[^\}\)\$\#]+		{}
 	"}"					{
-							if (!varDepths.empty() && varDepths.peek()==Boolean.TRUE) {
+							if (!varDepths.empty() && Boolean.TRUE.equals(varDepths.peek())) {
 								varDepths.pop();
 								if (varDepths.empty()) {
 									addToken(start,zzStartRead, Token.VARIABLE); yybegin(YYINITIAL);
@@ -318,7 +318,7 @@ Operator				= ([\:\+\?]?"=")
 							}
 						}
 	")"					{
-							if (!varDepths.empty() && varDepths.peek()==Boolean.FALSE) {
+							if (!varDepths.empty() && Boolean.FALSE.equals(varDepths.peek())) {
 								varDepths.pop();
 								if (varDepths.empty()) {
 									addToken(start,zzStartRead, Token.VARIABLE); yybegin(YYINITIAL);

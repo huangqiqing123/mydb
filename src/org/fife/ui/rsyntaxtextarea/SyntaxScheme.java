@@ -5,7 +5,7 @@
  * to color tokens.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -37,7 +37,7 @@ import org.xml.sax.helpers.XMLReaderFactory;
  * @version 1.0
  * @see Theme
  */
-@SuppressWarnings({ "checkstyle:magicnumber" })
+@SuppressWarnings("checkstyle:magicnumber")
 public class SyntaxScheme implements Cloneable, TokenTypes {
 
 	private Style[] styles;
@@ -92,8 +92,8 @@ public class SyntaxScheme implements Cloneable, TokenTypes {
 	 * Changes the "base font" for this syntax scheme.  This is called by
 	 * <code>RSyntaxTextArea</code> when its font changes via
 	 * <code>setFont()</code>.  This looks for tokens that use a derivative of
-	 * the text area's old font (but bolded and/or italicized) and make them
-	 * use the new font with those stylings instead.  This is desirable because
+	 * the text area's old font (but bolded and/or italicized) and makes them
+	 * use the new font with those styles instead.  This is desirable because
 	 * most programmers prefer a single font to be used in their text editor,
 	 * but might want bold (say for keywords) or italics.
 	 *
@@ -101,14 +101,13 @@ public class SyntaxScheme implements Cloneable, TokenTypes {
 	 * @param font The new font of the text area.
 	 */
 	void changeBaseFont(Font old, Font font) {
-		for (int i=0; i<styles.length; i++) {
-			Style style = styles[i];
-			if (style!=null && style.font!=null) {
+		for (Style style : styles) {
+			if (style != null && style.font != null) {
 				if (style.font.getFamily().equals(old.getFamily()) &&
-						style.font.getSize()==old.getSize()) {
+					style.font.getSize() == old.getSize()) {
 					int s = style.font.getStyle(); // Keep bold or italic
 					StyleContext sc = StyleContext.getDefaultStyleContext();
-					style.font= sc.getFont(font.getFamily(), s, font.getSize());
+					style.font = sc.getFont(font.getFamily(), s, font.getSize());
 				}
 			}
 		}
@@ -122,7 +121,7 @@ public class SyntaxScheme implements Cloneable, TokenTypes {
 	 */
 	@Override
 	public Object clone() {
-		SyntaxScheme shcs = null;
+		SyntaxScheme shcs;
 		try {
 			shcs = (SyntaxScheme)super.clone();
 		} catch (CloneNotSupportedException cnse) { // Never happens
@@ -239,10 +238,9 @@ public class SyntaxScheme implements Cloneable, TokenTypes {
 		// Keep me fast.  Iterating over *all* syntax schemes contained is
 		// probably much slower than a "bad" hash code here.
 		int hashCode = 0;
-		int count = styles.length;
-		for (int i=0; i<count; i++) {
-			if (styles[i]!=null) {
-				hashCode ^= styles[i].hashCode();
+		for (Style style : styles) {
+			if (style != null) {
+				hashCode ^= style.hashCode();
 				break;
 			}
 		}
@@ -345,7 +343,8 @@ public class SyntaxScheme implements Cloneable, TokenTypes {
 											integer);
 					}
 
-					Color fg = null; String temp = tokens[pos+1];
+					Color fg = null;
+					String temp = tokens[pos+1];
 					if (!"-".equals(temp)) { // "-" => keep fg as null
 						fg = stringToColor(temp);
 					}
@@ -387,11 +386,10 @@ public class SyntaxScheme implements Cloneable, TokenTypes {
 
 	void refreshFontMetrics(Graphics2D g2d) {
 		// It is assumed that any rendering hints are already applied to g2d.
-		for (int i=0; i<styles.length; i++) {
-			Style s = styles[i];
-			if (s!=null) {
-				s.fontMetrics = s.font==null ? null :
-								g2d.getFontMetrics(s.font);
+		for (Style s : styles) {
+			if (s != null) {
+				s.fontMetrics = s.font == null ? null :
+					g2d.getFontMetrics(s.font);
 			}
 		}
 	}
@@ -571,7 +569,7 @@ public class SyntaxScheme implements Cloneable, TokenTypes {
 	 *          <li><i>fg</i> and <i>bg</i> are the foreground and background
 	 *              colors for the scheme, and may be null (represented by
 	 *              <code>-</code>).
-	 *          <li><code>uline</code> is whether or not the font should be
+	 *          <li><code>uline</code> is whether the font should be
 	 *              underlined, and is either <code>t</code> or <code>f</code>.
 	 *          <li><code>style</code> is the <code>family,style,size</code>
 	 *              triplet described above.
@@ -633,7 +631,7 @@ public class SyntaxScheme implements Cloneable, TokenTypes {
 
 		public static SyntaxScheme load(Font baseFont, InputStream in)
 				throws IOException {
-			SyntaxSchemeLoader parser = null;
+			SyntaxSchemeLoader parser;
 			try {
 				XMLReader reader = XMLReaderFactory.createXMLReader();
 				parser = new SyntaxSchemeLoader(baseFont);
@@ -655,25 +653,23 @@ public class SyntaxScheme implements Cloneable, TokenTypes {
 			if ("style".equals(qName)) {
 
 				String type = attrs.getValue("token");
-				Field field = null;
+
+				Field field;
 				try {
-					field = Token.class.getField(type);
+					field = SyntaxScheme.class.getField(type);
 				} catch (RuntimeException re) {
 					throw re; // FindBugs
 				} catch (Exception e) {
-					System.err.println("Invalid token type: " + type);
+					System.err.println("Error fetching 'getType' method for Token class");
 					return;
 				}
 
 				if (field.getType()==int.class) {
 
-					int index = 0;
+					int index;
 					try {
 						index = field.getInt(scheme);
-					} catch (IllegalArgumentException e) {
-						e.printStackTrace();
-						return;
-					} catch (IllegalAccessException e) {
+					} catch (IllegalArgumentException | IllegalAccessException e) {
 						e.printStackTrace();
 						return;
 					}

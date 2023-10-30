@@ -4,7 +4,7 @@
  * FoldManager.java - Manages code folding in an RSyntaxTextArea instance.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.folding;
 
@@ -154,13 +154,27 @@ public interface FoldManager {
 	int getLastVisibleLine();
 
 
+	/**
+	 * Returns the visible line above a specified line.
+	 *
+	 * @param line The line to check.
+	 * @return The visible line above the specified line.
+	 * @see #getVisibleLineBelow(int)
+	 */
 	int getVisibleLineAbove(int line);
 
 
+	/**
+	 * Returns the visible line below a specified line.
+	 *
+	 * @param line The line to check.
+	 * @return The visible line below the specified line.
+	 * @see #getVisibleLineAbove(int)
+	 */
 	int getVisibleLineBelow(int line);
 
 
-    /**
+	/**
 	 * Returns whether code folding is enabled.  Note that only certain
 	 * languages support code folding; those that do not will ignore this
 	 * property.
@@ -174,7 +188,7 @@ public interface FoldManager {
 	/**
 	 * Returns <code>true</code> if and only if code folding is enabled for
 	 * this text area, AND folding is supported for the language it is editing.
-	 * Whether or not folding is supported for a language depends on whether
+	 * Whether folding is supported for a language depends on whether
 	 * a fold parser is registered for that language with the
 	 * <code>FoldParserManager</code>.
 	 *

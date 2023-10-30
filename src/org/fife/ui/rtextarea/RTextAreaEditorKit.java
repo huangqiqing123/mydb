@@ -4,7 +4,7 @@
  * RTextAreaEditorKit.java - The editor kit used by RTextArea.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -52,7 +52,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxUtilities;
 // FIXME:  Replace Utilities calls with custom versions (in RSyntaxUtilities) to
 // cut down on all of the modelToViews, as each call causes
 // a getTokenList => expensive!
-@SuppressWarnings({ "checkstyle:constantname" })
+@SuppressWarnings("checkstyle:constantname")
 public class RTextAreaEditorKit extends DefaultEditorKit {
 
 	/**
@@ -129,7 +129,7 @@ public class RTextAreaEditorKit extends DefaultEditorKit {
 	public static final String rtaNextOccurrenceAction		= "RTA.NextOccurrenceAction";
 
 	/**
-     * Action to select the previous occurrence of the selected text.
+	 * Action to select the previous occurrence of the selected text.
 	 */
 	public static final String rtaPrevOccurrenceAction		= "RTA.PrevOccurrenceAction";
 
@@ -270,8 +270,8 @@ public class RTextAreaEditorKit extends DefaultEditorKit {
 		new NextVisualPositionAction(downAction, false, SwingConstants.SOUTH),
 		new NextVisualPositionAction(selectionUpAction, true, SwingConstants.NORTH),
 		new NextVisualPositionAction(selectionDownAction, true, SwingConstants.SOUTH),
-        new NextOccurrenceAction(rtaNextOccurrenceAction),
-        new PreviousOccurrenceAction(rtaPrevOccurrenceAction),
+		new NextOccurrenceAction(rtaNextOccurrenceAction),
+		new PreviousOccurrenceAction(rtaPrevOccurrenceAction),
 		new NextWordAction(nextWordAction, false),
 		new NextWordAction(selectionNextWordAction, true),
 		new PageAction(rtaSelectionPageLeftAction, true, true),
@@ -356,10 +356,10 @@ public class RTextAreaEditorKit extends DefaultEditorKit {
 	 * @param in  The stream to read from
 	 * @param doc The destination for the insertion.
 	 * @param pos The location in the document to place the
-	 *   content &gt;= 0.
-	 * @exception IOException on any I/O error
-	 * @exception BadLocationException if pos represents an invalid
-	 *   location within the document.
+	 *        content &gt;= 0.
+	 * @throws IOException on any I/O error
+	 * @throws BadLocationException if pos represents an invalid
+	 *         location within the document.
 	*/
 	@Override
 	public void read(Reader in, Document doc, int pos)
@@ -533,7 +533,7 @@ public class RTextAreaEditorKit extends DefaultEditorKit {
 		@Override
 		public void actionPerformedImpl(ActionEvent e, RTextArea textArea) {
 
-			int newPos = 0;
+			int newPos;
 
 			try {
 
@@ -546,7 +546,7 @@ public class RTextAreaEditorKit extends DefaultEditorKit {
 					int begOffs = Utilities.getRowStart(textArea, offs);
 					// TODO: line wrap doesn't currently toggle between
 					// the first non-whitespace char and the actual start
-					// of the line line the no-line-wrap version does.
+					// of the line like the no-line-wrap version does.
 					newPos = begOffs;
 				}
 
@@ -846,8 +846,11 @@ public class RTextAreaEditorKit extends DefaultEditorKit {
 		private Action delegate;
 
 		public DefaultKeyTypedAction() {
-			super(DefaultEditorKit.defaultKeyTypedAction, null, null, null,
-					null);
+			this(DefaultEditorKit.defaultKeyTypedAction);
+		}
+
+		protected DefaultKeyTypedAction(String name) {
+			super(name, null, null, null, null);
 			delegate = new DefaultEditorKit.DefaultKeyTypedAction();
 		}
 
@@ -864,7 +867,7 @@ public class RTextAreaEditorKit extends DefaultEditorKit {
 
 		@Override
 		public final String getMacroID() {
-			return DefaultEditorKit.defaultKeyTypedAction;
+			return getName();
 		}
 
 	}
@@ -972,9 +975,9 @@ public class RTextAreaEditorKit extends DefaultEditorKit {
 			if (beep) {
 				UIManager.getLookAndFeel().provideErrorFeedback(textArea);
 			}
-            if (textArea != null) {
-                textArea.requestFocusInWindow();
-            }
+			if (textArea != null) {
+				textArea.requestFocusInWindow();
+			}
 
 		}
 
@@ -1098,6 +1101,11 @@ public class RTextAreaEditorKit extends DefaultEditorKit {
 		@Override
 		public void actionPerformedImpl(ActionEvent e, RTextArea textArea) {
 
+			if (!textArea.isEditable() || !textArea.isEnabled()) {
+				UIManager.getLookAndFeel().provideErrorFeedback(textArea);
+				return;
+			}
+
 			try {
 
 				// We use the elements instead of calling getLineOfOffset(),
@@ -1157,6 +1165,7 @@ public class RTextAreaEditorKit extends DefaultEditorKit {
 
 				int dot = textArea.getCaretPosition();
 				if (dot == 0) {
+					UIManager.getLookAndFeel().provideErrorFeedback(textArea);
 					return;
 				}
 
@@ -1177,7 +1186,7 @@ searchOffs = Math.max(lastWordStart - 1, 0);
 				}
 
 				while (searchOffs > 0) {
-					int wordStart = 0;
+					int wordStart;
 					try {
 						wordStart = getPreviousWord(textArea, searchOffs);
 					} catch (BadLocationException ble) {
@@ -1187,8 +1196,6 @@ searchOffs = Math.max(lastWordStart - 1, 0);
 						wordStart = BreakIterator.DONE;
 					}
 					if (wordStart==BreakIterator.DONE) {
-						UIManager.getLookAndFeel().provideErrorFeedback(
-								textArea);
 						break;
 					}
 					int end = getWordEnd(textArea, wordStart);
@@ -1197,7 +1204,7 @@ searchOffs = Math.max(lastWordStart - 1, 0);
 					if (word.startsWith(lastPrefix)) {
 						textArea.replaceRange(word, lastWordStart, dot);
 						lastDot = textArea.getCaretPosition(); // Maybe shifted
-						break;
+						return;
 					}
 				}
 
@@ -1205,6 +1212,9 @@ searchOffs = Math.max(lastWordStart - 1, 0);
 				ble.printStackTrace();
 			}
 
+			// if we get here, no natch was found
+			UIManager.getLookAndFeel().provideErrorFeedback(
+				textArea);
 		}
 
 		@Override
@@ -1295,7 +1305,7 @@ searchOffs = Math.max(lastWordStart - 1, 0);
 		@Override
 		public void actionPerformedImpl(ActionEvent e, RTextArea textArea) {
 			int offs = textArea.getCaretPosition();
-			int endOffs = 0;
+			int endOffs;
 			try {
 				if (textArea.getLineWrap()) {
 					// Must check per character, since one logical line may be
@@ -1655,20 +1665,36 @@ searchOffs = Math.max(lastWordStart - 1, 0);
 
 		@Override
 		public void actionPerformedImpl(ActionEvent e, RTextArea textArea) {
+
 			if (!textArea.isEditable() || !textArea.isEnabled()) {
 				UIManager.getLookAndFeel().provideErrorFeedback(textArea);
 				return;
 			}
+
 			try {
-				int caret = textArea.getCaretPosition();
+
+				int dot = textArea.getCaretPosition();
+				int mark = textArea.getCaret().getMark();
 				Document doc = textArea.getDocument();
 				Element root = doc.getDefaultRootElement();
-				int line = root.getElementIndex(caret);
-				if (moveAmt==-1 && line>0) {
-					moveLineUp(textArea, line);
+				int startLine = root.getElementIndex(Math.min(dot, mark));
+				int endLine = root.getElementIndex(Math.max(dot, mark));
+
+				// If we're moving more than one line, only move the last line
+				// if they've selected more than one char in it.
+				int moveCount = endLine - startLine + 1;
+				if (moveCount > 1) {
+					Element elem = root.getElement(endLine);
+					if (dot == elem.getStartOffset() || mark == elem.getStartOffset()) {
+						moveCount--;
+					}
 				}
-				else if (moveAmt==1 && line<root.getElementCount()-1) {
-					moveLineDown(textArea, line);
+
+				if (moveAmt==-1 && startLine>0) {
+					moveLineUp(textArea, startLine, moveCount);
+				}
+				else if (moveAmt==1 && endLine < root.getElementCount()-1) {
+					moveLineDown(textArea, startLine, moveCount);
 				}
 				else {
 					UIManager.getLookAndFeel().provideErrorFeedback(textArea);
@@ -1687,50 +1713,96 @@ searchOffs = Math.max(lastWordStart - 1, 0);
 			return getName();
 		}
 
-		private void moveLineDown(RTextArea textArea, int line)
+		private void moveLineDown(RTextArea textArea, int line, int lineCount)
 									throws BadLocationException {
+
+			// // If we'd be moving lines past the end of the document, stop.
+			// // We could perhaps just decide to move the lines to the end of the
+			// // file, but this just keeps things simple.
+			// if (textArea.getLineCount() - line < lineCount) {
+			// 	UIManager.getLookAndFeel().provideErrorFeedback(textArea);
+			// 	return;
+			// }
+
 			Document doc = textArea.getDocument();
 			Element root = doc.getDefaultRootElement();
 			Element elem = root.getElement(line);
 			int start = elem.getStartOffset();
+
+			int endLine = line + lineCount - 1;
+			elem = root.getElement(endLine);
 			int end = elem.getEndOffset();
-			int caret = textArea.getCaretPosition();
-			int caretOffset = caret - start;
-			String text = doc.getText(start, end-start);
-			doc.remove(start, end-start);
-			Element elem2 = root.getElement(line); // not "line+1" - removed.
-			//int start2 = elem2.getStartOffset();
-			int end2 = elem2.getEndOffset();
-			doc.insertString(end2, text, null);
-			elem = root.getElement(line+1);
-			textArea.setCaretPosition(elem.getStartOffset()+caretOffset);
+
+			textArea.beginAtomicEdit();
+			try {
+
+				String text = doc.getText(start, end - start);
+				doc.remove(start, end - start);
+
+				int insertLine = Math.min(line + 1, textArea.getLineCount());
+				boolean newlineInserted = false;
+				if (insertLine == textArea.getLineCount()) {
+					textArea.append("\n");
+					newlineInserted = true;
+				}
+
+				int insertOffs = textArea.getLineStartOffset(insertLine);
+				doc.insertString(insertOffs, text, null);
+				textArea.setSelectionStart(insertOffs);
+				textArea.setSelectionEnd(insertOffs + text.length() - 1);
+
+				if (newlineInserted) {
+					doc.remove(doc.getLength() - 1, 1);
+				}
+
+			} finally {
+				textArea.endAtomicEdit();
+			}
+
 		}
 
-		private void moveLineUp(RTextArea textArea, int line)
+		private void moveLineUp(RTextArea textArea, int line, int moveCount)
 									throws BadLocationException {
+
 			Document doc = textArea.getDocument();
 			Element root = doc.getDefaultRootElement();
-			int lineCount = root.getElementCount();
 			Element elem = root.getElement(line);
 			int start = elem.getStartOffset();
-			int end = line==lineCount-1 ? elem.getEndOffset()-1 :
-									elem.getEndOffset();
-			int caret = textArea.getCaretPosition();
-			int caretOffset = caret - start;
-			String text = doc.getText(start, end-start);
-			if (line==lineCount-1) {
-				start--; // Remove previous line's ending \n
+
+			int endLine = line + moveCount - 1;
+			elem = root.getElement(endLine);
+			int end = elem.getEndOffset();
+			int lineCount = textArea.getLineCount();
+			boolean movingLastLine = false;
+			if (endLine == lineCount - 1) {
+				movingLastLine = true;
+				end--;
 			}
-			doc.remove(start, end-start);
-			Element elem2 = root.getElement(line-1);
-			int start2 = elem2.getStartOffset();
-			//int end2 = elem2.getEndOffset();
-			if (line==lineCount-1) {
-				text += '\n';
+
+			int insertLine = Math.max(line - 1, 0);
+
+			textArea.beginAtomicEdit();
+			try {
+
+				String text = doc.getText(start, end - start);
+				if (movingLastLine) {
+					text += '\n';
+				}
+				doc.remove(start, end - start);
+
+				int insertOffs = textArea.getLineStartOffset(insertLine);
+				doc.insertString(insertOffs, text, null);
+				textArea.setSelectionStart(insertOffs);
+				int selEnd = insertOffs + text.length() - 1;
+				textArea.setSelectionEnd(selEnd);
+				if (movingLastLine) { // Remove the artificially-added newline
+					doc.remove(doc.getLength() - 1, 1);
+				}
+
+			} finally {
+				textArea.endAtomicEdit();
 			}
-			doc.insertString(start2, text, null);
-			//caretOffset = Math.min(start2+caretOffset, end2-1);
-			textArea.setCaretPosition(start2+caretOffset);
+
 		}
 
 	}
@@ -1797,11 +1869,10 @@ searchOffs = Math.max(lastWordStart - 1, 0);
 					int curLine = textArea.getCaretLineNumber();
 
 					if (forward) {
-						for (int i=0; i<bookmarks.length; i++) {
-							GutterIconInfo bookmark = bookmarks[i];
+						for (GutterIconInfo bookmark : bookmarks) {
 							int offs = bookmark.getMarkedOffset();
 							int line = textArea.getLineOfOffset(offs);
-							if (line>curLine) {
+							if (line > curLine) {
 								moveTo = bookmark;
 								break;
 							}
@@ -1985,7 +2056,7 @@ searchOffs = Math.max(lastWordStart - 1, 0);
 			return getName();
 		}
 
-    }
+	}
 
 
 	/**
@@ -2012,7 +2083,7 @@ searchOffs = Math.max(lastWordStart - 1, 0);
 				if(offs >= curPara.getEndOffset() &&
 							oldOffs != curPara.getEndOffset() - 1) {
 					// we should first move to the end of current paragraph
-					// http://bugs.sun.com/view_bug.do?bug_id=4278839
+					// https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4278839
 					offs = curPara.getEndOffset() - 1;
 				}
 			} catch (BadLocationException ble) {
@@ -2211,10 +2282,10 @@ searchOffs = Math.max(lastWordStart - 1, 0);
 	}
 
 
-    /**
-     * Positions the caret at the beginning of the previous word.
-     */
-    public static class PreviousWordAction extends RecordableTextAction {
+	/**
+	 * Positions the caret at the beginning of the previous word.
+	 */
+	public static class PreviousWordAction extends RecordableTextAction {
 
  		private boolean select;
 
@@ -2379,18 +2450,18 @@ searchOffs = Math.max(lastWordStart - 1, 0);
 	 */
 	public static class SelectLineAction extends RecordableTextAction {
 
- 		private Action start;
 		private Action end;
 
 		public SelectLineAction() {
 			super(selectLineAction);
-			start = new BeginLineAction("pigdog", false);
 			end = new EndLineAction("pigdog", true);
 		}
 
 		@Override
 		public void actionPerformedImpl(ActionEvent e, RTextArea textArea) {
-			start.actionPerformed(e);
+			// We don't use BeginLineAction since we don't want to skip leading
+			// whitespace when calling this action.
+			moveDotToStartOfLine(textArea);
 			end.actionPerformed(e);
 		}
 
@@ -2399,6 +2470,14 @@ searchOffs = Math.max(lastWordStart - 1, 0);
 			return DefaultEditorKit.selectLineAction;
 		}
 
+		private void moveDotToStartOfLine(JTextComponent tc) {
+			int offs = tc.getCaretPosition();
+			try {
+				tc.setCaretPosition(Utilities.getRowStart(tc, offs));
+			} catch (BadLocationException ble) {
+				UIManager.getLookAndFeel().provideErrorFeedback(tc);
+			}
+		}
 	}
 
 

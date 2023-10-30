@@ -2,7 +2,7 @@
  * 10/08/2011
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.folding;
 
@@ -70,7 +70,7 @@ public class DefaultFoldManager implements FoldManager {
 		textArea.getDocument().addDocumentListener(l);
 		textArea.addPropertyChangeListener(RSyntaxTextArea.SYNTAX_STYLE_PROPERTY, l);
 		textArea.addPropertyChangeListener("document", l);
-		folds = new ArrayList<Fold>();
+		folds = new ArrayList<>();
 		updateFoldParser();
 	}
 
@@ -342,32 +342,6 @@ private Fold getFoldForLineImpl(Fold parent, List<Fold> folds, int line) {
 		return line==lineCount ? -1 : line;
 
 	}
-
-
-//	private static int binaryFindFoldContainingLine(int line) {
-//
-//List allFolds;
-//
-//		int low = 0;
-//		int high = allFolds.size() - 1;
-//
-//		while (low <= high) {
-//			int mid = (low + high) >> 1;
-//			Fold midVal = (Fold)allFolds.get(mid);
-//			if (midVal.containsLine(line)) {
-//				return mid;
-//			}
-//			if (line<=midVal.getStartLine()) {
-//				high = mid - 1;
-//			}
-//			else { // line > midVal.getEndLine()
-//				low = mid + 1;
-//			}
-//		}
-//
-//		return -(low + 1); // key not found
-//
-//	}
 
 
 	@Override

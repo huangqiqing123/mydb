@@ -4,7 +4,7 @@
  * ClipboardHistory.java - A history of text added to the clipboard.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -19,8 +19,8 @@ import java.util.List;
  *
  * Note that this class does not listen for all events on the system clipboard,
  * because that functionality is pretty fragile.  See
- * <a href="http://stackoverflow.com/questions/5484927/listen-to-clipboard-changes-check-ownership">
- * http://stackoverflow.com/questions/5484927/listen-to-clipboard-changes-check-ownership</a>
+ * <a href="https://stackoverflow.com/questions/5484927/listen-to-clipboard-changes-check-ownership">
+ * https://stackoverflow.com/questions/5484927/listen-to-clipboard-changes-check-ownership</a>
  * for more information.
  *
  * @author Robert Futrell
@@ -37,7 +37,7 @@ public final class ClipboardHistory {
 
 
 	private ClipboardHistory() {
-		history = new ArrayList<String>();
+		history = new ArrayList<>();
 		maxSize = DEFAULT_MAX_SIZE;
 	}
 
@@ -88,7 +88,7 @@ public final class ClipboardHistory {
 	 * @return The clipboard history.
 	 */
 	public List<String> getHistory() {
-		List<String> copy = new ArrayList<String>(this.history);
+		List<String> copy = new ArrayList<>(this.history);
 		Collections.reverse(copy);
 		return copy;
 	}

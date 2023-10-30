@@ -5,7 +5,7 @@
  * discerning which particular encoding is being used via the BOM.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.io;
 
@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PushbackInputStream;
 import java.io.Reader;
+import java.nio.charset.Charset;
 
 
 /**
@@ -41,13 +42,13 @@ import java.io.Reader;
  * @author Robert Futrell
  * @version 0.9
  */
-@SuppressWarnings({ "checkstyle:magicnumber" })
+@SuppressWarnings("checkstyle:magicnumber")
 public class UnicodeReader extends Reader {
 
 	/**
 	 * The input stream from which we're really reading.
 	 */
-	private InputStreamReader internalIn = null;
+	private InputStreamReader internalIn;
 
 	/**
 	 * The encoding being used.  We keep our own instead of using the string
@@ -117,6 +118,26 @@ public class UnicodeReader extends Reader {
 
 
 	/**
+	 * This utility constructor is here because you will usually use a
+	 * <code>UnicodeReader</code> on files.<p>
+	 * Creates a reader using the encoding specified by the BOM in the file;
+	 * if there is no recognized BOM, then a specified default encoding is
+	 * used.
+	 *
+	 * @param file The file from which you want to read.
+	 * @param defaultCharset The encoding to use if no BOM is found.  If
+	 *        this value is <code>null</code>, a system default is used.
+	 * @throws IOException If an error occurs when checking for/reading the
+	 *         BOM.
+	 * @throws SecurityException If a security manager exists and its
+	 *         checkRead method denies read access to the file.
+	 */
+	public UnicodeReader(File file, Charset defaultCharset) throws IOException {
+		this(new FileInputStream(file), defaultCharset != null ? defaultCharset.name() : null);
+	}
+
+
+	/**
 	 * Creates a reader using the encoding specified by the BOM in the file;
 	 * if there is no recognized BOM, then a system default encoding is used.
 	 *
@@ -125,7 +146,7 @@ public class UnicodeReader extends Reader {
 	 *         BOM.
 	 */
 	public UnicodeReader(InputStream in) throws IOException {
-		this(in, null);
+		this(in, (String)null);
 	}
 
 
@@ -144,6 +165,23 @@ public class UnicodeReader extends Reader {
 	public UnicodeReader(InputStream in, String defaultEncoding)
 									throws IOException {
 		init(in, defaultEncoding);
+	}
+
+
+	/**
+	 * Creates a reader using the encoding specified by the BOM in the file;
+	 * if there is no recognized BOM, then <code>defaultEncoding</code> is
+	 * used.
+	 *
+	 * @param in The input stream from which to read.
+	 * @param defaultCharset The encoding to use if no recognized BOM is
+	 *        found.  If this value is <code>null</code>, a system default
+	 *        is used.
+	 * @throws IOException If an error occurs when checking for/reading the
+	 *         BOM.
+	 */
+	public UnicodeReader(InputStream in, Charset defaultCharset) throws IOException {
+		init(in, defaultCharset.name());
 	}
 
 
@@ -183,7 +221,8 @@ public class UnicodeReader extends Reader {
 		PushbackInputStream tempIn = new PushbackInputStream(in, BOM_SIZE);
 
 		byte[] bom = new byte[BOM_SIZE];
-		int n, unread;
+		int n;
+		int unread;
 		n = tempIn.read(bom, 0, bom.length);
 
 		if ((bom[0]==(byte)0x00) && (bom[1]==(byte)0x00) &&

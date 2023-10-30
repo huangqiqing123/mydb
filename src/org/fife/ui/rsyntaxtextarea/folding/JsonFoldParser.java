@@ -4,7 +4,7 @@
  * JsonFoldParser.java - Fold parser for JSON.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.folding;
 
@@ -33,14 +33,11 @@ public class JsonFoldParser implements FoldParser {
 	private static final Object ARRAY_BLOCK = new Object();
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public List<Fold> getFolds(RSyntaxTextArea textArea) {
 
-		Stack<Object> blocks = new Stack<Object>();
-		List<Fold> folds = new ArrayList<Fold>();
+		Stack<Object> blocks = new Stack<>();
+		List<Fold> folds = new ArrayList<>();
 
 		Fold currentFold = null;
 		int lineCount = textArea.getLineCount();

@@ -5,12 +5,11 @@
  * background as an image using VolatileImages.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
-import java.awt.Graphics;
-import java.awt.Image;
+import java.awt.*;
 import java.awt.image.VolatileImage;
 
 
@@ -130,6 +129,12 @@ public class VolatileImageBackgroundPainterStrategy
 	@Override
 	protected void rescaleImage(int width, int height, int hint) {
 		bgImage = getRTextAreaBase().createVolatileImage(width, height);
+		if (bgImage == null && !GraphicsEnvironment.isHeadless()) {
+			bgImage = GraphicsEnvironment.getLocalGraphicsEnvironment()
+				.getDefaultScreenDevice()
+				.getDefaultConfiguration()
+				.createCompatibleVolatileImage(width, height);
+		}
 		if (bgImage!=null) {
 			renderImage(width, height, hint);
 		}

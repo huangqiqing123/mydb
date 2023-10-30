@@ -4,7 +4,7 @@
  * RTextAreaHighlighter.java - Highlighter for RTextAreas.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -55,18 +55,18 @@ public class RTextAreaHighlighter extends BasicHighlighter {
 	 * Constructor.
 	 */
 	public RTextAreaHighlighter() {
-		markAllHighlights = new ArrayList<HighlightInfo>();
+		markAllHighlights = new ArrayList<>();
 	}
 
 
 	/**
 	 * Adds a special "marked occurrence" highlight.
 	 *
-	 * @param start
-	 * @param end
-	 * @param p
+	 * @param start The start offset of the highlight.
+	 * @param end The end offset of the highlight.
+	 * @param p The highlight painter.
 	 * @return A tag to reference the highlight later.
-	 * @throws BadLocationException
+	 * @throws BadLocationException If one of the offsets specified is invalid.
 	 * @see #clearMarkAllHighlights()
 	 */
 	Object addMarkAllHighlight(int start, int end, HighlightPainter p)
@@ -102,9 +102,6 @@ public class RTextAreaHighlighter extends BasicHighlighter {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void deinstall(JTextComponent c) {
 		this.textArea = null;
@@ -130,8 +127,8 @@ public class RTextAreaHighlighter extends BasicHighlighter {
 	 * @return The list of "mark all" highlight ranges.
 	 */
 	public List<DocumentRange> getMarkAllHighlightRanges() {
-		List<DocumentRange> list = new ArrayList<DocumentRange>(
-				markAllHighlights.size());
+		List<DocumentRange> list = new ArrayList<>(
+			markAllHighlights.size());
 		for (HighlightInfo info : markAllHighlights) {
 			int start = info.getStartOffset();
 			int end = info.getEndOffset() + 1; // HACK
@@ -142,9 +139,6 @@ public class RTextAreaHighlighter extends BasicHighlighter {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void install(JTextComponent c) {
 		super.install(c);
@@ -223,6 +217,13 @@ public class RTextAreaHighlighter extends BasicHighlighter {
 		/**
 		 * Restricts the region based on the receivers offsets and messages
 		 * the painter to paint the region.
+		 *
+		 * @param g The graphics context to use.
+		 * @param p0 The start offset.
+		 * @param p1 The end offset.
+		 * @param viewBounds T?he view bounds.
+		 * @param editor The text component that contains the highlights.
+		 * @param view The view being rendered.
 		 */
 		void paintLayeredHighlights(Graphics g, int p0, int p1,
 					Shape viewBounds, JTextComponent editor, View view);
@@ -278,7 +279,7 @@ public class RTextAreaHighlighter extends BasicHighlighter {
 	 * A straightforward implementation of <code>HighlightInfo</code> for
 	 * painting layered highlights.
 	 */
-	@SuppressWarnings({ "checkstyle:visibilitymodifier" })
+	@SuppressWarnings("checkstyle:visibilitymodifier")
 	protected static class LayeredHighlightInfoImpl extends HighlightInfoImpl
 			implements LayeredHighlightInfo {
 
@@ -317,9 +318,6 @@ public class RTextAreaHighlighter extends BasicHighlighter {
 			}
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
 		public void paintLayeredHighlights(Graphics g, int p0, int p1,
 									Shape viewBounds, JTextComponent editor,

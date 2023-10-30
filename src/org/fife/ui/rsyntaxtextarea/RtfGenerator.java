@@ -4,13 +4,11 @@
  * RtfGenerator.java - Generates RTF via a simple Java API.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,10 +37,11 @@ import org.fife.ui.rtextarea.RTextArea;
  * </ul>
  *
  * @author Robert Futrell
- * @version 1.0
+ * @version 1.1
  */
 public class RtfGenerator {
 
+	private Color mainBG;
 	private List<Font> fontList;
 	private List<Color> colorList;
 	private StringBuilder document;
@@ -70,10 +69,13 @@ public class RtfGenerator {
 
 	/**
 	 * Constructor.
+	 *
+	 * @param mainBG The main background color to use.
 	 */
-	public RtfGenerator() {
-		fontList = new ArrayList<Font>(1); // Usually only 1.
-		colorList = new ArrayList<Color>(1); // Usually only 1.
+	public RtfGenerator(Color mainBG) {
+		this.mainBG = mainBG;
+		fontList = new ArrayList<>(1); // Usually only 1.
+		colorList = new ArrayList<>(1); // Usually only 1.
 		document = new StringBuilder();
 		reset();
 	}
@@ -85,7 +87,7 @@ public class RtfGenerator {
 	 * @see #appendToDoc(String, Font, Color, Color)
 	 */
 	public void appendNewline() {
-		document.append("\\par");
+		document.append("\\line");
 		document.append('\n'); // Just for ease of reading RTF.
 		lastWasControlWord = false;
 	}
@@ -293,7 +295,8 @@ public class RtfGenerator {
 					if (ch <= 127) {
 						sb.append(ch);
 					} else {
-						sb.append("\\u").append((int)ch);
+						// Trailing space for delimiter
+						sb.append("\\u").append((int)ch).append(' ');
 					}
 					break;
 			}
@@ -399,11 +402,11 @@ public class RtfGenerator {
 		// just search for a monospaced font on the system.
 		String monoFamilyName = getMonospacedFontFamily();
 
-		sb.append("{\\fonttbl{\\f0\\fnil\\fcharset0 " + monoFamilyName + ";}");
+		sb.append("{\\fonttbl{\\f0\\fnil\\fcharset0 ").append(monoFamilyName).append(";}");
 		for (int i=0; i<fontList.size(); i++) {
 			Font f = fontList.get(i);
 			String familyName = f.getFamily();
-			if (familyName.equals("Monospaced")) {
+			if (familyName.equals(Font.MONOSPACED)) {
 				familyName = monoFamilyName;
 			}
 			sb.append("{\\f").append(i+1).append("\\fnil\\fcharset0 ");
@@ -424,7 +427,7 @@ public class RtfGenerator {
 	 */
 	private static String getMonospacedFontFamily() {
 		String family = RTextArea.getDefaultFont().getFamily();
-		if ("Monospaced".equals(family)) {
+		if (Font.MONOSPACED.equals(family)) {
 			family = "Courier";
 		}
 		return family;
@@ -437,6 +440,9 @@ public class RtfGenerator {
 	 * @return The RTF document, as a <code>String</code>.
 	 */
 	public String getRtf() {
+
+		// Add background to the color table before adding it to our buffer
+		int mainBGIndex = getColorIndex(colorList, mainBG);
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("{");
@@ -452,6 +458,12 @@ public class RtfGenerator {
 		sb.append(getColorTableRtf()).append('\n');
 
 		// Content
+		int bgIndex = mainBGIndex + 1;
+		sb.append("\\cb").append(bgIndex).append(' ');
+		lastWasControlWord = true;
+		if (document.length() > 0) {
+			document.append("\\line"); // Forced line break
+		}
 		sb.append(document);
 
 		sb.append("}");
@@ -476,7 +488,9 @@ public class RtfGenerator {
 		lastBold = false;
 		lastItalic = false;
 		lastFontSize = DEFAULT_FONT_SIZE;
-		screenRes = Toolkit.getDefaultToolkit().getScreenResolution();
+		// Dummy resolution when running headless
+		screenRes = GraphicsEnvironment.isHeadless() ? 72 :
+			Toolkit.getDefaultToolkit().getScreenResolution();
 	}
 
 

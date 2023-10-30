@@ -1,6 +1,11 @@
+/*
+ * This library is distributed under a modified BSD license.  See the included
+ * LICENSE file for details.
+ */
 package org.fife.ui.rsyntaxtextarea;
 
 import javax.swing.text.TabExpander;
+import java.awt.*;
 
 
 /**
@@ -12,7 +17,9 @@ import javax.swing.text.TabExpander;
 public final class TokenUtils {
 
 
-	private TokenUtils() {}
+	private TokenUtils() {
+		// Do nothing (comment for Sonar)
+	}
 
 
 	/**
@@ -40,7 +47,7 @@ public final class TokenUtils {
 	 * @param tokenList The list to make start at the specified position.
 	 *        This parameter is modified.
 	 * @param pos The position at which the new token list is to start.  If
-	 *        this position is not in the passed-in token list,
+	 *        this position is not in the passed-in token list, the
 	 *        returned token list will either be <code>null</code> or the
 	 *        unpaintable token(s) at the end of the passed-in token list.
 	 * @param e How to expand tabs.
@@ -84,7 +91,7 @@ public final class TokenUtils {
 	 * @param tokenList The list to make start at the specified position.
 	 *        This parameter is modified.
 	 * @param pos The position at which the new token list is to start.  If
-	 *        this position is not in the passed-in token list,
+	 *        this position is not in the passed-in token list, the
 	 *        returned token list will either be <code>null</code> or the
 	 *        unpaintable token(s) at the end of the passed-in token list.
 	 * @param e How to expand tabs.
@@ -143,9 +150,111 @@ public final class TokenUtils {
 
 
 	/**
+	 * Returns the length, in characters, of a whitespace token, taking tabs
+	 * into account.
+	 *
+	 * @param t The token.  This should be of type {@link TokenTypes#WHITESPACE}.
+	 * @param tabSize The tab size in the editor.
+	 * @param curOffs The offset of the token in the current line.
+	 * @return The length of the token, in characters.
+	 */
+	public static int getWhiteSpaceTokenLength(Token t, int tabSize, int curOffs) {
+
+		int length = 0;
+
+		for (int i = 0; i < t.length(); i++) {
+			char ch = t.charAt(i);
+			if (ch == '\t') {
+				int newCurOffs = (curOffs + tabSize) / tabSize * tabSize;
+				length += newCurOffs - curOffs;
+				curOffs = newCurOffs;
+			}
+			else {
+				length++;
+				curOffs++;
+			}
+		}
+
+		return length;
+	}
+
+
+	/**
+	 * Returns whether a token list is {@code null}, empty, all whitespace,
+	 * just comment token(s), or any combination of those.
+	 *
+	 * @param t The token.
+	 * @return Whether the token list starting with that token is {@code null},
+	 *         empty, whitespace or comment tokens.
+	 * @see #isBlankOrAllWhiteSpaceWithoutComments(Token)
+	 */
+	public static boolean isBlankOrAllWhiteSpace(Token t) {
+
+		while (t != null && t.isPaintable()) {
+			if (!t.isCommentOrWhitespace()) {
+				return false;
+			}
+			t = t.getNextToken();
+		}
+		return true;
+	}
+
+
+	/**
+	 * Returns whether a token list is {@code null}, empty, or all whitespace
+	 * token(s).
+	 *
+	 * @param t The token.
+	 * @return Whether the token list starting with that token is {@code null},
+	 *         empty, or all whitespace token(s).
+	 * @see #isBlankOrAllWhiteSpace(Token)
+	 */
+	public static boolean isBlankOrAllWhiteSpaceWithoutComments(Token t) {
+
+		while (t != null && t.isPaintable()) {
+			if (!t.isWhitespace()) {
+				return false;
+			}
+			t = t.getNextToken();
+		}
+		return true;
+	}
+
+
+	/**
+	 * Generates HTML that renders a token with the style used in an RSTA instance.
+	 * Note this HTML is not concise.  It is a straightforward implementation to be
+	 * used to generate markup used in copy/paste and dnd scenarios.
+	 *
+	 * @param textArea The text area whose styles to use.
+	 * @param token The token to get equivalent HTML for.
+	 * @return The HTML.
+	 */
+	public static String tokenToHtml(RSyntaxTextArea textArea, Token token) {
+
+		StringBuilder style = new StringBuilder();
+
+		Font font = textArea.getFontForTokenType(token.getType());
+		if (font.isBold()) {
+			style.append("font-weight: bold;");
+		}
+		if (font.isItalic()) {
+			style.append("font-style: italic;");
+		}
+
+		Color c = textArea.getForegroundForToken(token);
+		style.append("color: ").append(HtmlUtil.getHexString(c)).append(";");
+
+		return "<span style=\"" + style + "\">" +
+			HtmlUtil.escapeForHtml(token.getLexeme(), "\n", true) +
+			"</span>";
+	}
+
+
+	/**
 	 * A sub-list of tokens.
 	 */
-	@SuppressWarnings({ "checkstyle:visibilitymodifier" })
+	@SuppressWarnings("checkstyle:visibilitymodifier")
 	public static class TokenSubList {
 
 		/**

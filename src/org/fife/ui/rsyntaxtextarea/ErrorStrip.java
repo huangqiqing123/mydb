@@ -5,7 +5,7 @@
  * errors, etc.) in an RSyntaxTextArea.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -33,6 +33,7 @@ import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
+import javax.swing.plaf.ColorUIResource;
 import javax.swing.text.BadLocationException;
 
 import org.fife.ui.rsyntaxtextarea.parser.Parser;
@@ -159,7 +160,7 @@ public class ErrorStrip extends JPanel {
 		setShowMarkAll(true);
 		setLevelThreshold(ParserNotice.Level.WARNING);
 		setFollowCaret(true);
-		setCaretMarkerColor(Color.BLACK);
+		setCaretMarkerColor(getDefaultCaretMarkerColor());
 		setMarkerToolTipProvider(null); // Install default
 	}
 
@@ -205,7 +206,7 @@ public class ErrorStrip extends JPanel {
 	 */
 	private Color getBrighterColor(Color c) {
 		if (brighterColors==null) {
-			brighterColors = new HashMap<Color, Color>(5); // Usually small
+			brighterColors = new HashMap<>(5); // Usually small
 		}
 		Color brighter = brighterColors.get(c);
 		if (brighter==null) {
@@ -233,6 +234,22 @@ public class ErrorStrip extends JPanel {
 
 
 	/**
+	 * Returns the default color for the caret marker.  This is a UI
+	 * resource so that it is updated if the LookAndFeel is updated,
+	 * but not if the user overrides it.
+	 *
+	 * @return The default color.
+	 */
+	private ColorUIResource getDefaultCaretMarkerColor() {
+
+		if (RSyntaxUtilities.isLightForeground(getForeground())) {
+			return new ColorUIResource(textArea.getCaretColor());
+		}
+
+		return new ColorUIResource(Color.BLACK);
+	}
+
+	/**
 	 * Returns whether the caret's position should be drawn.
 	 *
 	 * @return Whether the caret's position should be drawn.
@@ -243,9 +260,6 @@ public class ErrorStrip extends JPanel {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public Dimension getPreferredSize() {
 		int height = textArea.getPreferredScrollableViewportSize().height;
@@ -288,16 +302,13 @@ public class ErrorStrip extends JPanel {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String getToolTipText(MouseEvent e) {
 		String text = null;
 		int line = yToLine(e.getY());
 		if (line>-1) {
 			text = MSG.getString("Line");
-			text = MessageFormat.format(text, Integer.valueOf(line+1));
+			text = MessageFormat.format(text, line + 1);
 		}
 		return text;
 	}
@@ -311,10 +322,17 @@ public class ErrorStrip extends JPanel {
 	 * @return The y-offset.
 	 * @see #yToLine(int)
 	 */
-	private int lineToY(int line) {
-		int h = textArea.getVisibleRect().height;
+	private int lineToY(int line, Rectangle r) {
+		if (r == null) {
+			r = new Rectangle();
+		}
+		textArea.computeVisibleRect(r);
+		int h = r.height;
 		float lineCount = textArea.getLineCount();
-		return (int)(((line-1)/(lineCount-1)) * (h-2));
+		int lineHeight = textArea.getLineHeight();
+		int linesPerVisibleRect = h / lineHeight;
+
+		return Math.round((h-1) * line / Math.max(lineCount, linesPerVisibleRect));
 	}
 
 
@@ -353,13 +371,13 @@ public class ErrorStrip extends JPanel {
 	private void refreshMarkers() {
 
 		removeAll(); // listener is removed in Marker.removeNotify()
-		Map<Integer, Marker> markerMap = new HashMap<Integer, Marker>();
+		Map<Integer, Marker> markerMap = new HashMap<>();
 
 		List<ParserNotice> notices = textArea.getParserNotices();
 		for (ParserNotice notice : notices) {
 			if (notice.getLevel().isEqualToOrWorseThan(levelThreshold) ||
 					(notice instanceof TaskNotice)) {
-				Integer key = Integer.valueOf(notice.getLine());
+				Integer key = notice.getLine();
 				Marker m = markerMap.get(key);
 				if (m==null) {
 					m = new Marker(notice);
@@ -400,14 +418,14 @@ public class ErrorStrip extends JPanel {
 	private void addMarkersForRanges(List<DocumentRange> ranges,
 			Map<Integer, Marker> markerMap, Color color) {
 		for (DocumentRange range : ranges) {
-			int line = 0;
+			int line;
 			try {
 				line = textArea.getLineOfOffset(range.getStartOffset());
 			} catch (BadLocationException ble) { // Never happens
 				continue;
 			}
 			ParserNotice notice = new MarkedOccurrenceNotice(range, color);
-			Integer key = Integer.valueOf(line);
+			Integer key = line;
 			Marker m = markerMap.get(key);
 			if (m==null) {
 				m = new Marker(notice);
@@ -416,7 +434,7 @@ public class ErrorStrip extends JPanel {
 				add(m);
 			}
 			else {
-				if (!m.containsMarkedOccurence()) {
+				if (!m.containsMarkedOccurrence()) {
 					m.addNotice(notice);
 				}
 			}
@@ -424,9 +442,6 @@ public class ErrorStrip extends JPanel {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void removeNotify() {
 		super.removeNotify();
@@ -539,20 +554,36 @@ public class ErrorStrip extends JPanel {
 	}
 
 
+	@Override
+	public void updateUI() {
+
+		super.updateUI();
+
+		if (caretMarkerColor instanceof ColorUIResource) {
+			setCaretMarkerColor(getDefaultCaretMarkerColor());
+		}
+	}
+
+
 	/**
 	 * Returns the line in the text area corresponding to a y-offset in this
 	 * component.
 	 *
 	 * @param y The y-offset.
 	 * @return The line.
-	 * @see #lineToY(int)
+	 * @see #lineToY(int, Rectangle)
 	 */
 	private int yToLine(int y) {
 		int line = -1;
 		int h = textArea.getVisibleRect().height;
+
+		int lineHeight = textArea.getLineHeight();
+		int linesPerVisibleRect = h / lineHeight;
+		int lineCount = textArea.getLineCount();
+
 		if (y<h) {
 			float at = y/(float)h;
-			line = Math.round((textArea.getLineCount()-1)*at);
+			line = Math.round((Math.max(lineCount, linesPerVisibleRect)-1)*at);
 		}
 		return line;
 	}
@@ -570,7 +601,7 @@ public class ErrorStrip extends JPanel {
 		@Override
 		public String getToolTipText(List<ParserNotice> notices) {
 
-			String text = null;
+			String text;
 
 			if (notices.size()==1) {
 				text = notices.get(0).getMessage();
@@ -579,8 +610,7 @@ public class ErrorStrip extends JPanel {
 				StringBuilder sb = new StringBuilder("<html>");
 				sb.append(MSG.getString("MultipleMarkers"));
 				sb.append("<br>");
-				for (int i=0; i<notices.size(); i++) {
-					ParserNotice pn = notices.get(i);
+				for (ParserNotice pn : notices) {
 					sb.append("&nbsp;&nbsp;&nbsp;- ");
 					sb.append(pn.getMessage());
 					sb.append("<br>");
@@ -622,15 +652,13 @@ public class ErrorStrip extends JPanel {
 	private class Listener extends MouseAdapter
 					implements PropertyChangeListener, CaretListener {
 
-		private Rectangle visibleRect = new Rectangle();
+		private final Rectangle r = new Rectangle();
 
 		@Override
 		public void caretUpdate(CaretEvent e) {
 			if (getFollowCaret()) {
 				int line = textArea.getCaretLineNumber();
-				float percent = line / (float)(textArea.getLineCount()-1);
-				textArea.computeVisibleRect(visibleRect);
-				caretLineY = (int)(visibleRect.height*percent);
+				caretLineY = lineToY(line, r);
 				if (caretLineY!=lastLineY) {
 					repaint(0,lastLineY, getWidth(), 2); // Erase old position
 					repaint(0,caretLineY, getWidth(), 2);
@@ -653,6 +681,7 @@ public class ErrorStrip extends JPanel {
 				try {
 					int offs = textArea.getLineStartOffset(line);
 					textArea.setCaretPosition(offs);
+					RSyntaxUtilities.selectAndPossiblyCenter(textArea, new DocumentRange(offs, offs), false);
 				} catch (BadLocationException ble) { // Never happens
 					UIManager.getLookAndFeel().provideErrorFeedback(textArea);
 				}
@@ -738,9 +767,6 @@ public class ErrorStrip extends JPanel {
 			return color;
 		}
 
-		/**
-		 * {@inheritDoc}
-		 */
 		@Override
 		public boolean getKnowsOffsetAndLength() {
 			return true;
@@ -815,7 +841,7 @@ public class ErrorStrip extends JPanel {
 		private List<ParserNotice> notices;
 
 		Marker(ParserNotice notice) {
-			notices = new ArrayList<ParserNotice>(1); // Usually just 1
+			notices = new ArrayList<>(1); // Usually just 1
 			addNotice(notice);
 			setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 			setSize(getPreferredSize());
@@ -826,10 +852,10 @@ public class ErrorStrip extends JPanel {
 			notices.add(notice);
 		}
 
-		public boolean containsMarkedOccurence() {
+		public boolean containsMarkedOccurrence() {
 			boolean result = false;
-			for (int i=0; i<notices.size(); i++) {
-				if (notices.get(i) instanceof MarkedOccurrenceNotice) {
+			for (ParserNotice notice : notices) {
+				if (notice instanceof MarkedOccurrenceNotice) {
 					result = true;
 					break;
 				}
@@ -914,7 +940,7 @@ public class ErrorStrip extends JPanel {
 
 		public void updateLocation() {
 			int line = notices.get(0).getLine();
-			int y = lineToY(line);
+			int y = lineToY(line - 1, null); // ParserNotices are 1-based
 			setLocation(2, y);
 		}
 

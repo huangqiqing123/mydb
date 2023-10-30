@@ -4,17 +4,14 @@
  * LineHighlightManager - Manages line highlights.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Position;
@@ -59,7 +56,7 @@ class LineHighlightManager {
 		LineHighlightInfo lhi = new LineHighlightInfo(
 						textArea.getDocument().createPosition(offs), color);
 		if (lineHighlights==null) {
-			lineHighlights = new ArrayList<LineHighlightInfo>(1);
+			lineHighlights = new ArrayList<>(1);
 		}
 		int index = Collections.binarySearch(lineHighlights, lhi, comparator);
 		if (index<0) { // Common case
@@ -79,7 +76,7 @@ class LineHighlightManager {
 	 */
 	protected List<Object> getCurrentLineHighlightTags() {
 		return lineHighlights == null ? Collections.emptyList() :
-			new ArrayList<Object>(lineHighlights);
+			new ArrayList<>(lineHighlights);
 	}
 
 
@@ -194,6 +191,16 @@ class LineHighlightManager {
 		LineHighlightInfo(Position offs, Color c) {
 			this.offs = offs;
 			this.color = c;
+		}
+
+		@Override
+		public boolean equals(Object other) {
+			if (other instanceof LineHighlightInfo) {
+				LineHighlightInfo lhi2 = (LineHighlightInfo)other;
+				return this.getOffset() == lhi2.getOffset() &&
+					Objects.equals(this.getColor(), lhi2.getColor());
+			}
+			return false;
 		}
 
 		public Color getColor() {

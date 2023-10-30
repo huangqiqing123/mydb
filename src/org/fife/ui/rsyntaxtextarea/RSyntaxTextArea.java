@@ -1,49 +1,23 @@
 /*
- * 01/27/2004
- *
- * RSyntaxTextArea.java - An extension of RTextArea that adds
- * the ability to syntax highlight certain programming languages.
- *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.Cursor;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Insets;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.awt.Window;
+import java.awt.*;
 import java.awt.datatransfer.Clipboard;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
-import java.awt.event.MouseEvent;
-import java.awt.font.FontRenderContext;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JPopupMenu;
-import javax.swing.JViewport;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.HyperlinkEvent;
@@ -60,9 +34,7 @@ import org.fife.ui.rsyntaxtextarea.folding.FoldManager;
 import org.fife.ui.rsyntaxtextarea.parser.Parser;
 import org.fife.ui.rsyntaxtextarea.parser.ParserNotice;
 import org.fife.ui.rsyntaxtextarea.parser.ToolTipInfo;
-import org.fife.ui.rtextarea.RTextArea;
-import org.fife.ui.rtextarea.RTextAreaUI;
-import org.fife.ui.rtextarea.RecordableTextAction;
+import org.fife.ui.rtextarea.*;
 
 
 /**
@@ -76,6 +48,7 @@ import org.fife.ui.rtextarea.RecordableTextAction;
  *    <ul>
  *       <li>ActionScript
  *       <li>Assembler (X86)
+ *       <li>Assembler (6502)
  *       <li>BBCode
  *       <li>C
  *       <li>C++
@@ -93,6 +66,7 @@ import org.fife.ui.rtextarea.RecordableTextAction;
  *       <li>JavaScript
  *       <li>.jshintrc
  *       <li>JSP
+ *       <li>Kotlin
  *    </ul>
  *   </td>
  *   <td style="vertical-align: top">
@@ -106,6 +80,7 @@ import org.fife.ui.rtextarea.RecordableTextAction;
  *       <li>Perl
  *       <li>PHP
  *       <li>Properties files
+ *       <li>Protobuf files
  *       <li>Python
  *       <li>Ruby
  *       <li>SAS
@@ -138,7 +113,6 @@ import org.fife.ui.rtextarea.RecordableTextAction;
  * bookmarks easily to your text area.
  *
  * @author Robert Futrell
- * @version 2.5.8
  * @see TextEditorPane
  */
 public class RSyntaxTextArea extends RTextArea implements SyntaxConstants {
@@ -156,6 +130,7 @@ public class RSyntaxTextArea extends RTextArea implements SyntaxConstants {
 	public static final String FRACTIONAL_FONTMETRICS_PROPERTY			= "RSTA.fractionalFontMetrics";
 	public static final String HIGHLIGHT_SECONDARY_LANGUAGES_PROPERTY	= "RSTA.highlightSecondaryLanguages";
 	public static final String HYPERLINKS_ENABLED_PROPERTY				= "RSTA.hyperlinksEnabled";
+	public static final String INSERT_PAIRED_CHARS_PROPERTY				= "RSTA.insertPairedChars";
 	public static final String MARK_OCCURRENCES_PROPERTY				= "RSTA.markOccurrences";
 	public static final String MARKED_OCCURRENCES_CHANGED_PROPERTY		= "RSTA.markedOccurrencesChanged";
 	public static final String PAINT_MATCHED_BRACKET_PAIR_PROPERTY		= "RSTA.paintMatchedBracketPair";
@@ -188,7 +163,7 @@ public class RSyntaxTextArea extends RTextArea implements SyntaxConstants {
 	/** Handles code templates. */
 	private static CodeTemplateManager codeTemplateManager;
 
-	/** Whether or not templates are enabled. */
+	/** Whether templates are enabled. */
 	private static boolean templatesEnabled;
 
 	/**
@@ -218,10 +193,10 @@ public class RSyntaxTextArea extends RTextArea implements SyntaxConstants {
 	/** The location of the last matched bracket. */
 	private int lastBracketMatchPos;
 
-	/** Whether or not bracket matching is enabled. */
+	/** Whether bracket matching is enabled. */
 	private boolean bracketMatchingEnabled;
 
-	/** Whether or not bracket matching is animated. */
+	/** Whether bracket matching is animated. */
 	private boolean animateBracketMatching;
 
 	/** Whether <b>both</b> brackets are highlighted when bracket matching. */
@@ -234,7 +209,7 @@ public class RSyntaxTextArea extends RTextArea implements SyntaxConstants {
 	private boolean metricsNeverRefreshed;
 
 	/**
-	 * Whether or not auto-indent is on.
+	 * Whether auto-indent is on.
 	 */
 	private boolean autoIndentEnabled;
 
@@ -252,7 +227,7 @@ public class RSyntaxTextArea extends RTextArea implements SyntaxConstants {
 	private boolean closeMarkupTags;
 
 	/**
-	 * Whether or not lines with nothing but whitespace are "made empty".
+	 * Whether lines with nothing but whitespace are "made empty".
 	 */
 	private boolean clearWhitespaceLines;
 
@@ -347,6 +322,7 @@ private boolean fractionalFontMetricsEnabled;
 
 	private Color[] secondaryLanguageBackgrounds;
 
+	private boolean insertPairedCharacters;
 
 	/**
 	 * Constructor.
@@ -414,6 +390,7 @@ private boolean fractionalFontMetricsEnabled;
 	 */
 	public RSyntaxTextArea(RSyntaxDocument doc, String text,int rows,int cols) {
 		super(doc, text, rows, cols);
+		setSyntaxEditingStyle(doc.getSyntaxStyle());
 	}
 
 
@@ -440,10 +417,15 @@ private boolean fractionalFontMetricsEnabled;
 
 
 	/**
-	 * Adds a hyperlink listener to this text area.
+	 * Adds a hyperlink listener to this text area.  Assuming hyperlinks are
+	 * enabled, this listener will receive events when the mouse enters,
+	 * leaves, and clicks on hyperlinks when the scanning mask modifier
+	 * button (e.g. the control key) is pressed.
 	 *
 	 * @param l The listener to add.
 	 * @see #removeHyperlinkListener(HyperlinkListener)
+	 * @see #setHyperlinksEnabled(boolean)
+	 * @see #setLinkScanningMask(int)
 	 */
 	public void addHyperlinkListener(HyperlinkListener l) {
 		listenerList.add(HyperlinkListener.class, l);
@@ -493,6 +475,12 @@ private boolean fractionalFontMetricsEnabled;
 	public void addParser(Parser parser) {
 		if (parserManager==null) {
 			parserManager = new ParserManager(this);
+			// ParserManagers by default aren't started. They are typically
+			// started by addNotify() so we must manually start a new one
+			// if it's added after being displayed.
+			if (isDisplayable()) {
+				parserManager.restartParsing();
+			}
 		}
 		parserManager.addParser(parser);
 	}
@@ -624,11 +612,41 @@ private boolean fractionalFontMetricsEnabled;
 
 
 	/**
+	 * Copies the currently selected text to the system clipboard, with style
+	 * information from the specified theme.  Does nothing for {@code null} or
+	 * empty selections.
+	 *
+	 * @param theme The theme to use for the color and font information.
+	 *        This may be {@code null}, in which case this text area's
+	 *        current styles are used.
+	 * @see #copyAsStyledText()
+	 */
+	public void copyAsStyledText(Theme theme) {
+
+		// It's more performant to call the no-arg overload
+		if (theme == null) {
+			copyAsStyledText();
+			return;
+		}
+
+		Theme origTheme = new Theme(this);
+
+		theme.apply(this);
+		try {
+			copyAsStyledText();
+		} finally {
+			origTheme.apply(this);
+		}
+	}
+
+	/**
 	 * Copies the currently selected text to the system clipboard, with
 	 * any necessary style information (font, foreground color and background
-	 * color).  Does nothing for <code>null</code> selections.
+	 * color).  Does nothing for {@code null} or empty selections.
+	 *
+	 * @see #copyAsStyledText(Theme)
 	 */
-	public void copyAsRtf() {
+	public void copyAsStyledText() {
 
 		int selStart = getSelectionStart();
 		int selEnd = getSelectionEnd();
@@ -636,54 +654,24 @@ private boolean fractionalFontMetricsEnabled;
 			return;
 		}
 
-		// Make sure there is a system clipboard, and that we can write
-		// to it.
-		SecurityManager sm = System.getSecurityManager();
-		if (sm!=null) {
-			try {
-				sm.checkSystemClipboardAccess();
-			} catch (SecurityException se) {
-				UIManager.getLookAndFeel().provideErrorFeedback(null);
-				return;
-			}
-		}
-		Clipboard cb = getToolkit().getSystemClipboard();
+		// Get the selection as HTML
+		String html = HtmlUtil.getTextAsHtml(this, selStart, selEnd);
 
-		// Create the RTF selection.
-		RtfGenerator gen = new RtfGenerator();
-		Token tokenList = getTokenListFor(selStart, selEnd);
-		for (Token t=tokenList; t!=null; t=t.getNextToken()) {
-			if (t.isPaintable()) {
-				if (t.length()==1 && t.charAt(0)=='\n') {
-					gen.appendNewline();
-				}
-				else {
-					Font font = getFontForTokenType(t.getType());
-					Color bg = getBackgroundForToken(t);
-					boolean underline = getUnderlineForToken(t);
-					// Small optimization - don't print fg color if this
-					// is a whitespace color.  Saves on RTF size.
-					if (t.isWhitespace()) {
-						gen.appendToDocNoFG(t.getLexeme(), font, bg, underline);
-					}
-					else {
-						Color fg = getForegroundForToken(t);
-						gen.appendToDoc(t.getLexeme(), font, fg, bg, underline);
-					}
-				}
-			}
-		}
+		// Get the selection as RTF
+		byte[] rtfBytes = getTextAsRtf(selStart, selEnd);
+
+		String plainText = getSelectedText();
 
 		// Set the system clipboard contents to the RTF selection.
-		RtfTransferable contents = new RtfTransferable(gen.getRtf().getBytes());
-		//System.out.println("*** " + new String(gen.getRtf().getBytes()));
+		StyledTextTransferable contents = new StyledTextTransferable(plainText, html, rtfBytes);
+
+		Clipboard cb = getToolkit().getSystemClipboard();
 		try {
 			cb.setContents(contents, null);
+			ClipboardHistory.get().add(plainText);
 		} catch (IllegalStateException ise) {
 			UIManager.getLookAndFeel().provideErrorFeedback(null);
-			return;
 		}
-
 	}
 
 
@@ -695,6 +683,43 @@ private boolean fractionalFontMetricsEnabled;
 	@Override
 	protected Document createDefaultModel() {
 		return new RSyntaxDocument(SYNTAX_STYLE_NONE);
+	}
+
+
+	private HyperlinkEvent createHyperlinkEvent(HyperlinkEvent.EventType type) {
+
+		// If the mouse is leaving a hyperlink, or ctrl is released,
+		// short-circuit
+		if (type == HyperlinkEvent.EventType.EXITED) {
+			return new HyperlinkEvent(this, type, null);
+		}
+
+		HyperlinkEvent he = null;
+
+		if (linkGeneratorResult!=null && type == HyperlinkEvent.EventType.ACTIVATED) {
+			he = linkGeneratorResult.execute();
+			linkGeneratorResult = null;
+		}
+		else {
+			Token t = modelToToken(hoveredOverLinkOffset);
+			if (t != null) {
+				URL url = null;
+				String desc = null;
+				try {
+					String temp = t.getLexeme();
+					// URI's need "http://" prefix for web URL's to work.
+					if (temp.startsWith("www.")) {
+						temp = "http://" + temp;
+					}
+					url = new URL(temp);
+				} catch (MalformedURLException mue) {
+					desc = mue.getMessage();
+				}
+				he = new HyperlinkEvent(this, type, url, desc);
+			}
+		}
+
+		return he;
 	}
 
 
@@ -744,11 +769,25 @@ private boolean fractionalFontMetricsEnabled;
 		collapseAllFoldsAction = new RSyntaxTextAreaEditorKit.CollapseAllFoldsAction(true);
 		expandAllFoldsAction = new RSyntaxTextAreaEditorKit.ExpandAllFoldsAction(true);
 
+		RecordableTextAction plainCut = cutAction;
+		RecordableTextAction plainCopy = copyAction;
+		cutAction = new RSyntaxTextAreaEditorKit.CopyCutAsStyledTextAction(true);
+		copyAction = new RSyntaxTextAreaEditorKit.CopyCutAsStyledTextAction(false);
+		copyActionAttributes(plainCopy, copyAction);
+		copyActionAttributes(plainCut, cutAction);
+	}
+
+	private static void copyActionAttributes(RecordableTextAction from, RecordableTextAction to) {
+		to.setName(from.getName());
+		to.setMnemonic(from.getMnemonic());
+		to.setShortDescription(from.getShortDescription());
+		to.setAccelerator(from.getAccelerator());
 	}
 
 
+
 	/**
-	 * Returns the a real UI to install on this text area.
+	 * Returns a real UI to install on this text area.
 	 *
 	 * @return The UI.
 	 */
@@ -865,14 +904,24 @@ private boolean fractionalFontMetricsEnabled;
 
 
 	/**
-	 * Notifies all listeners that have registered interest for notification
+	 * Notifies all listeners that have registered interest in notification
 	 * on this event type.  The listener list is processed last to first.
 	 *
-	 * @param e The event to fire.
+	 * @param type The type of event to fire.
 	 */
-	private void fireHyperlinkUpdate(HyperlinkEvent e) {
+	protected void fireHyperlinkUpdate(HyperlinkEvent.EventType type) {
+
+		// Fix #443: Don't lazily create the event as LinkGenerators may
+		// handle the click themselves. We want such handling to occur
+		// even if no HyperlinkListeners are attached.
+		HyperlinkEvent e = createHyperlinkEvent(type);
+		if (e == null) {
+			return; // No linkable text under caret, or handled by LinkGenerator
+		}
+
 		// Guaranteed to return a non-null array
 		Object[] listeners = listenerList.getListenerList();
+
 		// Process the listeners last to first, notifying
 		// those that are interested in this event
 		for (int i = listeners.length-2; i>=0; i-=2) {
@@ -918,12 +967,7 @@ private boolean fractionalFontMetricsEnabled;
 			// causes BadLocationExceptions when an entire folded region is
 			// deleted (see GitHub issue #22:
 			// https://github.com/bobbylight/RSyntaxTextArea/issues/22)
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					possiblyUpdateCurrentLineHighlightLocation();
-				}
-			});
+			SwingUtilities.invokeLater(this::possiblyUpdateCurrentLineHighlightLocation);
 		}
 		else {
 			possiblyUpdateCurrentLineHighlightLocation();
@@ -934,14 +978,14 @@ private boolean fractionalFontMetricsEnabled;
 
 
 	/**
-	 * Forces the given {@link Parser} to re-parse the content of this text
-	 * area.<p>
+	 * Forces the given {@link Parser} to reparse the content of this text
+	 * area.  This should only be called on the EDT.<p>
 	 *
 	 * This method can be useful when a <code>Parser</code> can be configured
 	 * as to what notices it returns.  For example, if a Java language parser
 	 * can be configured to set whether no serialVersionUID is a warning,
 	 * error, or ignored, this method can be called after changing the expected
-	 * notice type to have the document re-parsed.
+	 * notice type to have the document reparsed.
 	 *
 	 * @param parser The index of the <code>Parser</code> to re-run.
 	 * @see #getParser(int)
@@ -952,10 +996,11 @@ private boolean fractionalFontMetricsEnabled;
 
 
 	/**
-	 * Forces re-parsing with a specific parser.  Note that if this parser is
-	 * not installed on this text area, nothing will happen.
+	 * Forces reparsing with a specific parser.  Note that if this parser is
+	 * not installed on this text area, nothing will happen.  This method
+	 * should only be called on the EDT.
 	 *
-	 * @param parser The parser that should re-parse this text area's contents.
+	 * @param parser The parser that should reparse this text area's contents.
 	 *        This should be installed on this text area.
 	 * @return Whether the parser was installed on this text area.
 	 * @see #forceReparsing(int)
@@ -999,7 +1044,7 @@ private boolean fractionalFontMetricsEnabled;
 	 *
 	 * @param token The token.
 	 * @return The background color to use for that token.  If this value is
-	 *         is <code>null</code> then this token has no special background
+	 *         <code>null</code> then this token has no special background
 	 *         color.
 	 * @see #getForegroundForToken(Token)
 	 */
@@ -1070,7 +1115,7 @@ private boolean fractionalFontMetricsEnabled;
 	 * @return The color.
 	 * @see #getDefaultBracketMatchBorderColor
 	 */
-	public static final Color getDefaultBracketMatchBGColor() {
+	public static Color getDefaultBracketMatchBGColor() {
 		return DEFAULT_BRACKET_MATCH_BG_COLOR;
 	}
 
@@ -1081,7 +1126,7 @@ private boolean fractionalFontMetricsEnabled;
 	 * @return The color.
 	 * @see #getDefaultBracketMatchBGColor
 	 */
-	public static final Color getDefaultBracketMatchBorderColor() {
+	public static Color getDefaultBracketMatchBorderColor() {
 		return DEFAULT_BRACKET_MATCH_BORDER_COLOR;
 	}
 
@@ -1260,9 +1305,39 @@ private boolean fractionalFontMetricsEnabled;
 	 *
 	 * @return Whether hyperlinks are enabled for this text area.
 	 * @see #setHyperlinksEnabled(boolean)
+	 * @see #addHyperlinkListener(HyperlinkListener)
 	 */
 	public boolean getHyperlinksEnabled() {
 		return hyperlinksEnabled;
+	}
+
+
+	/**
+	 * Returns whether paired characters should be inserted when there is
+	 * a selection. For example, If the following text is selected:
+	 * <p>
+	 *     {@code something}
+	 * </p>
+	 * And the double quote character, {@code "}, is typed, the selection
+	 * will be replaced with:
+	 * <p>
+	 *     {@code "something"}
+	 * </p>
+	 * If enabled, this occurs for the following characters:
+	 * <ul>
+	 *     <li>{@code "}</li>
+	 *     <li>{@code '}</li>
+	 *     <li>{@code [}</li>
+	 *     <li>{@code (}</li>
+	 *     <li>{@code &#123;}</li>
+	 * </ul>
+	 *
+	 * @return Whether to insert paired characters if a relevant key is typed
+	 *         while there is a selection.
+	 * @see #setInsertPairedCharacters(boolean)
+	 */
+	public boolean getInsertPairedCharacters() {
+		return insertPairedCharacters;
 	}
 
 
@@ -1294,7 +1369,6 @@ private boolean fractionalFontMetricsEnabled;
 	 */
 	@Override
 	public int getLineHeight() {
-		//System.err.println("... getLineHeight() returning " + lineHeight);
 		return lineHeight;
 	}
 
@@ -1354,7 +1428,7 @@ private boolean fractionalFontMetricsEnabled;
 	 * Returns the delay between when the caret is moved and when "marked
 	 * occurrences" are highlighted.
 	 *
-	 * @return The "mark occurrences" delay.
+	 * @return The "mark occurrences" delay, in milliseconds.
 	 * @see #setMarkOccurrencesDelay(int)
 	 */
 	public int getMarkOccurrencesDelay() {
@@ -1605,7 +1679,7 @@ private boolean fractionalFontMetricsEnabled;
 
 
 	/**
-	 * Returns all of the colors currently being used in syntax highlighting
+	 * Returns all the colors currently being used in syntax highlighting
 	 * by this text component.
 	 *
 	 * @return An instance of <code>SyntaxScheme</code> that represents
@@ -1673,11 +1747,11 @@ private boolean fractionalFontMetricsEnabled;
 
 
 	/**
-	 * Returns whether or not templates are enabled for all instances
+	 * Returns whether templates are enabled for all instances
 	 * of <code>RSyntaxTextArea</code>.<p>
 	 *
 	 * For more flexible boilerplate code insertion, consider using the
-	 * <a href="http://javadoc.fifesoft.com/autocomplete/org/fife/ui/autocomplete/TemplateCompletion.html">
+	 * <a href="https://javadoc.fifesoft.com/autocomplete/org/fife/ui/autocomplete/TemplateCompletion.html">
 	 * TemplateCompletion class</a> in the
 	 * <a href="https://github.com/bobbylight/AutoComplete">AutoComplete
 	 * add-on library</a>.
@@ -1691,6 +1765,35 @@ private boolean fractionalFontMetricsEnabled;
 		return templatesEnabled;
 	}
 
+	private byte[] getTextAsRtf(int start, int end) {
+
+		// Create the RTF selection.
+		RtfGenerator gen = new RtfGenerator(getBackground());
+		Token tokenList = getTokenListFor(start, end);
+		for (Token t = tokenList; t != null; t = t.getNextToken()) {
+			if (t.isPaintable()) {
+				if (t.length() == 1 && t.charAt(0) == '\n') {
+					gen.appendNewline();
+				} else {
+					Font font = getFontForTokenType(t.getType());
+					Color bg = getBackgroundForToken(t);
+					boolean underline = getUnderlineForToken(t);
+					// Small optimization - don't print fg color if this
+					// is a whitespace color.  Saves on RTF size.
+					if (t.isWhitespace()) {
+						gen.appendToDocNoFG(t.getLexeme(), font, bg, underline);
+					} else {
+						Color fg = getForegroundForToken(t);
+						gen.appendToDoc(t.getLexeme(), font, fg, bg, underline);
+					}
+				}
+			}
+		}
+
+		// RTF text is 7-bit ASCII so this should cover us
+		return gen.getRtf().getBytes(StandardCharsets.UTF_8);
+	}
+
 
 	/**
 	 * Returns a token list for the given range in the document.
@@ -1699,7 +1802,7 @@ private boolean fractionalFontMetricsEnabled;
 	 * @param endOffs The end offset in the document.
 	 * @return The first token in the token list.
 	 */
-	private Token getTokenListFor(int startOffs, int endOffs) {
+	public Token getTokenListFor(int startOffs, int endOffs) {
 
 		TokenImpl tokenList = null;
 		TokenImpl lastToken = null;
@@ -1797,7 +1900,7 @@ private boolean fractionalFontMetricsEnabled;
 	@Override
 	public String getToolTipText(MouseEvent e) {
 
-		// Apple JVMS (Java 6 and prior) have their ToolTipManager events
+		// Apple JVMs (Java 6 and prior) have their ToolTipManager events
 		// repeat for some reason, so this method gets called every 1 second
 		// or so.  We short-circuit that since some ToolTipManagers may do
 		// expensive calculations (e.g. language supports).
@@ -1938,6 +2041,7 @@ private boolean fractionalFontMetricsEnabled;
 		setTabLineColor(null);
 		setMarkOccurrencesColor(MarkOccurrencesSupport.DEFAULT_COLOR);
 		setMarkOccurrencesDelay(MarkOccurrencesSupport.DEFAULT_DELAY_MS);
+		setInsertPairedCharacters(true);
 
 		foldManager = new DefaultFoldManager(this);
 
@@ -1948,14 +2052,14 @@ private boolean fractionalFontMetricsEnabled;
 		setClearWhitespaceLinesEnabled(true);
 
 		setHyperlinksEnabled(true);
-		setLinkScanningMask(InputEvent.CTRL_DOWN_MASK);
+		int mask = isOSX() ? InputEvent.META_DOWN_MASK : InputEvent.CTRL_DOWN_MASK;
+		setLinkScanningMask(mask);
 		setHyperlinkForeground(Color.BLUE);
 		isScanningForLinks = false;
 		setUseFocusableTips(true);
 
-		//setAntiAliasingEnabled(true);
-		setDefaultAntiAliasingState();
 		restoreDefaultSyntaxScheme();
+		setDefaultAntiAliasingState();
 
 		setHighlightSecondaryLanguages(true);
 		secondaryLanguageBackgrounds = new Color[3];
@@ -1970,9 +2074,9 @@ private boolean fractionalFontMetricsEnabled;
 
 
 	/**
-	 * Returns whether or not auto-indent is enabled.
+	 * Returns whether auto-indent is enabled.
 	 *
-	 * @return Whether or not auto-indent is enabled.
+	 * @return Whether auto-indent is enabled.
 	 * @see #setAutoIndentEnabled(boolean)
 	 */
 	public boolean isAutoIndentEnabled() {
@@ -1981,7 +2085,7 @@ private boolean fractionalFontMetricsEnabled;
 
 
 	/**
-	 * Returns whether or not bracket matching is enabled.
+	 * Returns whether bracket matching is enabled.
 	 *
 	 * @return <code>true</code> iff bracket matching is enabled.
 	 * @see #setBracketMatchingEnabled
@@ -1992,10 +2096,10 @@ private boolean fractionalFontMetricsEnabled;
 
 
 	/**
-	 * Returns whether or not lines containing nothing but whitespace are made
+	 * Returns whether lines containing nothing but whitespace are made
 	 * into blank lines when Enter is pressed in them.
 	 *
-	 * @return Whether or not whitespace-only lines are cleared when
+	 * @return Whether whitespace-only lines are cleared when
 	 *         the user presses Enter on them.
 	 * @see #setClearWhitespaceLinesEnabled(boolean)
 	 */
@@ -2079,16 +2183,13 @@ private boolean fractionalFontMetricsEnabled;
 		syntaxScheme.refreshFontMetrics(g2d);
 		if (!getLineWrap()) {
 			// HORRIBLE HACK!  The un-wrapped view needs to refresh its cached
-			// longest line information.
+			// longest-line information.
 			SyntaxView sv = (SyntaxView)getUI().getRootView(this).getView(0);
 			sv.calculateLongestLine();
 		}
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void redoLastAction() {
 		super.redoLastAction();
@@ -2120,6 +2221,8 @@ private boolean fractionalFontMetricsEnabled;
 	 *
 	 * @param l The listener to remove.
 	 * @see #addHyperlinkListener(HyperlinkListener)
+	 * @see #setHyperlinksEnabled(boolean)
+	 * @see #setLinkScanningMask(int)
 	 */
 	public void removeHyperlinkListener(HyperlinkListener l) {
 		listenerList.remove(HyperlinkListener.class, l);
@@ -2175,7 +2278,7 @@ private boolean fractionalFontMetricsEnabled;
 	 * example, a template that expands on the word "forb" will be saved as
 	 * <code>forb.xml</code>.
 	 *
-	 * @return Whether or not the save was successful.  The save will
+	 * @return Whether the save was successful.  The save will
 	 *         be unsuccessful if the template directory does not exist or
 	 *         if it has not been set (i.e., you have not yet called
 	 *         <code>setTemplateDirectory</code>).
@@ -2200,8 +2303,9 @@ private boolean fractionalFontMetricsEnabled;
 	 *
 	 * Note that basic users of <code>RSyntaxTextArea</code> will not call this
 	 * method directly; rather, it is usually called by instances of
-	 * <code>LanguageSupport</code> in the <code>RSTALangaugeSupport</code>
-	 * library.  See <a href="http://fifesoft.com">http://fifesoft.com</a>
+	 * <code>LanguageSupport</code> in the <code>RSTALanguageSupport</code>
+	 * library.  See <a href="https://github.com/bobbylight/RSTALanguageSupport">
+	 * https://github.com/bobbylight/RSTALanguageSupport</a>
 	 * for more information about this library.
 	 *
 	 * @param min The "minimum" line in the active line range, or
@@ -2251,18 +2355,7 @@ private boolean fractionalFontMetricsEnabled;
 		if (enabled!=currentlyEnabled) {
 
 			if (enabled) {
-				aaHints = RSyntaxUtilities.getDesktopAntiAliasHints();
-				// If the desktop query method comes up empty, use the standard
-				// Java2D greyscale method.  Note this will likely NOT be as
-				// nice as what would be used if the getDesktopAntiAliasHints()
-				// call worked.
-				if (aaHints==null) {
-					Map<RenderingHints.Key, Object> temp =
-							new HashMap<RenderingHints.Key, Object>();
-					temp.put(RenderingHints.KEY_TEXT_ANTIALIASING,
-							RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-					aaHints = temp;
-				}
+				aaHints = RSyntaxUtilities.getBestPossibleAntiAliasHints();
 			}
 			else {
 				aaHints = null;
@@ -2282,10 +2375,10 @@ private boolean fractionalFontMetricsEnabled;
 
 
 	/**
-	 * Sets whether or not auto-indent is enabled.  This fires a property
+	 * Sets whether auto-indent is enabled.  This fires a property
 	 * change event of type {@link #AUTO_INDENT_PROPERTY}.
 	 *
-	 * @param enabled Whether or not auto-indent is enabled.
+	 * @param enabled Whether auto-indent is enabled.
 	 * @see #isAutoIndentEnabled()
 	 */
 	public void setAutoIndentEnabled(boolean enabled) {
@@ -2300,7 +2393,7 @@ private boolean fractionalFontMetricsEnabled;
 	 * Sets whether bracket matching is enabled.  This fires a property change
 	 * event of type {@link #BRACKET_MATCHING_PROPERTY}.
 	 *
-	 * @param enabled Whether or not bracket matching should be enabled.
+	 * @param enabled Whether bracket matching should be enabled.
 	 * @see #isBracketMatchingEnabled()
 	 */
 	public void setBracketMatchingEnabled(boolean enabled) {
@@ -2313,11 +2406,11 @@ private boolean fractionalFontMetricsEnabled;
 
 
 	/**
-	 * Sets whether or not lines containing nothing but whitespace are made
+	 * Sets whether lines containing nothing but whitespace are made
 	 * into blank lines when Enter is pressed in them.  This method fires
 	 * a property change event of type {@link #CLEAR_WHITESPACE_LINES_PROPERTY}.
 	 *
-	 * @param enabled Whether or not whitespace-only lines are cleared when
+	 * @param enabled Whether whitespace-only lines are cleared when
 	 *        the user presses Enter on them.
 	 * @see #isClearWhitespaceLinesEnabled()
 	 */
@@ -2396,55 +2489,22 @@ private boolean fractionalFontMetricsEnabled;
 	private void setDefaultAntiAliasingState() {
 
 		// Most accurate technique, but not available on all OSes.
-		aaHints = RSyntaxUtilities.getDesktopAntiAliasHints();
-		if (aaHints==null) {
-
-			Map<RenderingHints.Key, Object> temp =
-					new HashMap<RenderingHints.Key, Object>();
-
-			// In Java 6+, you can figure out what text AA hint Swing uses for
-			// JComponents...
-			JLabel label = new JLabel();
-			FontMetrics fm = label.getFontMetrics(label.getFont());
-			Object hint = null;
-			//FontRenderContext frc = fm.getFontRenderContext();
-			//hint = fm.getAntiAliasingHint();
-			try {
-				Method m = FontMetrics.class.getMethod("getFontRenderContext");
-				FontRenderContext frc = (FontRenderContext)m.invoke(fm);
-				m = FontRenderContext.class.getMethod("getAntiAliasingHint");
-				hint = m.invoke(frc);
-			} catch (RuntimeException re) {
-				throw re; // FindBugs
-			} catch (Exception e) {
-				// Swallow, either Java 1.5, or running in an applet
-			}
-
-			// If not running Java 6+, default to AA enabled on Windows where
-			// the software AA is pretty fast, and default (e.g. disabled) on
-			// non-Windows.  Note that OS X always uses AA no matter what
-			// rendering hints you give it, so this is a moot point there.
-			//System.out.println("Rendering hint: " + hint);
-			if (hint==null) {
-				String os = System.getProperty("os.name").toLowerCase();
-				if (os.contains("windows")) {
-					hint = RenderingHints.VALUE_TEXT_ANTIALIAS_ON;
-				}
-				else {
-					hint = RenderingHints.VALUE_TEXT_ANTIALIAS_DEFAULT;
-				}
-			}
-			temp.put(RenderingHints.KEY_TEXT_ANTIALIASING, hint);
-
-			aaHints = temp;
-
-		}
+		aaHints = RSyntaxUtilities.getBestPossibleAntiAliasHints();
 
 		// We must be connected to a screen resource for our graphics
 		// to be non-null.
 		if (isDisplayable()) {
 			refreshFontMetrics(getGraphics2D(getGraphics()));
 		}
+
+		// If not, we might be running headlessly.  Take a stab at
+		// our rendering hints and create an artificial graphics context.
+		else {
+			Graphics2D g2d = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics();
+			g2d.setRenderingHints(RSyntaxUtilities.getBestPossibleAntiAliasHints());
+			refreshFontMetrics(g2d);
+		}
+
 		repaint();
 
 	}
@@ -2495,13 +2555,22 @@ private boolean fractionalFontMetricsEnabled;
 
 
 	/**
-	 * Sets the font used by this text area.  Note that if some token styles
-	 * are using a different font, they will not be changed by calling this
-	 * method.  To set different fonts on individual token types, use the
-	 * text area's <code>SyntaxScheme</code>.
+	 * Sets the font used by this text area.<p>
+	 *
+	 * Note that if some token styles are using a different font family
+	 * (not style, e.g. bold and italics don't count), they will not be
+	 * changed by calling this method.  In particular, if you are using
+	 * multiple different fonts in your text area for different token
+	 * types, and are looking for an easy way to increase or decrease
+	 * all font sizes, use
+	 * {@link RSyntaxTextAreaEditorKit.IncreaseFontSizeAction} and
+	 * {@link RSyntaxTextAreaEditorKit.DecreaseFontSizeAction} rather
+	 * than this method.
 	 *
 	 * @param font The font.
 	 * @see SyntaxScheme#getStyle(int)
+	 * @see RSyntaxTextAreaEditorKit.IncreaseFontSizeAction
+	 * @see RSyntaxTextAreaEditorKit.DecreaseFontSizeAction
 	 */
 	@Override
 	public void setFont(Font font) {
@@ -2526,6 +2595,9 @@ private boolean fractionalFontMetricsEnabled;
 			// Force the current line highlight to be repainted, even
 			// though the caret's location hasn't changed.
 			forceCurrentLineHighlightRepaint();
+			// Update the "matched bracket", if any
+			lastBracketMatchPos = -1;
+			doBracketMatching();
 			// Get line number border in text area to repaint again
 			// since line heights have updated.
 			firePropertyChange("font", old, font);
@@ -2588,6 +2660,7 @@ private boolean fractionalFontMetricsEnabled;
 	 * imposes a fair performance penalty.  This method fires a property change
 	 * event of type {@link #HIGHLIGHT_SECONDARY_LANGUAGES_PROPERTY}.
 	 *
+	 * @param highlight Whether to highlight secondary languages.
 	 * @see #getHighlightSecondaryLanguages()
 	 * @see #setSecondaryLanguageBackground(int, Color)
 	 * @see #getSecondaryLanguageCount()
@@ -2625,12 +2698,47 @@ private boolean fractionalFontMetricsEnabled;
 	 *
 	 * @param enabled Whether hyperlinks are enabled.
 	 * @see #getHyperlinksEnabled()
+	 * @see #setLinkScanningMask(int)
+	 * @see #addHyperlinkListener(HyperlinkListener)
 	 */
 	public void setHyperlinksEnabled(boolean enabled) {
 		if (this.hyperlinksEnabled!=enabled) {
 			this.hyperlinksEnabled = enabled;
 			repaint();
 			firePropertyChange(HYPERLINKS_ENABLED_PROPERTY, !enabled, enabled);
+		}
+	}
+
+
+	/**
+	 * Toggles whether paired characters should be inserted when there is
+	 * a selection. For example, If the following text is selected:
+	 * <p>
+	 *     {@code something}
+	 * </p>
+	 * And the double quote character, {@code "}, is typed, the selection
+	 * can be replaced with:
+	 * <p>
+	 *     {@code "something"}
+	 * </p>
+	 * If enabled, this occurs for the following characters:
+	 * <ul>
+	 *     <li>{@code "}</li>
+	 *     <li>{@code '}</li>
+	 *     <li>{@code [}</li>
+	 *     <li>{@code (}</li>
+	 *     <li>{@code &#123;}</li>
+	 * </ul>
+	 *
+	 * @param insertPairedCharacters Whether to insert paired characters if a
+	 *        relevant key is typed while there is a selection.
+	 * @see #getInsertPairedCharacters()
+	 */
+	public void setInsertPairedCharacters(boolean insertPairedCharacters) {
+		if (this.insertPairedCharacters != insertPairedCharacters) {
+			this.insertPairedCharacters = insertPairedCharacters;
+			firePropertyChange(INSERT_PAIRED_CHARS_PROPERTY,
+				!insertPairedCharacters, insertPairedCharacters);
 		}
 	}
 
@@ -2643,7 +2751,12 @@ private boolean fractionalFontMetricsEnabled;
 	/**
 	 * Sets the mask for the key used to toggle whether we are scanning for
 	 * hyperlinks with mouse hovering.  The default value is
-	 * <code>CTRL_DOWN_MASK</code>.
+	 * {@code CTRL_DOWN_MASK}.<p>
+	 *
+	 * Note that this value will be ignored if
+	 * {@link #setHyperlinksEnabled(boolean)} is called and set to
+	 * {@code false}.  If you wish to disable hyperlinks, use that
+	 * method rather than changing this mask value.
 	 *
 	 * @param mask The mask to use.  This should be some bitwise combination of
 	 *        {@link InputEvent#CTRL_DOWN_MASK},
@@ -2675,7 +2788,8 @@ private boolean fractionalFontMetricsEnabled;
 	public void setMarkOccurrences(boolean markOccurrences) {
 		if (markOccurrences) {
 			if (markOccurrencesSupport==null) {
-				markOccurrencesSupport = new MarkOccurrencesSupport();
+				markOccurrencesSupport = new MarkOccurrencesSupport(markOccurrencesDelay,
+					markOccurrencesColor);
 				markOccurrencesSupport.install(this);
 				firePropertyChange(MARK_OCCURRENCES_PROPERTY, false, true);
 			}
@@ -2707,15 +2821,18 @@ private boolean fractionalFontMetricsEnabled;
 
 	/**
 	 * Sets the delay between when the caret is moved and when "marked
-	 * occurrences" are highlighted.
+	 * occurrences" are highlighted.  It is recommended to set this to
+	 * a value greater than {@code 0} to debounce the "mark occurrences"
+	 * operation, since it can be an expensive operation.
 	 *
-	 * @param delay The new delay.  This must be greater than {@code 0}.
+	 * @param delay The new delay, in milliseconds.  This must be
+	 *        greater than or equal to {@code 0}.
 	 * @see #getMarkOccurrencesDelay()
 	 * @see #getMarkOccurrences()
 	 */
 	public void setMarkOccurrencesDelay(int delay) {
-		if (delay <= 0) {
-			throw new IllegalArgumentException("Delay must be > 0");
+		if (delay < 0) {
+			throw new IllegalArgumentException("Delay must be >= 0");
 		}
 		if (delay != this.markOccurrencesDelay) {
 			this.markOccurrencesDelay = delay;
@@ -2827,6 +2944,12 @@ private boolean fractionalFontMetricsEnabled;
 	public void setParserDelay(int millis) {
 		if (parserManager==null) {
 			parserManager = new ParserManager(this);
+			// ParserManagers by default aren't started. They are typically
+			// started by addNotify() so we must manually start a new one
+			// if it's added after being displayed.
+			if (isDisplayable()) {
+				parserManager.restartParsing();
+			}
 		}
 		parserManager.setDelay(millis);
 	}
@@ -2904,9 +3027,20 @@ private boolean fractionalFontMetricsEnabled;
 			styleKey = SYNTAX_STYLE_NONE;
 		}
 		if (!styleKey.equals(syntaxStyleKey)) {
+
 			String oldStyle = syntaxStyleKey;
 			syntaxStyleKey = styleKey;
-			((RSyntaxDocument)getDocument()).setSyntaxStyle(styleKey);
+
+			// A little confusing, but in the code path of
+			// RSyntaxTextArea.setDocument() -> setSyntaxEditingStyle(),
+			// there's no need to update the Document's syntax style here
+			// since it was fetched from there.  Wasteful, AND causes
+			// but #206.
+			RSyntaxDocument doc = (RSyntaxDocument)getDocument();
+			if (!styleKey.equals(doc.getSyntaxStyle())) {
+				((RSyntaxDocument)getDocument()).setSyntaxStyle(styleKey);
+			}
+
 			firePropertyChange(SYNTAX_STYLE_PROPERTY, oldStyle, styleKey);
 			setActiveLineRange(-1, -1);
 		}
@@ -2915,7 +3049,7 @@ private boolean fractionalFontMetricsEnabled;
 
 
 	/**
-	 * Sets all of the colors used in syntax highlighting to the colors
+	 * Sets all the colors used in syntax highlighting to the colors
 	 * specified.  This uses a shallow copy of the color scheme so that
 	 * multiple text areas can share the same color scheme and have their
 	 * properties changed simultaneously.<p>
@@ -2999,7 +3133,7 @@ private boolean fractionalFontMetricsEnabled;
 	 *
 	 * Templates are a set of "shorthand identifiers" that you can configure
 	 * so that you only have to type a short identifier (such as "forb") to
-	 * insert a larger amount of code into the document (such as:<p>
+	 * insert a larger amount of code into the document, such as:<p>
 	 *
 	 * <pre>
 	 *   for (&lt;caret&gt;) {
@@ -3015,12 +3149,12 @@ private boolean fractionalFontMetricsEnabled;
 	 * uniformity among all text areas in an application.<p>
 	 *
 	 * For more flexible boilerplate code insertion, consider using the
-	 * <a href="http://javadoc.fifesoft.com/autocomplete/org/fife/ui/autocomplete/TemplateCompletion.html">TemplateCompletion
-	 * class</a> in the
+	 * <a href="https://javadoc.fifesoft.com/autocomplete/org/fife/ui/autocomplete/TemplateCompletion.html">
+	 * TemplateCompletion class</a> in the
 	 * <a href="https://github.com/bobbylight/AutoComplete">AutoComplete
 	 * add-on library</a>.
 	 *
-	 * @param enabled Whether or not templates should be enabled.
+	 * @param enabled Whether templates should be enabled.
 	 * @see #getTemplatesEnabled()
 	 */
 	public static synchronized void setTemplatesEnabled(boolean enabled) {
@@ -3105,7 +3239,7 @@ private boolean fractionalFontMetricsEnabled;
 		if (whitespaceVisible!=visible) {
 			this.whitespaceVisible = visible;
 			tokenPainter = visible ? new VisibleWhitespaceTokenPainter() :
-					(TokenPainter)new DefaultTokenPainter();
+					new DefaultTokenPainter();
 			repaint();
 			firePropertyChange(VISIBLE_WHITESPACE_PROPERTY, !visible, visible);
 		}
@@ -3117,22 +3251,24 @@ private boolean fractionalFontMetricsEnabled;
 	 * the hyperlink modifier.
 	 */
 	private void stopScanningForLinks() {
+
 		if (isScanningForLinks) {
-			Cursor c = getCursor();
+
 			isScanningForLinks = false;
 			linkGeneratorResult = null;
 			hoveredOverLinkOffset = -1;
+			fireHyperlinkUpdate(HyperlinkEvent.EventType.EXITED);
+			repaint(); // TODO: Repaint just the affected line.
+
+			// Occasionally cursor changes for other reasons outside of links
+			Cursor c = getCursor();
 			if (c!=null && c.getType()==Cursor.HAND_CURSOR) {
 				setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
-				repaint(); // TODO: Repaint just the affected line.
 			}
 		}
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void undoLastAction() {
 		super.undoLastAction();
@@ -3156,13 +3292,13 @@ private boolean fractionalFontMetricsEnabled;
 	 *         position.
 	 * @see #modelToToken(int)
 	 */
-	/*
-	 * TODO: This is a little inefficient.  This should convert view
-	 * coordinates to the underlying token (if any).  The way things currently
-	 * are, we're calling getTokenListForLine() twice (once in viewToModel()
-	 * and once here).
-	 */
 	public Token viewToToken(Point p) {
+		/*
+		 * TODO: This is a little inefficient.  This should convert view
+		 * coordinates to the underlying token (if any).  The way things currently
+		 * are, we're calling getTokenListForLine() twice (once in viewToModel()
+		 * and once here).
+		 */
 		return modelToToken(viewToModel(p));
 	}
 
@@ -3308,33 +3444,6 @@ private boolean fractionalFontMetricsEnabled;
 			insets = new Insets(0, 0, 0, 0);
 		}
 
-		private HyperlinkEvent createHyperlinkEvent() {
-			HyperlinkEvent he = null;
-			if (linkGeneratorResult!=null) {
-				he = linkGeneratorResult.execute();
-				linkGeneratorResult = null;
-			}
-			else {
-				Token t = modelToToken(hoveredOverLinkOffset);
-				URL url = null;
-				String desc = null;
-				try {
-					String temp = t.getLexeme();
-					// URI's need "http://" prefix for web URL's to work.
-					if (temp.startsWith("www.")) {
-						temp = "http://" + temp;
-					}
-					url = new URL(temp);
-				} catch (MalformedURLException mue) {
-					desc = mue.getMessage();
-				}
-				he = new HyperlinkEvent(RSyntaxTextArea.this,
-						HyperlinkEvent.EventType.ACTIVATED,
-						url, desc);
-			}
-			return he;
-		}
-
 		private boolean equal(LinkGeneratorResult e1,
 				LinkGeneratorResult e2) {
 			return e1.getSourceOffset()==e2.getSourceOffset();
@@ -3344,10 +3453,7 @@ private boolean fractionalFontMetricsEnabled;
 		public void mouseClicked(MouseEvent e) {
 			if (getHyperlinksEnabled() && isScanningForLinks &&
 					hoveredOverLinkOffset>-1) {
-				HyperlinkEvent he = createHyperlinkEvent();
-				if (he!=null) {
-					fireHyperlinkUpdate(he);
-				}
+				fireHyperlinkUpdate(HyperlinkEvent.EventType.ACTIVATED);
 				stopScanningForLinks();
 			}
 		}
@@ -3384,7 +3490,7 @@ private boolean fractionalFontMetricsEnabled;
 					// Copy token, viewToModel() unfortunately modifies Token
 					t = new TokenImpl(t);
 				}
-				Cursor c2 = null;
+				Cursor c2;
 				if (t!=null && t.isHyperlink()) {
 					if (hoveredOverLinkOffset==-1 ||
 							hoveredOverLinkOffset!=t.getOffset()) {
@@ -3420,12 +3526,20 @@ private boolean fractionalFontMetricsEnabled;
 				else {
 					c2 = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR);
 					hoveredOverLinkOffset = -1;
-					linkGeneratorResult = null;
+					if (linkGeneratorResult != null) {
+						linkGeneratorResult = null;
+					}
 				}
 				if (getCursor()!=c2) {
+
 					setCursor(c2);
 					// TODO: Repaint just the affected line(s).
 					repaint(); // Link either left or went into.
+
+					// Here we know for sure if they are changing to hovering over a link
+					// or leaving one
+					fireHyperlinkUpdate(c2 == Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) ?
+						HyperlinkEvent.EventType.ENTERED : HyperlinkEvent.EventType.EXITED);
 				}
 			}
 			else {
@@ -3437,6 +3551,5 @@ private boolean fractionalFontMetricsEnabled;
 		}
 
 	}
-
 
 }

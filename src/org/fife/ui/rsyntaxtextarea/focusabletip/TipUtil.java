@@ -4,7 +4,7 @@
  * TipUtil.java - Utility methods for homemade tool tips.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.focusabletip;
 
@@ -23,54 +23,22 @@ import javax.swing.border.Border;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.text.html.HTMLDocument;
 
+import org.fife.ui.rsyntaxtextarea.HtmlUtil;
 import org.fife.ui.rsyntaxtextarea.RSyntaxUtilities;
+import org.fife.ui.rtextarea.RTextArea;
 
 
 /**
- * Static utility methods for focusable tips.
+ * Static utility methods for focusable tips.  Many of these methods
+ * are useful when you want to make a popup {@code JWindow} look like
+ * a tool tip.
  *
  * @author Robert Futrell
  * @version 1.0
  */
 public final class TipUtil {
 
-
 	private TipUtil() {
-	}
-
-
-	/**
-	 * Returns a hex string for the specified color, suitable for HTML.
-	 *
-	 * @param c The color.
-	 * @return The string representation, in the form "<code>#rrggbb</code>",
-	 *         or <code>null</code> if <code>c</code> is <code>null</code>.
-	 */
-	private static String getHexString(Color c) {
-
-		if (c==null) {
-			return null;
-		}
-
-		StringBuilder sb = new StringBuilder("#");
-		int r = c.getRed();
-		if (r<16) {
-			sb.append('0');
-		}
-		sb.append(Integer.toHexString(r));
-		int g = c.getGreen();
-		if (g<16) {
-			sb.append('0');
-		}
-		sb.append(Integer.toHexString(g));
-		int b = c.getBlue();
-		if (b<16) {
-			sb.append('0');
-		}
-		sb.append(Integer.toHexString(b));
-
-		return sb.toString();
-
 	}
 
 
@@ -87,10 +55,10 @@ public final class TipUtil {
 		GraphicsEnvironment env = GraphicsEnvironment.
 										getLocalGraphicsEnvironment();
 		GraphicsDevice[] devices = env.getScreenDevices();
-		for (int i=0; i<devices.length; i++) {
-			GraphicsConfiguration[] configs = devices[i].getConfigurations();
-			for (int j=0; j<configs.length; j++) {
-				Rectangle gcBounds = configs[j].getBounds();
+		for (GraphicsDevice device : devices) {
+			GraphicsConfiguration[] configs = device.getConfigurations();
+			for (GraphicsConfiguration config : configs) {
+				Rectangle gcBounds = config.getBounds();
 				if (gcBounds.contains(x, y)) {
 					return gcBounds;
 				}
@@ -105,8 +73,40 @@ public final class TipUtil {
 	 * Returns the default background color to use for tool tip windows.
 	 *
 	 * @return The default background color.
+	 * @see #getToolTipBackground(RTextArea)
+	 * @see #getToolTipBorder()
 	 */
 	public static Color getToolTipBackground() {
+		return getToolTipBackground(null);
+	}
+
+
+	/**
+	 * Returns the default background color to use for tool tip windows.
+	 *
+	 * @param textArea The text area that will be the parent component of
+	 *         the tool tip.  If this is non-{@code null}, its background
+	 *         color is taken into consideration when determining the color
+	 *         to return (it will match the editor's background color if
+	 *         necessary to facilitate proper contrast for tool tips rendering
+	 *         code).  If this is {@code null}, the tool tip background for
+	 *         the current Look and Feel will be returned.
+	 * @return The default background color.
+	 * @see #getToolTipBackground()
+	 * @see #getToolTipBorder(RTextArea)
+	 */
+	public static Color getToolTipBackground(RTextArea textArea) {
+
+		// If the parent component is a text area, we assume the tool tip will
+		// display text area content.  In this case, use its background to
+		// ensure contrast between foreground and background.
+		// The only exception here is if the background of the editor is white,
+		// in which case we still use the default tool tip color (e.g. yellow
+		// on Windows) since contrast there is high enough and it looks a little
+		// more "native"
+		if (textArea != null && !Color.WHITE.equals(textArea.getBackground())) {
+			return textArea.getBackground();
+		}
 
 		Color c = UIManager.getColor("ToolTip.background");
 
@@ -134,8 +134,43 @@ public final class TipUtil {
 	 * Returns the border used by tool tips in this look and feel.
 	 *
 	 * @return The border.
+	 * @see #getToolTipBorder(RTextArea)
+	 * @see #getToolTipBackground()
 	 */
 	public static Border getToolTipBorder() {
+		return getToolTipBorder(null);
+	}
+
+
+	/**
+	 * Returns the border used by tool tips in this look and feel.
+	 *
+	 * @param textArea The text area that will be the parent component of
+	 *         the tool tip.  If this is non-{@code null}, its background
+	 *         color is taken into consideration when determining the color
+	 *         to return (it will coordinate with the editor's background
+	 *         color if necessary to facilitate proper contrast for tool
+	 *         tips rendering code).  If this is {@code null}, the tool
+	 *         tip background for the current Look and Feel will be returned.
+	 * @return The border.
+	 * @see #getToolTipBorder()
+	 * @see #getToolTipBackground(RTextArea)
+	 */
+	public static Border getToolTipBorder(RTextArea textArea) {
+
+		// If the parent component is a text area, we assume the tool tip will
+		// display text area content.  In this case, use its background to
+		// ensure contrast between foreground and background.
+		// The only exception here is if the background of the editor is white,
+		// in which case we still use the default tool tip color (e.g. yellow
+		// on Windows) since contrast there is high enough and it looks a little
+		// more "native"
+		if (textArea != null && !Color.WHITE.equals(textArea.getBackground())) {
+			Color color = textArea.getBackground();
+			if (color != null) {
+				return BorderFactory.createLineBorder(color.brighter());
+			}
+		}
 
 		Border border = UIManager.getBorder("ToolTip.border");
 
@@ -157,7 +192,7 @@ public final class TipUtil {
 	 * querying them is useless.
 	 *
 	 * @param c The color to check.
-	 * @return Whether it is a DerivedColor
+	 * @return Whether it is a DerivedColor.
 	 */
 	private static boolean isDerivedColor(Color c) {
 		return c!=null && c.getClass().getName().endsWith(".DerivedColor");
@@ -225,7 +260,7 @@ public final class TipUtil {
 		// without clearing out the important "standard" ones?).
 		Color linkFG = RSyntaxUtilities.getHyperlinkForeground();
 		doc.getStyleSheet().addRule(
-				"a { color: " + getHexString(linkFG) + "; }");
+				"a { color: " + HtmlUtil.getHexString(linkFG) + "; }");
 
 	}
 
@@ -243,7 +278,7 @@ public final class TipUtil {
 		doc.getStyleSheet().addRule(
 				"body { font-family: " + font.getFamily() +
 						"; font-size: " + font.getSize() + "pt" +
-						"; color: " + getHexString(fg) + "; }");
+						"; color: " + HtmlUtil.getHexString(fg) + "; }");
 	}
 
 

@@ -5,7 +5,7 @@
  * RSyntaxTextArea.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -78,8 +78,8 @@ public class RSyntaxDocument extends RDocument implements Iterable<Token>,
 
 	private transient int lastLine = -1;
 	private transient Token cachedTokenList;
-	private transient int useCacheCount = 0;
-	private transient int tokenRetrievalCount = 0;
+	private transient int useCacheCount;
+	private transient int tokenRetrievalCount;
 
 	private transient Segment s;
 
@@ -110,7 +110,7 @@ public class RSyntaxDocument extends RDocument implements Iterable<Token>,
 	 * @param syntaxStyle The syntax highlighting scheme to use.
 	 */
 	public RSyntaxDocument(TokenMakerFactory tmf, String syntaxStyle) {
-		putProperty(tabSizeAttribute, Integer.valueOf(5));
+		putProperty(tabSizeAttribute, 5);
 		lastTokensOnLines = new DynamicIntArray(400);
 		lastTokensOnLines.add(Token.NULL); // Initial (empty) line.
 		s = new Segment();
@@ -330,6 +330,8 @@ public class RSyntaxDocument extends RDocument implements Iterable<Token>,
 	 * Returns the text to place at the beginning and end of a
 	 * line to "comment" it in this programming language.
 	 *
+	 * @param languageIndex The language index to get comment information
+	 *        for.
 	 * @return The start and end strings to add to a line to "comment"
 	 *         it out.  A <code>null</code> value for either means there
 	 *         is no string to add for that part.  A value of
@@ -399,7 +401,7 @@ public class RSyntaxDocument extends RDocument implements Iterable<Token>,
 	 *        &gt;= 0.
 	 * @return A token list representing the specified line.
 	 */
-	public final Token getTokenListForLine(int line) {
+	public Token getTokenListForLine(int line) {
 
 		tokenRetrievalCount++;
 		if (line==lastLine && cachedTokenList!=null) {
@@ -478,8 +480,8 @@ public class RSyntaxDocument extends RDocument implements Iterable<Token>,
 	 * Deserializes a document.
 	 *
 	 * @param in The stream to read from.
-	 * @throws ClassNotFoundException
-	 * @throws IOException
+	 * @throws ClassNotFoundException If an unexpected error occurs.
+	 * @throws IOException If an IO error occurs.
 	 */
 	private void readObject(ObjectInputStream in)
 						throws ClassNotFoundException, IOException {

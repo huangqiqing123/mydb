@@ -4,7 +4,7 @@
  * RSyntaxTextAreaUI.java - UI for an RSyntaxTextArea.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -43,6 +43,12 @@ public class RSyntaxTextAreaUI extends RTextAreaUI {
 	private static final EditorKit DEFAULT_KIT			= new RSyntaxTextAreaEditorKit();
 
 
+	/**
+	 * Creates and returns an instance of this UI.
+	 *
+	 * @param ta The text area that will use the UI.
+	 * @return The UI.
+	 */
 	public static ComponentUI createUI(JComponent ta) {
 		return new RSyntaxTextAreaUI(ta);
 	}
@@ -50,18 +56,20 @@ public class RSyntaxTextAreaUI extends RTextAreaUI {
 
 	/**
 	 * Constructor.
+	 *
+	 * @param rSyntaxTextArea The text area.
 	 */
 	public RSyntaxTextAreaUI(JComponent rSyntaxTextArea) {
 		super(rSyntaxTextArea);
 	}
 
 
-    /**
-     * Creates the view for an element.
-     *
-     * @param elem The element.
-     * @return The view.
-     */
+	/**
+	 * Creates the view for an element.
+	 *
+	 * @param elem The element.
+	 * @return The view.
+	 */
 	@Override
 	public View create(Element elem) {
 		RTextArea c = getRTextArea();
@@ -134,9 +142,6 @@ public class RSyntaxTextAreaUI extends RTextAreaUI {
 			shared = new RSyntaxTextAreaDefaultInputMap();
 			UIManager.put(SHARED_INPUT_MAP_NAME, shared);
 		}
-		//KeyStroke[] keys = shared.allKeys();
-		//for (int i=0; i<keys.length; i++)
-		//	System.err.println(keys[i] + " -> " + shared.get(keys[i]));
 		map.setParent(shared);
 		return map;
 	}

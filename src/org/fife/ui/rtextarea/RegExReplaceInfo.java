@@ -4,7 +4,7 @@
  * RegExReplaceInfo.java - Information about a regex text match.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -63,7 +63,7 @@ class RegExReplaceInfo {
 	}
 
 	/**
-	 * Returns the string to replaced the matched text with.
+	 * Returns the string to replace the matched text with.
 	 *
 	 * @return The string to replace the matched text with.
 	 */

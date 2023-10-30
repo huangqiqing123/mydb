@@ -4,7 +4,7 @@
  * TipWindow.java - The actual window component representing the tool tip.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.focusabletip;
 
@@ -25,6 +25,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import javax.swing.BorderFactory;
 import javax.swing.JEditorPane;
@@ -43,7 +45,7 @@ import javax.swing.event.MouseInputAdapter;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTMLDocument;
 
-import org.fife.ui.rsyntaxtextarea.RSyntaxUtilities;
+import org.fife.ui.rsyntaxtextarea.HtmlUtil;
 
 
 /**
@@ -62,6 +64,8 @@ class TipWindow extends JWindow implements ActionListener {
 
 	private static TipWindow visibleInstance;
 
+	private static final String FLAT_LAF_BORDER_PREFIX = "com.formdev.flatlaf.ui.Flat";
+
 
 	/**
 	 * Constructor.
@@ -75,14 +79,14 @@ class TipWindow extends JWindow implements ActionListener {
 		this.ft = ft;
 		// Render plain text tool tips correctly.
 		if (msg!=null && msg.length()>=6 &&
-				!msg.substring(0,6).toLowerCase().equals("<html>")) {
-			msg = "<html>" + RSyntaxUtilities.escapeForHtml(msg, "<br>", false);
+				!msg.substring(0,6).equalsIgnoreCase("<html>")) {
+			msg = "<html>" + HtmlUtil.escapeForHtml(msg, "<br>", false);
 		}
 		this.text = msg;
 		tipListener = new TipListener();
 
 		JPanel cp = new JPanel(new BorderLayout());
-		cp.setBorder(TipUtil.getToolTipBorder());
+		cp.setBorder(getToolTipBorder());
 		cp.setBackground(TipUtil.getToolTipBackground());
 		textArea = new JEditorPane("text/html", text);
 		TipUtil.tweakTipEditorPane(textArea);
@@ -90,12 +94,9 @@ class TipWindow extends JWindow implements ActionListener {
 			((HTMLDocument)textArea.getDocument()).setBase(ft.getImageBase());
 		}
 		textArea.addMouseListener(tipListener);
-		textArea.addHyperlinkListener(new HyperlinkListener() {
-			@Override
-			public void hyperlinkUpdate(HyperlinkEvent e) {
-				if (e.getEventType()==HyperlinkEvent.EventType.ACTIVATED) {
-					TipWindow.this.ft.possiblyDisposeOfTipWindow();
-				}
+		textArea.addHyperlinkListener(e -> {
+			if (e.getEventType()==HyperlinkEvent.EventType.ACTIVATED) {
+				TipWindow.this.ft.possiblyDisposeOfTipWindow();
 			}
 		});
 		cp.add(textArea);
@@ -178,8 +179,8 @@ class TipWindow extends JWindow implements ActionListener {
 	 */
 	void fixSize() {
 
-		Dimension d = textArea.getPreferredSize();
-		Rectangle r = null;
+		Dimension d;
+		Rectangle r;
 		try {
 
 			// modelToView call is required for this hack, never remove!
@@ -219,8 +220,64 @@ class TipWindow extends JWindow implements ActionListener {
 	}
 
 
+	/**
+	 * FlatLaf adds insets to tool tips, and for some themes (usually light ones)
+	 * also uses a line border, whereas for other themes (usually dark ones)
+	 * there is no line border.  We need to ensure our border has no insets
+	 * so our draggable bottom component looks good, but we'd like to preserve
+	 * the color of the line border, if any.  This method allows us to do so
+	 * without a compile-time dependency on flatlaf.
+	 *
+	 * @param border The default tool tip border for the current Look and Feel.
+	 * @return The border to use for this window.
+	 */
+	private static Border getReplacementForFlatLafBorder(Border border) {
+
+		Class<?> clazz = border.getClass();
+
+		// If it's a FlatLineBorder, get its color.
+		// If it's a FlatEmptyBorder, just return a 0-sized regular EmptyBorder.
+		Color color = null;
+		Method[] methods = clazz.getDeclaredMethods();
+		for (Method method : methods) {
+			if ("getLineColor".equals(method.getName())) {
+				try {
+					color = (Color)method.invoke(border);
+				} catch (IllegalAccessException | InvocationTargetException e) {
+					e.printStackTrace(); // Never happens
+				}
+			}
+		}
+
+		if (color != null) {
+			return BorderFactory.createLineBorder(color);
+		}
+		return BorderFactory.createEmptyBorder();
+	}
+
+
 	public String getText() {
 		return text;
+	}
+
+
+	private static Border getToolTipBorder() {
+
+		Border border = TipUtil.getToolTipBorder();
+
+
+		// Special case for FlatDarkLaf and FlatLightLaf, since they add an
+		// empty border to tool tips that messes up our floating-window appearance
+		if (isFlatLafBorder(border)) {
+			border = getReplacementForFlatLafBorder(border);
+		}
+
+		return border;
+	}
+
+
+	private static boolean isFlatLafBorder(Border border) {
+		return border != null && border.getClass().getName().startsWith(FLAT_LAF_BORDER_PREFIX);
 	}
 
 
@@ -336,7 +393,7 @@ class TipWindow extends JWindow implements ActionListener {
 		@Override
 		public void mouseExited(MouseEvent e) {
 			// Since we registered this listener on the child components of
-			// the JWindow, not the JWindow iteself, we have to be careful.
+			// the JWindow, not the JWindow itself, we have to be careful.
 			Component source = (Component)e.getSource();
 			Point p = e.getPoint();
 			SwingUtilities.convertPointToScreen(p, source);

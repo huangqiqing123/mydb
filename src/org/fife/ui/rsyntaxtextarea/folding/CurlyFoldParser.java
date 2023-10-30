@@ -4,7 +4,7 @@
  * CurlyFoldParser.java - Fold parser for languages with C-style syntax.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.folding;
 
@@ -36,7 +36,7 @@ import org.fife.ui.rsyntaxtextarea.Token;
  * those two methods.<p>
  *
  * Note also that this class may impose somewhat of a performance penalty on
- * large source files, since it re-parses the entire document each time folds
+ * large source files, since it reparses the entire document each time folds
  * are reevaluated.
  *
  * @author Robert Futrell
@@ -100,13 +100,10 @@ public class CurlyFoldParser implements FoldParser {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public List<Fold> getFolds(RSyntaxTextArea textArea) {
 
-		List<Fold> folds = new ArrayList<Fold>();
+		List<Fold> folds = new ArrayList<>();
 
 		Fold currentFold = null;
 		int lineCount = textArea.getLineCount();
@@ -133,7 +130,7 @@ public class CurlyFoldParser implements FoldParser {
 
 							if (importStartLine>-1) {
 								if (lastSeenImportLine>importStartLine) {
-									Fold fold = null;
+									Fold fold;
 									// Any imports found *should* be a top-level fold,
 									// but we're extra lenient here and allow groups
 									// of them anywhere to keep our parser better-behaved
@@ -171,7 +168,7 @@ public class CurlyFoldParser implements FoldParser {
 									currentFold.setEndOffset(mlcEnd);
 									currentFold = currentFold.getParent();
 								}
-								//System.out.println("Ending MLC at: " + mlcEnd + ", parent==" + currentFold);
+								//System.out.println("Ending MLC at: " + mlcEnd);
 								inMLC = false;
 								mlcStart = 0;
 							}
@@ -196,7 +193,7 @@ public class CurlyFoldParser implements FoldParser {
 
 							if (importStartLine>-1) {
 								if (lastSeenImportLine>importStartLine) {
-									Fold fold = null;
+									Fold fold;
 									// Any imports found *should* be a top-level fold,
 									// but we're extra lenient here and allow groups
 									// of them anywhere to keep our parser better-behaved
@@ -244,7 +241,7 @@ public class CurlyFoldParser implements FoldParser {
 						if (currentFold!=null) {
 							currentFold.setEndOffset(t.getOffset());
 							Fold parentFold = currentFold.getParent();
-							//System.out.println("... Adding regular fold at " + t.offset + ", parent==" + parentFold);
+							//System.out.println("... Adding regular fold at " + t.offset);
 							// Don't add fold markers for single-line blocks
 							if (currentFold.isOnSingleLine()) {
 								if (!currentFold.removeFromParent()) {

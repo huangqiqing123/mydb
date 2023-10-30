@@ -1,12 +1,8 @@
 /*
  * 12/01/2014
  *
- * Copyright (C) 2013 Robert Futrell
- * robert_futrell at users.sourceforge.net
- * http://fifesoft.com/rsyntaxtextarea
- *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -37,7 +33,12 @@ public class HtmlOccurrenceMarker implements OccurrenceMarker {
 	private static final Set<String> TAGS_REQUIRING_CLOSING =
 			getRequiredClosingTags();
 
-	public static final Set<String> getRequiredClosingTags() {
+	/**
+	 * Returns the set of HTML tags that require a closing tag.
+	 *
+	 * @return The set of HTML tags that require a closing tag.
+	 */
+	public static Set<String> getRequiredClosingTags() {
 		final String[] tags = {
 			"html",
 			"head",
@@ -138,12 +139,12 @@ public class HtmlOccurrenceMarker implements OccurrenceMarker {
 			"u",
 			"xmp",
 		};
-		return new HashSet<String>(Arrays.asList(tags));
+		return new HashSet<>(Arrays.asList(tags));
 	}
 
 
 	/**
-	 * If the caret is inside of a tag, this method returns the token
+	 * If the caret is inside a tag, this method returns the token
 	 * representing the tag name; otherwise, <code>null</code> is returned.<p>
 	 *
 	 * Currently, this method only checks for tag names on the same line as
@@ -156,7 +157,7 @@ public class HtmlOccurrenceMarker implements OccurrenceMarker {
 	 *         specified occurrence marker identifies tokens other than
 	 *         tag names, these other element types may be returned.
 	 */
-	public static final Token getTagNameTokenForCaretOffset(
+	public static Token getTagNameTokenForCaretOffset(
 			RSyntaxTextArea textArea, OccurrenceMarker occurrenceMarker) {
 
 		// Get the tag name token.
@@ -196,27 +197,18 @@ public class HtmlOccurrenceMarker implements OccurrenceMarker {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public Token getTokenToMark(RSyntaxTextArea textArea) {
 		return getTagNameTokenForCaretOffset(textArea, this);
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public boolean isValidType(RSyntaxTextArea textArea, Token t) {
 		return textArea.getMarkOccurrencesOfTokenType(t.getType());
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void markOccurrences(RSyntaxDocument doc, Token t,
 			RSyntaxTextAreaHighlighter h, SmartHighlightPainter p) {
@@ -318,7 +310,7 @@ public class HtmlOccurrenceMarker implements OccurrenceMarker {
 			// tag we found originally; if it's not on this line, keep going
 			// to the previous line.
 
-			List<Entry> openCloses = new ArrayList<Entry>();
+			List<Entry> openCloses = new ArrayList<>();
 			boolean inPossibleMatch = false;
 			t = doc.getTokenListForLine(curLine);
 			final int endBefore = tokenOffs - 2; // Stop before "</".

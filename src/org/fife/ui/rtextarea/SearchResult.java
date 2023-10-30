@@ -4,7 +4,7 @@
  * SearchResult - The result of a find, replace, or "mark all" operation.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -42,6 +42,12 @@ public class SearchResult implements Comparable<SearchResult> {
 	 * The number of instances marked.
 	 */
 	private int markedCount;
+
+	/**
+	 * Whether this result is from a "wrapping" search - that is, no results were found from caret -> end of document,
+	 * but a result _was_ found in a subsequent search from document start -> caret.
+	 */
+	private boolean wrapped;
 
 
 	/**
@@ -212,6 +218,31 @@ public class SearchResult implements Comparable<SearchResult> {
 	 */
 	public void setMatchRange(DocumentRange range) {
 		this.matchRange = range;
+	}
+
+
+	/**
+	 * Marks this search result as a 'wrapped' result; that is, it came from the second pass through a
+	 * document, after an initial search forward or backward from the caret didn't return anything.
+	 *
+	 * @param wrapped The new 'wrapped' state. Defaults to false.
+	 * @see #isWrapped()
+	 * @see SearchContext#setSearchWrap(boolean)
+	 */
+	public void setWrapped(boolean wrapped) {
+		this.wrapped = wrapped;
+	}
+
+
+	/**
+	 * Returns whether this is a 'wrapped' result, meaning it came from a second pass through the document, after an
+	 * initial search forward or backward from the caret didn't return anything.
+	 *
+	 * @return true if the result was from a 'wrapping' search; false otherwise.
+	 * @see SearchContext#setSearchWrap(boolean)
+	 */
+	public boolean isWrapped() {
+		return wrapped;
 	}
 
 

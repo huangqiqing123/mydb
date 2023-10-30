@@ -4,7 +4,7 @@
  * Theme.java - A color theme for RSyntaxTextArea.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -70,18 +70,19 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author Robert Futrell
  * @version 1.0
  */
-@SuppressWarnings({ "checkstyle:visibilitymodifier" })
+@SuppressWarnings("checkstyle:visibilitymodifier")
 public class Theme {
 
 	public Font baseFont;
 	public Color bgColor;
 	public Color caretColor;
-	public boolean useSelctionFG;
+	public boolean useSelectionFG;
 	public Color selectionFG;
 	public Color selectionBG;
 	public boolean selectionRoundedEdges;
 	public Color currentLineHighlight;
 	public boolean fadeCurrentLineHighlight;
+	public Color tabLineColor;
 	public Color marginLineColor;
 	public Color markAllHighlightColor;
 	public Color markOccurrencesColor;
@@ -95,14 +96,18 @@ public class Theme {
 
 	public SyntaxScheme scheme;
 
+	public Color gutterBackgroundColor;
 	public Color gutterBorderColor;
 	public Color activeLineRangeColor;
 	public boolean iconRowHeaderInheritsGutterBG;
 	public Color lineNumberColor;
+	public Color currentLineNumberColor;
 	public String lineNumberFont;
 	public int lineNumberFontSize;
 	public Color foldIndicatorFG;
+	public Color foldIndicatorArmedFG;
 	public Color foldBG;
+	public Color armedFoldBG;
 
 
 	/**
@@ -131,12 +136,13 @@ public class Theme {
 		baseFont = textArea.getFont();
 		bgColor = textArea.getBackground();
 		caretColor = textArea.getCaretColor();
-		useSelctionFG = textArea.getUseSelectedTextColor();
+		useSelectionFG = textArea.getUseSelectedTextColor();
 		selectionFG = textArea.getSelectedTextColor();
 		selectionBG = textArea.getSelectionColor();
 		selectionRoundedEdges = textArea.getRoundedSelectionEdges();
 		currentLineHighlight = textArea.getCurrentLineHighlightColor();
 		fadeCurrentLineHighlight = textArea.getFadeCurrentLineHighlight();
+		tabLineColor = textArea.getTabLineColor();
 		marginLineColor = textArea.getMarginLineColor();
 		markAllHighlightColor = textArea.getMarkAllHighlightColor();
 		markOccurrencesColor = textArea.getMarkOccurrencesColor();
@@ -157,15 +163,18 @@ public class Theme {
 
 		Gutter gutter = RSyntaxUtilities.getGutter(textArea);
 		if (gutter!=null) {
-			bgColor = gutter.getBackground();
+			gutterBackgroundColor = gutter.getBackground();
 			gutterBorderColor = gutter.getBorderColor();
 			activeLineRangeColor = gutter.getActiveLineRangeColor();
 			iconRowHeaderInheritsGutterBG = gutter.getIconRowHeaderInheritsGutterBackground();
 			lineNumberColor = gutter.getLineNumberColor();
+			currentLineNumberColor = gutter.getCurrentLineNumberColor();
 			lineNumberFont = gutter.getLineNumberFont().getFamily();
 			lineNumberFontSize = gutter.getLineNumberFont().getSize();
 			foldIndicatorFG = gutter.getFoldIndicatorForeground();
+			foldIndicatorArmedFG = gutter.getFoldIndicatorArmedForeground();
 			foldBG = gutter.getFoldBackground();
+			armedFoldBG = gutter.getArmedFoldBackground();
 		}
 
 	}
@@ -181,12 +190,13 @@ public class Theme {
 		textArea.setFont(baseFont);
 		textArea.setBackground(bgColor);
 		textArea.setCaretColor(caretColor);
-		textArea.setUseSelectedTextColor(useSelctionFG);
+		textArea.setUseSelectedTextColor(useSelectionFG);
 		textArea.setSelectedTextColor(selectionFG);
 		textArea.setSelectionColor(selectionBG);
 		textArea.setRoundedSelectionEdges(selectionRoundedEdges);
 		textArea.setCurrentLineHighlightColor(currentLineHighlight);
 		textArea.setFadeCurrentLineHighlight(fadeCurrentLineHighlight);
+		textArea.setTabLineColor(tabLineColor);
 		textArea.setMarginLineColor(marginLineColor);
 		textArea.setMarkAllHighlightColor(markAllHighlightColor);
 		textArea.setMarkOccurrencesColor(markOccurrencesColor);
@@ -206,11 +216,12 @@ public class Theme {
 
 		Gutter gutter = RSyntaxUtilities.getGutter(textArea);
 		if (gutter!=null) {
-			gutter.setBackground(bgColor);
+			gutter.setBackground(gutterBackgroundColor);
 			gutter.setBorderColor(gutterBorderColor);
 			gutter.setActiveLineRangeColor(activeLineRangeColor);
 			gutter.setIconRowHeaderInheritsGutterBackground(iconRowHeaderInheritsGutterBG);
 			gutter.setLineNumberColor(lineNumberColor);
+			gutter.setCurrentLineNumberColor(currentLineNumberColor);
 			String fontName = lineNumberFont!=null ? lineNumberFont :
 				baseFont.getFamily();
 			int fontSize = lineNumberFontSize>0 ? lineNumberFontSize :
@@ -218,7 +229,9 @@ public class Theme {
 			Font font = getFont(fontName, Font.PLAIN, fontSize);
 			gutter.setLineNumberFont(font);
 			gutter.setFoldIndicatorForeground(foldIndicatorFG);
+			gutter.setFoldIndicatorArmedForeground(foldIndicatorArmedFG);
 			gutter.setFoldBackground(foldBG);
+			gutter.setArmedFoldBackground(armedFoldBG);
 		}
 
 	}
@@ -346,15 +359,11 @@ public class Theme {
 
 		Theme theme = new Theme(baseFont);
 
-		BufferedInputStream bin = new BufferedInputStream(in);
-		try {
+		try (BufferedInputStream bin = new BufferedInputStream(in)) {
 			XmlHandler.load(theme, bin);
-		} finally {
-			bin.close();
 		}
 
 		return theme;
-
 	}
 
 
@@ -367,11 +376,10 @@ public class Theme {
 	 */
 	public void save(OutputStream out) throws IOException {
 
-		BufferedOutputStream bout = new BufferedOutputStream(out);
-		try {
+		try (BufferedOutputStream bout = new BufferedOutputStream(out)) {
 
 			DocumentBuilder db = DocumentBuilderFactory.newInstance().
-					newDocumentBuilder();
+				newDocumentBuilder();
 			DOMImplementation impl = db.getDOMImplementation();
 
 			Document doc = impl.createDocument(null, "RSyntaxTheme", null);
@@ -380,7 +388,7 @@ public class Theme {
 
 			Element elem = doc.createElement("baseFont");
 			if (!baseFont.getFamily().equals(
-					RSyntaxTextArea.getDefaultFont().getFamily())) {
+				RSyntaxTextArea.getDefaultFont().getFamily())) {
 				elem.setAttribute("family", baseFont.getFamily());
 			}
 			elem.setAttribute("size", Integer.toString(baseFont.getSize()));
@@ -395,7 +403,7 @@ public class Theme {
 			root.appendChild(elem);
 
 			elem = doc.createElement("selection");
-			elem.setAttribute("useFG", Boolean.toString(useSelctionFG));
+			elem.setAttribute("useFG", Boolean.toString(useSelectionFG));
 			elem.setAttribute("fg", colorToString(selectionFG));
 			elem.setAttribute("bg", colorToString(selectionBG));
 			elem.setAttribute("roundedEdges", Boolean.toString(selectionRoundedEdges));
@@ -404,6 +412,10 @@ public class Theme {
 			elem = doc.createElement("currentLineHighlight");
 			elem.setAttribute("color", colorToString(currentLineHighlight));
 			elem.setAttribute("fade", Boolean.toString(fadeCurrentLineHighlight));
+			root.appendChild(elem);
+
+			elem = doc.createElement("tabLine");
+			elem.setAttribute("color", colorToString(tabLineColor));
 			root.appendChild(elem);
 
 			elem = doc.createElement("marginLine");
@@ -431,13 +443,17 @@ public class Theme {
 			root.appendChild(elem);
 
 			elem = doc.createElement("secondaryLanguages");
-			for (int i=0; i<secondaryLanguages.length; i++) {
+			for (int i = 0; i < secondaryLanguages.length; i++) {
 				Color color = secondaryLanguages[i];
 				Element elem2 = doc.createElement("language");
-				elem2.setAttribute("index", Integer.toString(i+1));
-				elem2.setAttribute("bg", color==null ? "":colorToString(color));
+				elem2.setAttribute("index", Integer.toString(i + 1));
+				elem2.setAttribute("bg", color == null ? "" : colorToString(color));
 				elem.appendChild(elem2);
 			}
+			root.appendChild(elem);
+
+			elem = doc.createElement("gutterBackground");
+			elem.setAttribute("color", colorToString(gutterBackgroundColor));
 			root.appendChild(elem);
 
 			elem = doc.createElement("gutterBorder");
@@ -446,18 +462,27 @@ public class Theme {
 
 			elem = doc.createElement("lineNumbers");
 			elem.setAttribute("fg", colorToString(lineNumberColor));
-			if (lineNumberFont!=null) {
+			if (currentLineNumberColor != null) {
+				elem.setAttribute("currentFG", colorToString(currentLineNumberColor));
+			}
+			if (lineNumberFont != null) {
 				elem.setAttribute("fontFamily", lineNumberFont);
 			}
-			if (lineNumberFontSize>0) {
+			if (lineNumberFontSize > 0) {
 				elem.setAttribute("fontSize",
-						Integer.toString(lineNumberFontSize));
+					Integer.toString(lineNumberFontSize));
 			}
 			root.appendChild(elem);
 
 			elem = doc.createElement("foldIndicator");
 			elem.setAttribute("fg", colorToString(foldIndicatorFG));
+			if (foldIndicatorArmedFG != null) {
+				elem.setAttribute("armedFg", colorToString(foldIndicatorArmedFG));
+			}
 			elem.setAttribute("iconBg", colorToString(foldBG));
+			if (armedFoldBG != null) {
+				elem.setAttribute("iconArmedBg", colorToString(armedFoldBG));
+			}
 			root.appendChild(elem);
 
 			elem = doc.createElement("iconRowHeader");
@@ -467,29 +492,35 @@ public class Theme {
 
 			elem = doc.createElement("tokenStyles");
 			Field[] fields = TokenTypes.class.getFields();
-			for (int i=0; i<fields.length; i++) {
-				Field field = fields[i];
+			for (Field field : fields) {
+
+				// IntelliJ's coverage analysis injects fields named
+				// things like __$lineHits$__.  Yuck.
+				if (field.getName().startsWith("__")) {
+					continue;
+				}
+
 				int value = field.getInt(null);
-				if (value!=TokenTypes.DEFAULT_NUM_TOKEN_TYPES) {
+				if (value != TokenTypes.DEFAULT_NUM_TOKEN_TYPES) {
 					Style style = scheme.getStyle(value);
-					if (style!=null) {
+					if (style != null) {
 						Element elem2 = doc.createElement("style");
 						elem2.setAttribute("token", field.getName());
 						Color fg = style.foreground;
-						if (fg!=null) {
+						if (fg != null) {
 							elem2.setAttribute("fg", colorToString(fg));
 						}
 						Color bg = style.background;
-						if (bg!=null) {
+						if (bg != null) {
 							elem2.setAttribute("bg", colorToString(bg));
 						}
 						Font font = style.font;
-						if (font!=null) {
+						if (font != null) {
 							if (!font.getFamily().equals(
-									baseFont.getFamily())) {
+								baseFont.getFamily())) {
 								elem2.setAttribute("fontFamily", font.getFamily());
 							}
-							if (font.getSize()!=baseFont.getSize()) {
+							if (font.getSize() != baseFont.getSize()) {
 								elem2.setAttribute("fontSize", Integer.toString(font.getSize()));
 							}
 							if (font.isBold()) {
@@ -510,9 +541,9 @@ public class Theme {
 
 			DOMSource source = new DOMSource(doc);
 			// Use a writer instead of OutputStream to allow pretty printing.
-			// See http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6337981
+			// See https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6337981
 			StreamResult result = new StreamResult(new PrintWriter(
-					new UnicodeWriter(bout, "UTF-8")));
+				new UnicodeWriter(bout, "UTF-8")));
 			TransformerFactory transFac = TransformerFactory.newInstance();
 			Transformer transformer = transFac.newTransformer();
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -524,12 +555,7 @@ public class Theme {
 		} catch (RuntimeException re) {
 			throw re; // FindBugs
 		} catch (Exception e) {
-			e.printStackTrace();
-			throw new IOException("Error generating XML: " + e.getMessage());
-			// When Java 6 is minimum required version
-			//throw new IOException("Error generating XML: " + e.getMessage(), e);
-		} finally {
-			bout.close();
+			throw new IOException("Error generating XML: " + e.getMessage(), e);
 		}
 
 	}
@@ -615,7 +641,6 @@ public class Theme {
 				is.setEncoding("UTF-8");
 				reader.parse(is);
 			} catch (/*SAX|ParserConfiguration*/Exception se) {
-				se.printStackTrace();
 				throw new IOException(se.toString());
 			}
 		}
@@ -635,8 +660,7 @@ public class Theme {
 		}
 
 		@Override
-		public InputSource resolveEntity(String publicID,
-				String systemID) throws SAXException {
+		public InputSource resolveEntity(String publicID, String systemID) {
 			return new InputSource(getClass().
 					getResourceAsStream("themes/theme.dtd"));
 		}
@@ -650,6 +674,7 @@ public class Theme {
 				String color = attrs.getValue("color");
 				if (color!=null) {
 					theme.bgColor = stringToColor(color, getDefaultBG());
+					theme.gutterBackgroundColor = theme.bgColor;
 				}
 				else {
 					String img = attrs.getValue("image");
@@ -689,11 +714,33 @@ public class Theme {
 				theme.fadeCurrentLineHighlight = fade;
 			}
 
+			else if ("tabLine".equals(qName)) {
+				String color = attrs.getValue("color");
+				theme.tabLineColor = stringToColor(color);
+			}
+
 			else if ("foldIndicator".equals(qName)) {
 				String color = attrs.getValue("fg");
 				theme.foldIndicatorFG = stringToColor(color);
+				color = attrs.getValue("armedFg");
+				// This field must have a value for downstream consumers to
+				// function properly, so default to regular FG if not armed
+				// variant isn't specified
+				theme.foldIndicatorArmedFG = stringToColor(color);
 				color = attrs.getValue("iconBg");
 				theme.foldBG = stringToColor(color);
+				color = attrs.getValue("iconArmedBg");
+				// This field must have a value for downstream consumers to
+				// function properly, so default to regular BG if not armed
+				// variant isn't specified
+				theme.armedFoldBG = stringToColor(color, theme.foldBG);
+			}
+
+			else if ("gutterBackground".equals(qName)) {
+				String color = attrs.getValue("color");
+				if (color!=null) {
+					theme.gutterBackgroundColor = stringToColor(color);
+				}
 			}
 
 			else if ("gutterBorder".equals(qName)) {
@@ -706,12 +753,14 @@ public class Theme {
 				theme.activeLineRangeColor = stringToColor(color);
 				String inheritBGStr = attrs.getValue("inheritsGutterBG");
 				theme.iconRowHeaderInheritsGutterBG =
-						inheritBGStr==null ? false : Boolean.valueOf(inheritBGStr);
+					Boolean.parseBoolean(inheritBGStr);
 			}
 
 			else if ("lineNumbers".equals(qName)) {
 				String color = attrs.getValue("fg");
 				theme.lineNumberColor = stringToColor(color);
+				color = attrs.getValue("currentFG");
+				theme.currentLineNumberColor = stringToColor(color);
 				theme.lineNumberFont = attrs.getValue("fontFamily");
 				theme.lineNumberFontSize = parseInt(attrs, "fontSize", -1);
 			}
@@ -760,7 +809,7 @@ public class Theme {
 
 			else if ("selection".equals(qName)) {
 				String useStr = attrs.getValue("useFG");
-				theme.useSelctionFG = Boolean.parseBoolean(useStr);
+				theme.useSelectionFG = Boolean.parseBoolean(useStr);
 				String color = attrs.getValue("fg");
 				theme.selectionFG = stringToColor(color,
 											getDefaultSelectionFG());
@@ -781,7 +830,7 @@ public class Theme {
 			else if ("style".equals(qName)) {
 
 				String type = attrs.getValue("token");
-				Field field = null;
+				Field field;
 				try {
 					field = Token.class.getField(type);
 				} catch (RuntimeException re) {
@@ -793,13 +842,10 @@ public class Theme {
 
 				if (field.getType()==int.class) {
 
-					int index = 0;
+					int index;
 					try {
 						index = field.getInt(theme.scheme);
-					} catch (IllegalArgumentException e) {
-						e.printStackTrace();
-						return;
-					} catch (IllegalAccessException e) {
+					} catch (IllegalArgumentException | IllegalAccessException e) {
 						e.printStackTrace();
 						return;
 					}
@@ -856,9 +902,14 @@ public class Theme {
 							orig.deriveFont(style);
 					}
 
+					// RSTA delegates to baseFont if a scheme has no font
+					if (theme.baseFont.equals(theme.scheme.getStyle(index).font)) {
+						theme.scheme.getStyle(index).font = null;
+					}
+
 					String ulineStr = attrs.getValue("underline");
 					if (ulineStr!=null) {
-						boolean uline= Boolean.parseBoolean(ulineStr);
+						boolean uline = Boolean.parseBoolean(ulineStr);
 						theme.scheme.getStyle(index).underline = uline;
 					}
 

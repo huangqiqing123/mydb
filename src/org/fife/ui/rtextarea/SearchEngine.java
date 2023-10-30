@@ -4,7 +4,7 @@
  * SearchEngine.java - Handles find/replace operations in an RTextArea.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -72,11 +72,11 @@ public final class SearchEngine {
 		boolean doMarkAll = textArea instanceof RTextArea && context.getMarkAll();
 
 		String text = context.getSearchFor();
-		if (text==null || text.length()==0) {
+		if (text == null || text.isEmpty() || textArea.getDocument().getLength() == 0) {
 			if (doMarkAll) {
 				// Force "mark all" event to be broadcast so listeners know to
 				// clear their mark-all markers.  The RSTA already cleared its
-				// highlights above, but cleraMarkAllHighlights() doesn't fire
+				// highlights above, but clearMarkAllHighlights() doesn't fire
 				// an event itself for performance reasons.
 				List<DocumentRange> emptyRangeList = Collections.emptyList();
 				((RTextArea)textArea).markAll(emptyRangeList);
@@ -94,7 +94,7 @@ public final class SearchEngine {
 						Math.min(c.getDot(), c.getMark());
 
 		String findIn = getFindInText(textArea, start, forward);
-		if (findIn==null || findIn.length()==0) {
+		if (!context.getSearchWrap() && (findIn == null || findIn.isEmpty())) {
 			return new SearchResult();
 		}
 
@@ -104,7 +104,7 @@ public final class SearchEngine {
 					getMarkedCount();
 		}
 
-		SearchResult result = SearchEngine.findImpl(findIn, context);
+		SearchResult result = SearchEngine.findImpl(findIn == null ? "" : findIn, context);
 		if (result.wasFound() && !result.getMatchRange().isZeroLength()) {
 			// Without this, if JTextArea isn't in focus, selection
 			// won't appear selected.
@@ -114,6 +114,39 @@ public final class SearchEngine {
 			}
 			RSyntaxUtilities.selectAndPossiblyCenter(textArea,
 					result.getMatchRange(), true);
+		} else if (context.getSearchWrap() && !result.wasFound()) {
+			if (forward) {
+				start = 0;
+			} else {
+				start = textArea.getDocument().getLength() - 1;
+			}
+
+			findIn = getFindInText(textArea, start, forward);
+
+			if (findIn == null || findIn.isEmpty()) {
+				SearchResult emptyResult = new SearchResult();
+				emptyResult.setWrapped(true);
+				return emptyResult;
+			}
+
+			if (doMarkAll) {
+				markAllCount = markAllImpl((RTextArea) textArea, context).
+					getMarkedCount();
+			}
+
+			result = SearchEngine.findImpl(findIn, context);
+			result.setWrapped(true);
+			if (result.wasFound() && !result.getMatchRange().isZeroLength()) {
+				// Without this, if JTextArea isn't in focus, selection
+				// won't appear selected.
+				textArea.getCaret().setSelectionVisible(true);
+				if (forward) {
+					result.getMatchRange().translate(start);
+				}
+				RSyntaxUtilities.selectAndPossiblyCenter(textArea,
+					result.getMatchRange(), true
+				);
+			}
 		}
 
 		result.setMarkedCount(markAllCount);
@@ -154,7 +187,7 @@ public final class SearchEngine {
 			// Regex matches can have varying widths.  The returned point's
 			// x- and y-values represent the start and end indices of the
 			// match in findIn.
-			Point regExPos = null;
+			Point regExPos;
 			int start = 0;
 			do {
 				regExPos = getNextMatchPosRegEx(text, findIn.substring(start),
@@ -194,8 +227,8 @@ public final class SearchEngine {
 	private static CharSequence getFindInCharSequence(RTextArea textArea,
 			int start, boolean forward) {
 		RDocument doc = (RDocument)textArea.getDocument();
-		int csStart = 0;
-		int csEnd = 0;
+		int csStart;
+		int csEnd;
 		if (forward) {
 			csStart = start;
 			csEnd = doc.getLength();
@@ -253,7 +286,7 @@ public final class SearchEngine {
 	 *
 	 * If <code>replacement</code> is <code>null</code>, this method call is
 	 * assumed to be part of a "find" operation and points are returned.  If
-	 * if is non-<code>null</code>, it is assumed to be part of a "replace"
+	 * it is non-<code>null</code>, it is assumed to be part of a "replace"
 	 * operation and the <code>RegExReplaceInfo</code>s are returned.<p>
 	 *
 	 * @param m The matcher.
@@ -307,44 +340,16 @@ public final class SearchEngine {
 
 		// Make our variables lower case if we're ignoring case.
 		if (!matchCase) {
-			return getNextMatchPosImpl(searchFor.toLowerCase(),
-								searchIn.toLowerCase(), forward,
-								matchCase, wholeWord);
+			searchFor = searchFor.toLowerCase();
+			searchIn = searchIn.toLowerCase();
 		}
-
-		return getNextMatchPosImpl(searchFor, searchIn, forward,
-								matchCase, wholeWord);
-
-	}
-
-
-	/**
-	 * Actually does the work of matching; assumes searchFor and searchIn
-	 * are already upper/lower-cased appropriately.<br>
-	 * The reason this method is here is to attempt to speed up
-	 * <code>FindInFilesDialog</code>; since it repeatedly calls
-	 * this method instead of <code>getNextMatchPos</code>, it gets better
-	 * performance as it no longer has to allocate a lower-cased string for
-	 * every call.
-	 *
-	 * @param searchFor The string to search for.
-	 * @param searchIn The string to search in.
-	 * @param goForward Whether the search is forward or backward.
-	 * @param matchCase Whether the search is case-sensitive.
-	 * @param wholeWord Whether only whole words should be matched.
-	 * @return The location of the next match, or <code>-1</code> if no
-	 *         match was found.
-	 */
-	private static int getNextMatchPosImpl(String searchFor,
-								String searchIn, boolean goForward,
-								boolean matchCase, boolean wholeWord) {
 
 		if (wholeWord) {
 			int len = searchFor.length();
-			int temp = goForward ? 0 : searchIn.length();
-			int tempChange = goForward ? 1 : -1;
+			int temp = forward ? 0 : searchIn.length();
+			int tempChange = forward ? 1 : -1;
 			while (true) {
-				if (goForward) {
+				if (forward) {
 					temp = searchIn.indexOf(searchFor, temp);
 				}
 				else {
@@ -363,7 +368,7 @@ public final class SearchEngine {
 			}
 		}
 		else {
-			return goForward ? searchIn.indexOf(searchFor) :
+			return forward ? searchIn.indexOf(searchFor) :
 							searchIn.lastIndexOf(searchFor);
 		}
 
@@ -378,7 +383,7 @@ public final class SearchEngine {
 	 * @param searchIn The string to search in.
 	 * @param goForward Whether to search forward.  If <code>false</code>,
 	 *        search backward.
-	 * @param matchCase Whether or not to do a case-sensitive search for
+	 * @param matchCase Whether to do a case-sensitive search for
 	 *        <code>regEx</code>.
 	 * @param wholeWord If <code>true</code>, <code>regEx</code>
 	 *        occurrences embedded in longer words in <code>searchIn</code>
@@ -406,7 +411,7 @@ public final class SearchEngine {
 	 * @param searchIn The string to search in.
 	 * @param goForward Whether to search forward.  If <code>false</code>,
 	 *        search backward.
-	 * @param matchCase Whether or not to do a case-sensitive search for
+	 * @param matchCase Whether to do a case-sensitive search for
 	 *        <code>regEx</code>.
 	 * @param wholeWord If <code>true</code>, <code>regEx</code>
 	 *        occurrences embedded in longer words in <code>searchIn</code>
@@ -437,10 +442,10 @@ public final class SearchEngine {
 			regEx = "\\b" + regEx + "\\b";
 		}
 
-		// Make a pattern that takes into account whether or not to match case.
+		// Make a pattern that takes into account whether to match case.
 		int flags = Pattern.MULTILINE; // '^' and '$' are done per line.
 		flags = RSyntaxUtilities.getPatternFlags(matchCase, flags);
-		Pattern pattern = null;
+		Pattern pattern;
 		try {
 			pattern = Pattern.compile(regEx, flags);
 		} catch (PatternSyntaxException pse) {
@@ -494,7 +499,7 @@ public final class SearchEngine {
 	private static RegExReplaceInfo getRegExReplaceInfo(CharSequence searchIn,
 										SearchContext context) {
 		// Can't pass null to getNextMatchPosRegExImpl or it'll think
-		// you're doing a "find" operation instead of "replace, and return a
+		// you're doing a "find" operation instead of "replace", and return a
 		// Point.
 		String replacement = context.getReplaceWith();
 		if (replacement==null) {
@@ -621,7 +626,8 @@ public final class SearchEngine {
 	private static boolean isWholeWord(CharSequence searchIn,
 											int offset, int len) {
 
-		boolean wsBefore, wsAfter;
+		boolean wsBefore;
+		boolean wsAfter;
 
 		try {
 			wsBefore = !Character.isLetterOrDigit(searchIn.charAt(offset - 1));
@@ -676,10 +682,7 @@ public final class SearchEngine {
 	public static SearchResult markAll(RTextArea textArea,
 			SearchContext context) {
 		textArea.clearMarkAllHighlights();
-//		if (context.getMarkAll()) {
-			return markAllImpl(textArea, context);
-//		}
-//		return new SearchResult();
+		return markAllImpl(textArea, context);
 	}
 
 
@@ -706,7 +709,7 @@ public final class SearchEngine {
 		if (context.getMarkAll() && toMark!=null && toMark.length()>0
 				/*&& !toMark.equals(markedWord)*/) {
 
-			List<DocumentRange> highlights = new ArrayList<DocumentRange>();
+			List<DocumentRange> highlights = new ArrayList<>();
 			context = context.clone();
 			context.setSearchForward(true);
 			context.setMarkAll(false);
@@ -749,6 +752,10 @@ public final class SearchEngine {
 		else {
 			// Force a repaint of "mark all" highlights so ErrorStrips can
 			// get updated
+			// Force "mark all" event to be broadcast so listeners like
+			// ErrorStrip know to clear their mark-all markers. Note that
+			// clearMarkAllHighlights() doesn't fire an event itself for
+			// performance reasons.
 			List<DocumentRange> empty = Collections.emptyList();
 			textArea.markAll(empty);
 		}
@@ -870,7 +877,7 @@ public final class SearchEngine {
 		}
 
 		String toFind = context.getSearchFor();
-		if (toFind==null || toFind.length()==0) {
+		if (toFind==null || toFind.isEmpty()) {
 			return new SearchResult();
 		}
 
@@ -909,6 +916,7 @@ public final class SearchEngine {
 				DocumentRange range;
 				if (next.wasFound()) {
 					range = next.getMatchRange();
+					res.setWrapped(next.isWrapped());
 				}
 				else {
 					range = new DocumentRange(dot, dot);
@@ -952,7 +960,7 @@ public final class SearchEngine {
 
 		context.setSearchForward(true); // Replace all always searches forward
 		String toFind = context.getSearchFor();
-		if (toFind==null || toFind.length()==0) {
+		if (toFind==null || toFind.isEmpty()) {
 			return new SearchResult();
 		}
 
@@ -961,6 +969,15 @@ public final class SearchEngine {
 		if (context.getMarkAll()) {
 			context = context.clone();
 			context.setMarkAll(false);
+		}
+
+		// We also don't want to enable wrapping, since that can lead to
+		// infinite loops when replacing content e.g. replace "foo" with
+		// "foobar".  This is OK to do since the Replace All always scans
+		// the entire document.
+		if (context.getSearchWrap()) {
+			context = context.clone();
+			context.setSearchWrap(false);
 		}
 
 		SearchResult lastFound = null;

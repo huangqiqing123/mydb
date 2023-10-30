@@ -4,7 +4,7 @@
  * FocusableTip.java - A focusable tool tip, like those in Eclipse.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.focusabletip;
 
@@ -114,60 +114,66 @@ public class FocusableTip {
 		// doesn't return its proper preferred size until after it is displayed.
 		// See http://forums.sun.com/thread.jspa?forumID=57&threadID=574810
 		// for a discussion.
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
+		invokeLater(() -> {
 
-				// If a new FocusableTip is requested while another one is
-				// *focused* and visible, the focused tip (i.e. "tipWindow")
-				// will be disposed of.  If this Runnable is run after the
-				// dispose(), tipWindow will be null.  All of this is done on
-				// the EDT so no synchronization should be necessary.
-				if (tipWindow==null) {
-					return;
-				}
-
-				tipWindow.fixSize();
-				ComponentOrientation o = textArea.getComponentOrientation();
-
-				Point p = e.getPoint();
-				SwingUtilities.convertPointToScreen(p, textArea);
-
-				// Ensure tool tip is in the window bounds.
-				// Multi-monitor support - make sure the completion window (and
-				// description window, if applicable) both fit in the same
-				// window in a multi-monitor environment.  To do this, we decide
-				// which monitor the rectangle "p" is in, and use that one.
-				Rectangle sb = TipUtil.getScreenBoundsForPoint(p.x, p.y);
-				//Dimension ss = tipWindow.getToolkit().getScreenSize();
-
-				// Try putting our stuff "below" the mouse first.
-				int y = p.y + Y_MARGIN;
-				if (y+tipWindow.getHeight()>=sb.y+sb.height) {
-					y = p.y - Y_MARGIN - tipWindow.getHeight();
-				}
-
-				// Get x-coordinate of completions.  Try to align left edge
-				// with the mouse first (with a slight margin).
-				int x = p.x - X_MARGIN; // ltr
-				if (!o.isLeftToRight()) {
-					x = p.x - tipWindow.getWidth() + X_MARGIN;
-				}
-				if (x<sb.x) {
-					x = sb.x;
-				}
-				else if (x+tipWindow.getWidth()>sb.x+sb.width) { // completions don't fit
-					x = sb.x + sb.width - tipWindow.getWidth();
-				}
-
-				tipWindow.setLocation(x, y);
-				tipWindow.setVisible(true);
-
-				computeTipVisibleBounds(); // Do after tip is visible
-				textAreaListener.install(textArea);
-				lastText = text;
-
+			// If a new FocusableTip is requested while another one is
+			// *focused* and visible, the focused tip (i.e. "tipWindow")
+			// will be disposed of.  If this Runnable is run after the
+			// dispose(), tipWindow will be null.  All of this is done on
+			// the EDT so no synchronization should be necessary.
+			if (tipWindow==null) {
+				return;
 			}
+
+			tipWindow.fixSize();
+			ComponentOrientation o = textArea.getComponentOrientation();
+
+			Point p = e.getPoint();
+			SwingUtilities.convertPointToScreen(p, textArea);
+
+			// Ensure tool tip is in the window bounds.
+			// Multi-monitor support - make sure the completion window (and
+			// description window, if applicable) both fit in the same
+			// window in a multi-monitor environment.  To do this, we decide
+			// which monitor the rectangle "p" is in, and use that one.
+			Rectangle sb = TipUtil.getScreenBoundsForPoint(p.x, p.y);
+			//Dimension ss = tipWindow.getToolkit().getScreenSize();
+
+			// Try putting the tool tip below the mouse first.
+			// If doing so means the bottom of the tool tip is offscreen,
+			// display it above the mouse instead.
+			int y = p.y + Y_MARGIN;
+			if (y+tipWindow.getHeight()>=sb.y+sb.height) {
+				y = p.y - Y_MARGIN - tipWindow.getHeight();
+
+				// Ensure the top of the tool tip is always visible.
+				// The bottom of it may be offscreen if a tool tip is
+				// taller than the screen, but that is very unlikely
+				if (y < sb.y) {
+					y = sb.y + Y_MARGIN;
+				}
+			}
+
+			// Get x-coordinate of completions.  Try to align left edge
+			// with the mouse first (with a slight margin).
+			int x = p.x - X_MARGIN; // ltr
+			if (!o.isLeftToRight()) {
+				x = p.x - tipWindow.getWidth() + X_MARGIN;
+			}
+			if (x<sb.x) {
+				x = sb.x;
+			}
+			else if (x+tipWindow.getWidth()>sb.x+sb.width) { // completions don't fit
+				x = sb.x + sb.width - tipWindow.getWidth();
+			}
+
+			tipWindow.setLocation(x, y);
+			tipWindow.setVisible(true);
+
+			computeTipVisibleBounds(); // Do after tip is visible
+			textAreaListener.install(textArea);
+			lastText = text;
+
 		});
 
 	}
@@ -204,6 +210,11 @@ public class FocusableTip {
 	 */
 	static String getString(String key) {
 		return MSG.getString(key);
+	}
+
+
+	protected void invokeLater(Runnable r) {
+		SwingUtilities.invokeLater(r);
 	}
 
 
@@ -258,6 +269,12 @@ public class FocusableTip {
 	}
 
 
+	/**
+	 * Callback called when this tool tip is requested.
+	 *
+	 * @param e The mouse event that is triggering the tool tip.
+	 * @param text The text to display.
+	 */
 	public void toolTipRequested(MouseEvent e, String text) {
 
 		if (text==null || text.length()==0) {

@@ -4,7 +4,7 @@
  * RSyntaxTextAreaEditorKit.java - The editor kit used by RSyntaxTextArea.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -12,6 +12,7 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.text.CharacterIterator;
 import java.util.ResourceBundle;
 import java.util.Stack;
 
@@ -65,22 +66,29 @@ import org.fife.ui.rtextarea.RecordableTextAction;
  * @author Robert Futrell
  * @version 0.5
  */
-@SuppressWarnings({ "checkstyle:constantname" })
+@SuppressWarnings("checkstyle:constantname")
 public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 
 	private static final long serialVersionUID = 1L;
 
+	public static final String rstaBacktickAction			= "RSTA.BacktickAction";
 	public static final String rstaCloseCurlyBraceAction	= "RSTA.CloseCurlyBraceAction";
 	public static final String rstaCloseMarkupTagAction		= "RSTA.CloseMarkupTagAction";
 	public static final String rstaCollapseAllFoldsAction	= "RSTA.CollapseAllFoldsAction";
 	public static final String rstaCollapseAllCommentFoldsAction = "RSTA.CollapseAllCommentFoldsAction";
 	public static final String rstaCollapseFoldAction		= "RSTA.CollapseFoldAction";
-	public static final String rstaCopyAsRtfAction			= "RSTA.CopyAsRtfAction";
+	public static final String rstaCopyAsStyledTextAction   = "RSTA.CopyAsStyledTextAction";
+	public static final String rstaCutAsStyledTextAction   = "RSTA.CutAsStyledTextAction";
 	public static final String rstaDecreaseIndentAction		= "RSTA.DecreaseIndentAction";
+	public static final String rstaDoubleQuoteAction		= "RSTA.DoubleQuoteAction";
 	public static final String rstaExpandAllFoldsAction		= "RSTA.ExpandAllFoldsAction";
 	public static final String rstaExpandFoldAction			= "RSTA.ExpandFoldAction";
 	public static final String rstaGoToMatchingBracketAction	= "RSTA.GoToMatchingBracketAction";
+	public static final String rstaOpenParenAction			= "RSTA.OpenParenAction";
+	public static final String rstaOpenSquareBracketAction	= "RSTA.OpenSquareBracketAction";
+	public static final String rstaOpenCurlyAction			= "RSTA.OpenCurlyAction";
 	public static final String rstaPossiblyInsertTemplateAction = "RSTA.TemplateAction";
+	public static final String rstaSingleQuoteAction		= "RSTA.SingleQuoteAction";
 	public static final String rstaToggleCommentAction 		= "RSTA.ToggleCommentAction";
 	public static final String rstaToggleCurrentFoldAction	= "RSTA.ToggleCurrentFoldAction";
 
@@ -100,7 +108,8 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 		new ChangeFoldStateAction(rstaCollapseFoldAction, true),
 		new ChangeFoldStateAction(rstaExpandFoldAction, false),
 		new CollapseAllFoldsAction(),
-		new CopyAsRtfAction(),
+		new CopyCutAsStyledTextAction(false),
+		new CopyCutAsStyledTextAction(true),
 		//new DecreaseFontSizeAction(),
 		new DecreaseIndentAction(),
 		new DeletePrevWordAction(),
@@ -111,8 +120,14 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 		new EndWordAction(endWordAction, true),
 		new ExpandAllFoldsAction(),
 		new GoToMatchingBracketAction(),
-		new InsertBreakAction(),
 		//new IncreaseFontSizeAction(),
+		new InsertBreakAction(),
+		new InsertPairedCharacterAction(rstaOpenParenAction, '(', ')'),
+		new InsertPairedCharacterAction(rstaOpenSquareBracketAction, '[', ']'),
+		new InsertPairedCharacterAction(rstaOpenCurlyAction, '{', '}'),
+		new InsertQuoteAction(rstaDoubleQuoteAction, InsertQuoteAction.QuoteType.DOUBLE_QUOTE),
+		new InsertQuoteAction(rstaSingleQuoteAction, InsertQuoteAction.QuoteType.SINGLE_QUOTE),
+		new InsertQuoteAction(rstaBacktickAction, InsertQuoteAction.QuoteType.BACKTICK),
 		new InsertTabAction(),
 		new NextWordAction(nextWordAction, false),
 		new NextWordAction(selectionNextWordAction, true),
@@ -232,7 +247,7 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 				}
 				do {
 					ch = seg.previous();
-				} while (doc.isIdentifierChar(languageIndex, ch));
+				} while (doc.isIdentifierChar(languageIndex, ch) && ch != CharacterIterator.DONE);
 			}
 
 			// The "word" is whitespace
@@ -318,6 +333,11 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 
 		@Override
 		public void actionPerformedImpl(ActionEvent e, RTextArea textArea) {
+
+			if (!textArea.isEditable() || !textArea.isEnabled()) {
+				UIManager.getLookAndFeel().provideErrorFeedback(textArea);
+				return;
+			}
 
 			RSyntaxTextArea rsta = (RSyntaxTextArea)textArea;
 			RSyntaxDocument doc = (RSyntaxDocument)rsta.getDocument();
@@ -440,8 +460,7 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 						Token t = doc.getTokenListForLine(
 											rsta.getCaretLineNumber());
 						t = RSyntaxUtilities.getTokenAtOffset(t, dot-1);
-						if (t!=null && t.getType()==Token.MARKUP_TAG_DELIMITER) {
-							//System.out.println("Huzzah - closing tag!");
+						if (t!=null && t.getType()==Token.MARKUP_TAG_DELIMITER) { // Closing tag
 							String tagName = discoverTagName(doc, dot);
 							if (tagName!=null) {
 								rsta.replaceSelection(tagName + (char)(ch+2));
@@ -472,7 +491,7 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 		 */
 		private String discoverTagName(RSyntaxDocument doc, int dot) {
 
-			Stack<String> stack = new Stack<String>();
+			Stack<String> stack = new Stack<>();
 
 			Element root = doc.getDefaultRootElement();
 			int curLine = root.getElementIndex(dot);
@@ -624,24 +643,73 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 
 
 	/**
-	 * Action for copying text as RTF.
+	 * Action for copying text as styled text.
 	 */
-	public static class CopyAsRtfAction extends RecordableTextAction {
+	public static class CopyCutAsStyledTextAction extends RecordableTextAction {
 
-		private static final long serialVersionUID = 1L;
+		private Theme theme;
+		private boolean cutAction;
 
-		public CopyAsRtfAction() {
-			super(rstaCopyAsRtfAction);
+		private static final long serialVersionUID = 2L;
+
+		private static String getActionName(boolean cutAction) {
+			return cutAction ? rstaCutAsStyledTextAction : rstaCopyAsStyledTextAction;
 		}
 
-		public CopyAsRtfAction(String name, Icon icon, String desc,
-					Integer mnemonic, KeyStroke accelerator) {
+		public CopyCutAsStyledTextAction(boolean cutAction) {
+			super(getActionName(cutAction));
+			this.cutAction = cutAction;
+		}
+
+		public CopyCutAsStyledTextAction(String themeName, Theme theme, boolean cutAction) {
+			super(getActionName(cutAction) + "_" + themeName);
+			this.theme = theme;
+			this.cutAction = cutAction;
+
+		}
+
+		public CopyCutAsStyledTextAction(String name, Icon icon, String desc,
+										 Integer mnemonic, KeyStroke accelerator) {
 			super(name, icon, desc, mnemonic, accelerator);
 		}
 
 		@Override
 		public void actionPerformedImpl(ActionEvent e, RTextArea textArea) {
-			((RSyntaxTextArea)textArea).copyAsRtf();
+
+			// TODO: Refactor popup menu logic so RTextArea doesn't get RSyntaxTextArea's
+			// cut and copy actions
+			if (!(textArea instanceof RSyntaxTextArea)) {
+				handleActionPerformedPlainText(textArea);
+				return;
+			}
+
+			if (cutAction && (!textArea.isEditable() || !textArea.isEnabled())) {
+				UIManager.getLookAndFeel().provideErrorFeedback(textArea);
+				return;
+			}
+
+			((RSyntaxTextArea)textArea).copyAsStyledText(theme);
+			if (cutAction) {
+				int selStart = textArea.getSelectionStart();
+				int selEnd = textArea.getSelectionEnd();
+
+				try {
+					textArea.getDocument().remove(selStart, selEnd - selStart);
+				} catch (BadLocationException ble) {
+					ble.printStackTrace();
+					UIManager.getLookAndFeel().provideErrorFeedback(textArea);
+				}
+			}
+			textArea.requestFocusInWindow();
+		}
+
+		private void handleActionPerformedPlainText(RTextArea textArea) {
+			if (cutAction) {
+				textArea.cut();
+			}
+			else {
+				textArea.copy();
+			}
 			textArea.requestFocusInWindow();
 		}
 
@@ -676,7 +744,7 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 			RSyntaxTextArea rsta = (RSyntaxTextArea)textArea;
 			SyntaxScheme scheme = rsta.getSyntaxScheme();
 
-			// All we need to do is update all of the fonts in syntax
+			// All we need to do is update all the fonts in syntax
 			// schemes, then call setSyntaxHighlightingColorScheme with the
 			// same scheme already being used.  This relies on the fact that
 			// that method does not check whether the new scheme is different
@@ -698,7 +766,7 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 						}
 						else if (oldSize>MINIMUM_SIZE) {
 							// Can't shrink by full decreaseAmount, but
-							// can shrink a little bit.
+							// can shrink a little.
 							ss.font = font.deriveFont(MINIMUM_SIZE);
 							changed = true;
 						}
@@ -717,13 +785,13 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 			}
 			else if (oldSize>MINIMUM_SIZE) {
 				// Can't shrink by full decreaseAmount, but
-				// can shrink a little bit.
+				// can shrink a little.
 				rsta.setFont(font.deriveFont(MINIMUM_SIZE));
 				changed = true;
 			}
 
 			// If we updated at least one font, update the screen.  If
-			// all of the fonts were already the minimum size, beep.
+			// all the fonts were already the minimum size, beep.
 			if (changed) {
 				rsta.setSyntaxScheme(scheme);
 				// NOTE:  This is a hack to get an encompassing
@@ -1061,7 +1129,7 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 			int wordStart = offs;
 			while (wordStart >= start) {
 				char ch = doc.charAt(wordStart);
-				// Ignore newlines so we work when caret is at end of line
+				// Ignore newlines, so we work when caret is at end of line
 				if (!isIdentifierChar(ch) && ch != '\n') {
 					break;
 				}
@@ -1143,7 +1211,8 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 			if (doc.isIdentifierChar(languageIndex, ch)) {
 				do {
 					ch = seg.next();
-				} while (doc.isIdentifierChar(languageIndex, ch));
+				} while (doc.isIdentifierChar(languageIndex, ch) &&
+						ch != CharacterIterator.DONE);
 			}
 
 			// The "word" is whitespace.
@@ -1330,7 +1399,7 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 			RSyntaxTextArea rsta = (RSyntaxTextArea)textArea;
 			SyntaxScheme scheme = rsta.getSyntaxScheme();
 
-			// All we need to do is update all of the fonts in syntax
+			// All we need to do is update all the fonts in syntax
 			// schemes, then call setSyntaxHighlightingColorScheme with the
 			// same scheme already being used.  This relies on the fact that
 			// that method does not check whether the new scheme is different
@@ -1352,7 +1421,7 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 						}
 						else if (oldSize<MAXIMUM_SIZE) {
 							// Can't grow by full increaseAmount, but
-							// can grow a little bit.
+							// can grow a little.
 							ss.font = font.deriveFont(MAXIMUM_SIZE);
 							changed = true;
 						}
@@ -1371,13 +1440,13 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 			}
 			else if (oldSize<MAXIMUM_SIZE) {
 				// Can't grow by full increaseAmount, but
-				// can grow a little bit.
+				// can grow a little.
 				rsta.setFont(font.deriveFont(MAXIMUM_SIZE));
 				changed = true;
 			}
 
 			// If we updated at least one font, update the screen.  If
-			// all of the fonts were already the minimum size, beep.
+			// all the fonts were already the minimum size, beep.
 			if (changed) {
 				rsta.setSyntaxScheme(scheme);
 				// NOTE:  This is a hack to get an encompassing
@@ -1478,82 +1547,80 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 		 * if appropriate.  This method can be called by token makers who
 		 * implement a custom action for inserting newlines.
 		 *
-		 * @param textArea
+		 * @param textArea The text area to examine.
 		 * @param noSelection Whether there is no selection.
 		 */
 		protected void handleInsertBreak(RSyntaxTextArea textArea,
 										boolean noSelection) {
-			// If we're auto-indenting...
-			if (noSelection && textArea.isAutoIndentEnabled()) {
-				insertNewlineWithAutoIndent(textArea);
+
+			if (noSelection) {
+				textArea.beginAtomicEdit();
+				try {
+					handleInsertBreakWithoutSelection(textArea);
+				} catch (BadLocationException ble) { // Never happens
+					textArea.replaceSelection("\n");
+					ble.printStackTrace();
+				} finally {
+					textArea.endAtomicEdit();
+				}
 			}
 			else {
 				textArea.replaceSelection("\n");
-				if (noSelection) {
-					possiblyCloseCurlyBrace(textArea, null);
-				}
 			}
 		}
 
-		private void insertNewlineWithAutoIndent(RSyntaxTextArea sta) {
+		private void handleInsertBreakWithoutSelection(RSyntaxTextArea textArea)
+				throws BadLocationException {
 
-			try {
+			int caretPos = textArea.getCaretPosition();
+			Document doc = textArea.getDocument();
+			Element map = doc.getDefaultRootElement();
+			int lineNum = map.getElementIndex(caretPos);
+			Element line = map.getElement(lineNum);
+			int start = line.getStartOffset();
+			int end = line.getEndOffset()-1; // Why always "-1"?
+			int len = end-start;
+			String s = doc.getText(start, len);
+			int caretOffsInLine = caretPos - start;
 
-				int caretPos = sta.getCaretPosition();
-				Document doc = sta.getDocument();
-				Element map = doc.getDefaultRootElement();
-				int lineNum = map.getElementIndex(caretPos);
-				Element line = map.getElement(lineNum);
-				int start = line.getStartOffset();
-				int end = line.getEndOffset()-1; // Why always "-1"?
-				int len = end-start;
-				String s = doc.getText(start, len);
-
-				// endWS is the end of the leading whitespace of the
-				// current line.
-				String leadingWS = RSyntaxUtilities.getLeadingWhitespace(s);
-				StringBuilder sb = new StringBuilder("\n");
+			StringBuilder sb = new StringBuilder("\n");
+			String leadingWS = null;
+			if (textArea.isAutoIndentEnabled()) {
+				leadingWS = RSyntaxUtilities.getLeadingWhitespace(s, caretOffsInLine);
 				sb.append(leadingWS);
-
-				// If there is only whitespace between the caret and
-				// the EOL, pressing Enter auto-indents the new line to
-				// the same place as the previous line.
-				int nonWhitespacePos = atEndOfLine(caretPos-start, s, len);
-				if (nonWhitespacePos==-1) {
-					if (leadingWS.length()==len &&
-							sta.isClearWhitespaceLinesEnabled()) {
-						// If the line was nothing but whitespace, select it
-						// so its contents get removed.
-						sta.setSelectionStart(start);
-						sta.setSelectionEnd(end);
-					}
-					sta.replaceSelection(sb.toString());
-				}
-
-				// If there is non-whitespace between the caret and the
-				// EOL, pressing Enter takes that text to the next line
-				// and auto-indents it to the same place as the last
-				// line.
-				else {
-					sb.append(s.substring(nonWhitespacePos));
-					sta.replaceRange(sb.toString(), caretPos, end);
-					sta.setCaretPosition(caretPos + leadingWS.length()+1);
-				}
-
-				// Must do it after everything else, as the "smart indent"
-				// calculation depends on the previous line's state
-				// AFTER the Enter press (stuff may have been moved down).
-				if (sta.getShouldIndentNextLine(lineNum)) {
-					sta.replaceSelection("\t");
-				}
-
-				possiblyCloseCurlyBrace(sta, leadingWS);
-
-			} catch (BadLocationException ble) { // Never happens
-				sta.replaceSelection("\n");
-				ble.printStackTrace();
 			}
 
+			// If the text remaining on the line would be all whitespace,
+			// remove it if necessary
+			if (textArea.isClearWhitespaceLinesEnabled() && isAllWhitespace(s, 0, caretOffsInLine)) {
+				// Select all text on the line before the caret so it gets removed
+				textArea.setCaretPosition(start);
+			}
+
+			// Find any non-whitespace text after the caret. If there is any, it gets put
+			// onto the next line. Whitespace between the caret and that text gets removed.
+			int nonWhitespacePos = atEndOfLine(caretPos-start, s, len);
+			//textArea.moveCaretPosition(start + (nonWhitespacePos > -1 ? nonWhitespacePos : end));
+			textArea.moveCaretPosition(nonWhitespacePos > -1 ? start + nonWhitespacePos : end);
+			textArea.replaceSelection(sb.toString());
+
+			// Must do it after everything else, as the "smart indent"
+			// calculation depends on the previous line's state
+			// AFTER the Enter press (stuff may have been moved down).
+			if (textArea.getShouldIndentNextLine(lineNum)) {
+				textArea.replaceSelection("\t");
+			}
+
+			possiblyCloseCurlyBrace(textArea, leadingWS);
+		}
+
+		private static boolean isAllWhitespace(String str, int from, int to) {
+			for (int i = from; i < to; i++) {
+				if (!Character.isWhitespace(str.charAt(i))) {
+					return false;
+				}
+			}
+			return true;
 		}
 
 		private void possiblyCloseCurlyBrace(RSyntaxTextArea textArea,
@@ -1600,6 +1667,174 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 
 
 	/**
+	 * If there is no selection, a character is inserted. If there is a selection,
+	 * it is wrapped by the character and its pair. Useful for e.g. quotes, parens,
+	 * etc.
+	 */
+	public static class InsertPairedCharacterAction extends DefaultKeyTypedAction {
+
+		private static final long serialVersionUID = 1L;
+
+		private final char ch;
+		private final char pairedCh;
+
+		public InsertPairedCharacterAction(String actionName, char ch, char pairedCh) {
+			super(actionName);
+			this.ch = ch;
+			this.pairedCh = pairedCh;
+		}
+
+		@Override
+		public void actionPerformedImpl(ActionEvent e, RTextArea textArea) {
+
+			if (!textArea.isEditable() || !textArea.isEnabled()) {
+				UIManager.getLookAndFeel().provideErrorFeedback(textArea);
+				return;
+			}
+
+			RSyntaxTextArea sta = (RSyntaxTextArea)textArea;
+			boolean noSelection = sta.getSelectionStart() == sta.getSelectionEnd();
+
+			if (noSelection || !sta.getInsertPairedCharacters()) {
+				// Default action can be unique across OS's
+				super.actionPerformedImpl(e, textArea);
+			}
+			else {
+				wrapSelection(textArea);
+			}
+		}
+
+		private void wrapSelection(RTextArea textArea) {
+
+			int selStart = textArea.getSelectionStart();
+			int selEnd = textArea.getSelectionEnd();
+
+			textArea.beginAtomicEdit();
+			try {
+				textArea.insert(String.valueOf(ch), selStart);
+				textArea.insert(String.valueOf(pairedCh), selEnd + 1);
+				// Remove the auto-increase from insertion
+				textArea.setSelectionEnd(selEnd + 1);
+			} finally {
+				textArea.endAtomicEdit();
+			}
+		}
+
+	}
+
+
+	/**
+	 * Inserts a quote character. If the current language supports string literals with this
+	 * quote character, the following additional logic occurs:
+	 * <ul>
+	 *     <li>If the caret is not in a string literal or comment, both the opening and closing
+	 *         quotes are entered</li>
+	 *     <li>If the caret is at the end (the closing quote) of a valid quoted literal, the
+	 *         existing closing quote character is overwritten, rather than a new quote
+	 *         character being entered</li>
+	 * </ul>
+	 * This feature is meant to simplify the common case of typing single-line strings.
+	 */
+	public static class InsertQuoteAction extends InsertPairedCharacterAction {
+
+		/**
+		 * The type of quote to insert.
+		 */
+		public enum QuoteType {
+			DOUBLE_QUOTE('"', TokenTypes.LITERAL_STRING_DOUBLE_QUOTE, TokenTypes.ERROR_STRING_DOUBLE),
+			SINGLE_QUOTE('\'', TokenTypes.LITERAL_CHAR, TokenTypes.ERROR_CHAR),
+			BACKTICK('`', TokenTypes.LITERAL_BACKQUOTE, -1);
+
+			private final char ch;
+			private final int validTokenType;
+			private final int invalidTokenType;
+
+			QuoteType(char ch, int validTokenType, int invalidTokenType) {
+				this.ch = ch;
+				this.validTokenType = validTokenType;
+				this.invalidTokenType = invalidTokenType;
+			}
+		}
+
+		private final QuoteType quoteType;
+		private final String stringifiedQuoteTypeCh;
+
+		public InsertQuoteAction(String actionName, QuoteType quoteType) {
+			super(actionName, quoteType.ch, quoteType.ch);
+			this.quoteType = quoteType;
+			stringifiedQuoteTypeCh = String.valueOf(quoteType.ch);
+		}
+
+		@Override
+		public void actionPerformedImpl(ActionEvent e, RTextArea textArea) {
+
+			if (!textArea.isEditable() || !textArea.isEnabled()) {
+				UIManager.getLookAndFeel().provideErrorFeedback(textArea);
+				return;
+			}
+
+			RSyntaxTextArea rsta = (RSyntaxTextArea) textArea;
+
+			if (!rsta.getInsertPairedCharacters() ||
+				textArea.getSelectionStart() != textArea.getSelectionEnd() ||
+				textArea.getTextMode() == RTextArea.OVERWRITE_MODE) {
+				super.actionPerformedImpl(e, textArea);
+				return;
+			}
+
+			int offs = rsta.getCaretPosition();
+			Token t = RSyntaxUtilities.getTokenAtOffsetOrLastTokenIfEndOfLine(rsta, offs);
+			int tokenType = t != null ? t.getType() : TokenTypes.NULL;
+			boolean isComment = t != null && t.isComment();
+
+			if (tokenType == quoteType.validTokenType) {
+				if (offs == t.getEndOffset() - 1) {
+					textArea.moveCaretPosition(offs + 1); // Force a replacement to ensure undo is contiguous
+					textArea.replaceSelection(stringifiedQuoteTypeCh);
+					textArea.setCaretPosition(offs + 1);
+				}
+				else {
+					super.actionPerformedImpl(e, textArea);
+				}
+			}
+			else if (isComment || tokenType == quoteType.invalidTokenType) {
+				// We could be smarter here for invalid quoted literals - if we knew whether the language
+				// used '\' as an escape character, and the caret is NOT between a '\' and the closing
+				// quote, we could then assume it's an invalid string due to e.g. a bad escape char, and
+				// overwrite the closing quote. But for now we're just doing nothing in this case
+				super.actionPerformedImpl(e, textArea); // Just insert the character
+			}
+			else {
+				insertEmptyQuoteLiteral(rsta);
+			}
+		}
+
+		private void insertEmptyQuoteLiteral(RSyntaxTextArea textArea) {
+
+			textArea.beginAtomicEdit();
+
+			try {
+
+				textArea.replaceSelection(stringifiedQuoteTypeCh);
+
+				// Check whether the starting quote started a string literal. If it did,
+				// enter the closing quote. This is done to sniff out language tht don't
+				// support string literals.
+				int caretPos = textArea.getCaretPosition();
+				Token t = RSyntaxUtilities.getTokenAtOffsetOrLastTokenIfEndOfLine(textArea, caretPos);
+				int tokenType = t != null ? t.getType() : TokenTypes.NULL;
+				if (tokenType == quoteType.validTokenType || tokenType == quoteType.invalidTokenType) {
+					textArea.replaceSelection(stringifiedQuoteTypeCh);
+					textArea.setCaretPosition(textArea.getCaretPosition() - 1);
+				}
+			} finally {
+				textArea.endAtomicEdit();
+			}
+		}
+	}
+
+
+	/**
 	 * Action for inserting tabs.  This is extended to "block indent" a
 	 * group of contiguous lines if they are selected.
 	 */
@@ -1628,15 +1863,16 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 			Caret c = textArea.getCaret();
 			int dot = c.getDot();
 			int mark = c.getMark();
-			int dotLine = map.getElementIndex(dot);
-			int markLine = map.getElementIndex(mark);
 
-			// If there is a multi-line selection, indent all lines in
-			// the selection.
-			if (dotLine!=markLine) {
+			// If there is a selection, indent all lines in it
+			if (dot != mark) {
+
+				int dotLine = map.getElementIndex(dot);
+				int markLine = map.getElementIndex(mark);
 				int first = Math.min(dotLine, markLine);
 				int last = Math.max(dotLine, markLine);
-				Element elem; int start;
+				Element elem;
+				int start;
 
 				// Since we're using Document.insertString(), we must mimic the
 				// soft tab behavior provided by RTextArea.replaceSelection().
@@ -1745,7 +1981,8 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 			if (doc.isIdentifierChar(languageIndex, ch)) {
 				do {
 					ch = seg.next();
-				} while (doc.isIdentifierChar(languageIndex, ch));
+				} while (doc.isIdentifierChar(languageIndex, ch) &&
+						ch != CharacterIterator.DONE);
 			}
 
 			// Skip groups of "anything else" (operators, etc.).
@@ -1919,7 +2156,8 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 			if (doc.isIdentifierChar(languageIndex, ch)) {
 				do {
 					ch = seg.previous();
-				} while (doc.isIdentifierChar(languageIndex, ch));
+				} while (doc.isIdentifierChar(languageIndex, ch) &&
+						ch != CharacterIterator.DONE);
 			}
 
 			// Skip groups of "anything else" (operators, etc.).
@@ -2043,18 +2281,17 @@ public class RSyntaxTextAreaEditorKit extends RTextAreaEditorKit {
 			int start = elem.getStartOffset();
 			int end = elem.getEndOffset() - 1;
 			if (add) {
-				doc.insertString(start, startEnd[0], null);
 				if (startEnd[1]!=null) {
-					doc.insertString(end+startEnd[0].length(), startEnd[1],
-									null);
+					doc.insertString(end, startEnd[1], null);
 				}
+				doc.insertString(start, startEnd[0], null);
 			}
 			else {
-				doc.remove(start, startEnd[0].length());
 				if (startEnd[1]!=null) {
 					int temp = startEnd[1].length();
-					doc.remove(end-startEnd[0].length()-temp, temp);
+					doc.remove(end-temp, temp);
 				}
+				doc.remove(start, startEnd[0].length());
 			}
 		}
 

@@ -4,15 +4,17 @@
  * AbstractGutterComponent.java - A component that can be displayed in a Gutter.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
 import java.awt.Container;
 import java.awt.Rectangle;
 import java.awt.Shape;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
-import javax.swing.JPanel;
+import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.text.View;
 
@@ -35,6 +37,8 @@ abstract class AbstractGutterComponent extends JPanel {
 	 */
 	protected int currentLineCount;
 
+	private static Listener listener;
+
 
 	/**
 	 * Constructor.
@@ -44,6 +48,13 @@ abstract class AbstractGutterComponent extends JPanel {
 	AbstractGutterComponent(RTextArea textArea) {
 		init(); // Called before setTextArea().
 		setTextArea(textArea);
+	}
+
+
+	@Override
+	public void addNotify() {
+		super.addNotify();
+		getListener().install(this);
 	}
 
 
@@ -57,7 +68,7 @@ abstract class AbstractGutterComponent extends JPanel {
 	 *        <code>getVisibleEditorRect</code> method.
 	 * @return The child view's bounds.
 	 */
-	protected static final Rectangle getChildViewBounds(View parent, int line,
+	protected static Rectangle getChildViewBounds(View parent, int line,
 										Rectangle editorRect) {
 		Shape alloc = parent.getChildAllocation(line, editorRect);
 		if (alloc==null) {
@@ -78,6 +89,19 @@ abstract class AbstractGutterComponent extends JPanel {
 	protected Gutter getGutter() {
 		Container parent = getParent();
 		return (parent instanceof Gutter) ? (Gutter)parent : null;
+	}
+
+
+	/**
+	 * Returns the singleton instance of the listener for all gutter components.
+	 *
+	 * @return The singleton instance.
+	 */
+	private static Listener getListener() {
+		if (listener == null) {
+			listener = new Listener();
+		}
+		return listener;
 	}
 
 
@@ -106,6 +130,13 @@ abstract class AbstractGutterComponent extends JPanel {
 	abstract void lineHeightsChanged();
 
 
+	@Override
+	public void removeNotify() {
+		getListener().uninstall(this);
+		super.removeNotify();
+	}
+
+
 	/**
 	 * Sets the text area being displayed.  Subclasses can override, but
 	 * should call the super implementation.
@@ -122,4 +153,35 @@ abstract class AbstractGutterComponent extends JPanel {
 	}
 
 
+	static class Listener extends MouseAdapter {
+
+		private boolean newArmed;
+
+		void install(AbstractGutterComponent component) {
+			component.addMouseListener(this);
+			component.addMouseMotionListener(this);
+		}
+
+		public void mouseExited(MouseEvent e) {
+			setArmed((AbstractGutterComponent)e.getComponent(), false);
+		}
+
+		public void mouseMoved(MouseEvent e) {
+			setArmed((AbstractGutterComponent)e.getComponent(), true);
+		}
+
+		private void setArmed(AbstractGutterComponent component, boolean armed) {
+			newArmed = armed;
+			SwingUtilities.invokeLater(() -> {
+				if (component.getGutter() != null && newArmed != component.getGutter().isArmed()) {
+					component.getGutter().setArmed(newArmed);
+				}
+			});
+		}
+
+		void uninstall(AbstractGutterComponent component) {
+			component.removeMouseListener(this);
+			component.removeMouseMotionListener(this);
+		}
+	}
 }

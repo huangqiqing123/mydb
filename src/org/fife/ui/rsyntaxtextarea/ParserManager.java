@@ -5,7 +5,7 @@
  * if necessary.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -116,10 +116,10 @@ class ParserManager implements DocumentListener, ActionListener,
 		this.textArea = textArea;
 		textArea.getDocument().addDocumentListener(this);
 		textArea.addPropertyChangeListener("document", this);
-		parsers = new ArrayList<Parser>(1); // Usually small
+		parsers = new ArrayList<>(1); // Usually small
 		timer = new Timer(delay, this);
 		timer.setRepeats(false);
-		running = true;
+		running = false;
 	}
 
 
@@ -226,7 +226,7 @@ class ParserManager implements DocumentListener, ActionListener,
 		}
 
 		if (noticeHighlightPairs==null) {
-			noticeHighlightPairs = new ArrayList<NoticeHighlightPair>();
+			noticeHighlightPairs = new ArrayList<>();
 		}
 
 		removeParserNotices(res);
@@ -297,13 +297,7 @@ class ParserManager implements DocumentListener, ActionListener,
 			h.clearParserHighlights(parser);
 		}
 		if (noticeHighlightPairs!=null) {
-			Iterator<NoticeHighlightPair> i=noticeHighlightPairs.iterator();
-			while (i.hasNext()) {
-				NoticeHighlightPair pair = i.next();
-				if (pair.notice.getParser()==parser) {
-					i.remove();
-				}
-			}
+			noticeHighlightPairs.removeIf(pair -> pair.notice.getParser() == parser);
 		}
 	}
 
@@ -322,14 +316,14 @@ class ParserManager implements DocumentListener, ActionListener,
 
 
 	/**
-	 * Forces the given {@link Parser} to re-parse the content of this text
+	 * Forces the given {@link Parser} to reparse the content of this text
 	 * area.<p>
 	 *
 	 * This method can be useful when a <code>Parser</code> can be configured
 	 * as to what notices it returns.  For example, if a Java language parser
 	 * can be configured to set whether no serialVersionUID is a warning,
 	 * error, or ignored, this method can be called after changing the expected
-	 * notice type to have the document re-parsed.
+	 * notice type to have the document reparsed.
 	 *
 	 * @param parser The index of the <code>Parser</code> to re-run.
 	 * @see #getParser(int)
@@ -356,7 +350,7 @@ class ParserManager implements DocumentListener, ActionListener,
 
 	/**
 	 * Returns the delay between the last "concurrent" edit and when the
-	 * document is re-parsed.
+	 * document is reparsed.
 	 *
 	 * @return The delay, in milliseconds.
 	 * @see #setDelay(int)
@@ -399,7 +393,7 @@ class ParserManager implements DocumentListener, ActionListener,
 	 *         none.
 	 */
 	public List<ParserNotice> getParserNotices() {
-		List<ParserNotice> notices = new ArrayList<ParserNotice>();
+		List<ParserNotice> notices = new ArrayList<>();
 		if (noticeHighlightPairs!=null) {
 			for (NoticeHighlightPair pair : noticeHighlightPairs) {
 				notices.add(pair.notice);
@@ -423,43 +417,25 @@ class ParserManager implements DocumentListener, ActionListener,
 		String tip = null;
 		HyperlinkListener listener = null;
 		parserForTip = null;
-		Point p = e.getPoint();
 
-//		try {
+		if (noticeHighlightPairs!=null) {
+
+			Point p = e.getPoint();
 			int pos = textArea.viewToModel(p);
-			/*
-			Highlighter.Highlight[] highlights = textArea.getHighlighter().
-												getHighlights();
-			for (int i=0; i<highlights.length; i++) {
-				Highlighter.Highlight h = highlights[i];
-				//if (h instanceof ParserNoticeHighlight) {
-				//	ParserNoticeHighlight pnh = (ParserNoticeHighlight)h;
-					int start = h.getStartOffset();
-					int end = h.getEndOffset();
-					if (start<=pos && end>=pos) {
-						//return pnh.getMessage();
-						return textArea.getText(start, end-start);
+
+			for (NoticeHighlightPair pair : noticeHighlightPairs) {
+				ParserNotice notice = pair.notice;
+				if (noticeContainsPosition(notice, pos) &&
+						noticeContainsPointInView(notice, p)) {
+					tip = notice.getToolTipText();
+					parserForTip = notice.getParser();
+					if (parserForTip instanceof HyperlinkListener) {
+						listener = (HyperlinkListener)parserForTip;
 					}
-				//}
-			}
-			*/
-			if (noticeHighlightPairs!=null) {
-				for (NoticeHighlightPair pair : noticeHighlightPairs) {
-					ParserNotice notice = pair.notice;
-					if (noticeContainsPosition(notice, pos) &&
-							noticeContainsPointInView(notice, p)) {
-						tip = notice.getToolTipText();
-						parserForTip = notice.getParser();
-						if (parserForTip instanceof HyperlinkListener) {
-							listener = (HyperlinkListener)parserForTip;
-						}
-						break;
-					}
+					break;
 				}
 			}
-//		} catch (BadLocationException ble) {
-//			ble.printStackTrace();	// Should never happen.
-//		}
+		}
 
 		URL imageBase = parserForTip==null ? null : parserForTip.getImageBase();
 		return new ToolTipInfo(tip, listener, imageBase);
@@ -502,7 +478,7 @@ class ParserManager implements DocumentListener, ActionListener,
 	public void insertUpdate(DocumentEvent e) {
 
 		// Keep track of the first and last offset modified.  Some parsers are
-		// smart and will only re-parse this section of the file.
+		// smart and will only reparse this section of the file.
 		try {
 			int offs = e.getOffset();
 			if (firstOffsetModded==null || offs<firstOffsetModded.getOffset()) {
@@ -560,7 +536,8 @@ class ParserManager implements DocumentListener, ActionListener,
 
 		try {
 
-			int start, end;
+			int start;
+			int end;
 			if (notice.getKnowsOffsetAndLength()) {
 				start = notice.getOffset();
 				end = start + notice.getLength() - 1;
@@ -708,9 +685,9 @@ class ParserManager implements DocumentListener, ActionListener,
 	public void removeUpdate(DocumentEvent e) {
 
 		// Keep track of the first and last offset modified.  Some parsers are
-		// smart and will only re-parse this section of the file.  Note that
+		// smart and will only reparse this section of the file.  Note that
 		// for removals, only the line at the removal start needs to be
-		// re-parsed.
+		// reparsed.
 		try {
 			int offs = e.getOffset();
 			if (firstOffsetModded==null || offs<firstOffsetModded.getOffset()) {
@@ -741,7 +718,7 @@ class ParserManager implements DocumentListener, ActionListener,
 
 	/**
 	 * Sets the delay between the last "concurrent" edit and when the document
-	 * is re-parsed.
+	 * is reparsed.
 	 *
 	 * @param millis The new delay, in milliseconds.  This must be greater
 	 *        than <code>0</code>.
@@ -815,7 +792,7 @@ class ParserManager implements DocumentListener, ActionListener,
 
 
 	static {
-		boolean debugParsing = false;
+		boolean debugParsing;
 		try {
 			debugParsing = Boolean.getBoolean(PROPERTY_DEBUG_PARSING);
 		} catch (AccessControlException ace) {

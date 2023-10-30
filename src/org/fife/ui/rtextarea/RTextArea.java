@@ -4,14 +4,11 @@
  * RTextArea.java - An extension of JTextArea that adds many features.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
-import java.awt.Color;
-import java.awt.ComponentOrientation;
-import java.awt.Graphics;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyEvent;
@@ -26,14 +23,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import javax.swing.Action;
-import javax.swing.Icon;
-import javax.swing.InputMap;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
+import javax.swing.*;
 import javax.swing.event.CaretEvent;
 import javax.swing.plaf.TextUI;
 import javax.swing.text.AbstractDocument;
@@ -162,8 +152,8 @@ public class RTextArea extends RTextAreaBase implements Printable {
 	 */
 	private ToolTipSupplier toolTipSupplier;
 
-	private static RecordableTextAction cutAction;
-	private static RecordableTextAction copyAction;
+	protected static RecordableTextAction cutAction;
+	protected static RecordableTextAction copyAction;
 	private static RecordableTextAction pasteAction;
 	private static RecordableTextAction deleteAction;
 	private static RecordableTextAction undoAction;
@@ -283,6 +273,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 	 *
 	 * @param line The line to highlight.  This is zero-based.
 	 * @param color The color to highlight the line with.
+	 * @return An opaque tag that can be used to remove the highlight later.
 	 * @throws BadLocationException If <code>line</code> is an invalid line
 	 *         number.
 	 * @see #removeLineHighlight(Object)
@@ -347,6 +338,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 	/**
 	 * Returns whether an undo is possible.
 	 *
+	 * @return Whether the operation was successful.
 	 * @see #canRedo()
 	 * @see #undoLastAction()
 	 */
@@ -358,6 +350,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 	/**
 	 * Returns whether a redo is possible.
 	 *
+	 * @return Whether the operation was successful.
 	 * @see #canUndo()
 	 * @see #redoLastAction()
 	 */
@@ -367,13 +360,16 @@ public class RTextArea extends RTextAreaBase implements Printable {
 
 
 	/**
-	 * Clears any "mark all" highlights, if any.
+	 * Clears any "mark all" highlights, if any. As {@link SearchEngine} handles
+	 * "mark all" highlights itself, the programmer doesn't usually need to call
+	 * this directly. One use case to do so might be doing custom highlighting of
+	 * specific text in the text area.
 	 *
 	 * @see #markAll(List)
 	 * @see #getMarkAllHighlightColor()
 	 * @see #setMarkAllHighlightColor(Color)
 	 */
-	void clearMarkAllHighlights() {
+	public void clearMarkAllHighlights() {
 		((RTextAreaHighlighter)getHighlighter()).clearMarkAllHighlights();
 		//markedWord = null;
 		repaint();
@@ -470,8 +466,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 	private static void createPopupMenuActions() {
 
 		// Create actions for right-click popup menu.
-		// 1.5.2004/pwy: Replaced the CTRL_MASK with the cross-platform version...
-		int mod = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+		int mod = RTextArea.getDefaultModifier();
 		ResourceBundle msg = ResourceBundle.getBundle(MSG);
 
 		cutAction = new RTextAreaEditorKit.CutAction();
@@ -520,7 +515,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 
 
 	/**
-	 * Returns the a real UI to install on this text area.
+	 * Returns a real UI to install on this text area.
 	 *
 	 * @return The UI.
 	 */
@@ -559,13 +554,11 @@ public class RTextArea extends RTextAreaBase implements Printable {
 	 * Removes all undoable edits from this document's undo manager.  This
 	 * method also makes the undo/redo actions disabled.
 	 */
-	/*
-	 * NOTE:  For some reason, it appears I have to create an entirely new
-	 *        <code>undoManager</code> for undo/redo to continue functioning
-	 *        properly; if I don't, it only ever lets you do one undo.  Not
-	 *        too sure why this is...
-	 */
 	public void discardAllEdits() {
+		// NOTE:  For some reason, it appears I have to create an entirely new
+		// 	<code>undoManager</code> for undo/redo to continue functioning
+		// properly; if I don't, it only ever lets you do one undo.  Not
+		// too sure why this is...
 		undoManager.discardAllEdits();
 		getDocument().removeUndoableEditListener(undoManager);
 		undoManager = createUndoManager();
@@ -591,12 +584,9 @@ public class RTextArea extends RTextAreaBase implements Printable {
 	 * @see #isRecordingMacro()
 	 * @see #beginRecordingMacro()
 	 */
-	/*
-	 * FIXME:  This should throw an exception if we're not recording a macro.
-	 */
 	public static synchronized void endRecordingMacro() {
+		// FIXME: This should throw an exception if we're not recording a macro.
 		if (!isRecordingMacro()) {
-			//System.err.println("Not recording a macro!");
 			return;
 		}
 		recordingMacro = false;
@@ -696,7 +686,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 
 	/**
 	 * Returns the macro currently stored in this <code>RTextArea</code>.
-	 * Since macros are shared, all <code>RTextArea</code>s in the currently-
+	 * Since macros are shared, all <code>RTextArea</code>s in the currently
 	 * running application are using this macro.
 	 *
 	 * @return The current macro, or <code>null</code> if no macro has been
@@ -715,8 +705,29 @@ public class RTextArea extends RTextAreaBase implements Printable {
 	 * @see #getMarkAllHighlightColor()
 	 * @see #setMarkAllHighlightColor(Color)
 	 */
-	public static final Color getDefaultMarkAllHighlightColor() {
+	public static Color getDefaultMarkAllHighlightColor() {
 		return DEFAULT_MARK_ALL_COLOR;
+	}
+
+
+	/**
+	 * Returns the default modifier key for a system.  For example, on Windows
+	 * this would be the CTRL key (<code>InputEvent.CTRL_MASK</code>).
+	 *
+	 * @return The default modifier key.
+	 */
+	public static int getDefaultModifier() {
+
+		// Allow for headless environments, e.g. unit tests
+		int modifier = RTextAreaBase.isOSX() ? Event.META_MASK : Event.CTRL_MASK;
+
+		try {
+			modifier = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+		} catch (HeadlessException e) {
+			// Do nothing; take default value
+		}
+
+		return modifier;
 	}
 
 
@@ -898,7 +909,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 		carets = new CaretStyle[2];
 		setCaretStyle(INSERT_MODE, CaretStyle.THICK_VERTICAL_LINE_STYLE);
 		setCaretStyle(OVERWRITE_MODE, CaretStyle.BLOCK_STYLE);
-		setDragEnabled(true);			// Enable drag-and-drop.
+		setDragEnabled(!GraphicsEnvironment.isHeadless());
 
 		setTextMode(INSERT_MODE); // Carets array must be created first!
 		setMarkAllOnOccurrenceSearches(true);
@@ -910,9 +921,9 @@ public class RTextArea extends RTextAreaBase implements Printable {
 
 
 	/**
-	 * Returns whether or not a macro is being recorded.
+	 * Returns whether a macro is being recorded.
 	 *
-	 * @return Whether or not a macro is being recorded.
+	 * @return Whether a macro is being recorded.
 	 * @see #beginRecordingMacro()
 	 * @see #endRecordingMacro()
 	 */
@@ -934,9 +945,10 @@ public class RTextArea extends RTextAreaBase implements Printable {
 
 
 	/**
-	 * Marks all ranges specified with the "mark all" highlighter.  Typically,
-	 * this method is called indirectly from {@link SearchEngine} when doing
-	 * a fine or replace operation.<p>
+	 * Marks all ranges specified with the "mark all" highlighter. As
+	 * {@link SearchEngine} handles "mark all" highlights itself, the programmer
+	 * doesn't usually need to call this directly. One use case to do so might
+	 * be doing custom highlighting of specific text in the text area.<p>
 	 *
 	 * This method fires a property change event of type
 	 * {@link #MARK_ALL_OCCURRENCES_CHANGED_PROPERTY}.
@@ -948,12 +960,11 @@ public class RTextArea extends RTextAreaBase implements Printable {
 	 * @see #getMarkAllHighlightColor()
 	 * @see #setMarkAllHighlightColor(Color)
 	 */
-	void markAll(List<DocumentRange> ranges) {
+	public void markAll(List<DocumentRange> ranges) {
 
 		RTextAreaHighlighter h = (RTextAreaHighlighter)getHighlighter();
-		if (/*toMark!=null && !toMark.equals(markedWord) && */h!=null) {
+		if (h!=null) {
 
-			//markedWord = toMark;
 			if (ranges!=null) {
 				for (DocumentRange range : ranges) {
 					try {
@@ -999,14 +1010,14 @@ public class RTextArea extends RTextAreaBase implements Printable {
 				undoManager.beginInternalAtomicEdit();
 				try {
 					for (MacroRecord record : macroRecords) {
-						for (int i=0; i<actions.length; i++) {
-							if ((actions[i] instanceof RecordableTextAction) &&
+						for (Action action : actions) {
+							if ((action instanceof RecordableTextAction) &&
 								record.id.equals(
-								((RecordableTextAction)actions[i]).getMacroID())) {
-								actions[i].actionPerformed(
+									((RecordableTextAction)action).getMacroID())) {
+								action.actionPerformed(
 									new ActionEvent(this,
-												ActionEvent.ACTION_PERFORMED,
-												record.actionCommand));
+										ActionEvent.ACTION_PERFORMED,
+										record.actionCommand));
 								break;
 							}
 						}
@@ -1034,6 +1045,33 @@ public class RTextArea extends RTextAreaBase implements Printable {
 
 
 	/**
+	 * Overridden to disable drag-and-drop if the user triple-clicks.
+	 * Typically, the user will select text, or double-click a word, then
+	 * drag it to its destination.  Triple-clicking before dragging text to
+	 * a new location is rare.  For that reason, we disable it in that case
+	 * since it causes issues with triple-click-to-select-by-line.
+	 * See https://github.com/bobbylight/RSyntaxTextArea/issues/59 for more
+	 * information.
+	 *
+	 * @param e The mouse event being dispatched.
+	 */
+	@Override
+	protected void processMouseEvent(MouseEvent e) {
+
+		boolean disableDndHack = getDragEnabled() && e.getClickCount() > 2;
+		if (disableDndHack) {
+			setDragEnabled(false);
+		}
+
+		super.processMouseEvent(e);
+
+		if (disableDndHack) {
+			setDragEnabled(true);
+		}
+	}
+
+
+	/**
 	 * We override this method because the super version gives us an entirely
 	 * new <code>Document</code>, thus requiring us to re-attach our Undo
 	 * manager.  With this version we just replace the text.
@@ -1043,7 +1081,15 @@ public class RTextArea extends RTextAreaBase implements Printable {
 
 		RTextAreaEditorKit kit = (RTextAreaEditorKit)getUI().getEditorKit(this);
 		setText(null);
+
+		// We disassociate the document from the text area while loading a file
+		// for performance reasons.  For small files this will be negligibly
+		// slower, but for large files this is a performance boost as there will
+		// be no listeners receiving events every call to Document.insert().
+		// On my PC it was about 1 second per 5 MB.
 		Document doc = getDocument();
+		setDocument(createDefaultModel());
+
 		if (desc != null) {
 			doc.putProperty(Document.StreamDescriptionProperty, desc);
 		}
@@ -1054,6 +1100,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 			throw new IOException(e.getMessage());
 		}
 
+		setDocument(doc);
 	}
 
 
@@ -1061,8 +1108,8 @@ public class RTextArea extends RTextAreaBase implements Printable {
 	 * De-serializes a text area.
 	 *
 	 * @param s The stream to read from.
-	 * @throws ClassNotFoundException
-	 * @throws IOException
+	 * @throws ClassNotFoundException If something bad happens.
+	 * @throws IOException If an IO error occurs.
 	 */
 	private void readObject(ObjectInputStream s)
 						throws ClassNotFoundException, IOException {
@@ -1070,7 +1117,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 		s.defaultReadObject();
 
 		// UndoManagers cannot be serialized without Exceptions.  See
-		// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4275892
+		// https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4275892
 		undoManager = createUndoManager();
 		getDocument().addUndoableEditListener(undoManager);
 
@@ -1137,7 +1184,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 	 * @param start the start position &gt;= 0
 	 * @param end the end position &gt;= start
 	 * @exception IllegalArgumentException  if part of the range is an
-	 *  invalid position in the model
+	 *            invalid position in the model.
 	 * @see #insert(String, int)
 	 * @see #replaceRange(String, int, int)
 	 */
@@ -1152,20 +1199,20 @@ public class RTextArea extends RTextAreaBase implements Printable {
 				// Without this, in some cases we'll have to do two undos
 				// for one logical operation (for example, try editing a
 				// Java source file in an RSyntaxTextArea, and moving a line
-				// with text already on it down via Enter.  Without this
+				// with text already on it down via Enter).  Without this
 				// line, doing a single "undo" moves all later text up,
 				// but the first line moved down isn't there!  Doing a
 				// second undo puts it back.
 				undoManager.beginInternalAtomicEdit();
 				((AbstractDocument)doc).replace(start, end - start,
-                               		                     str, null);
+					str, null);
 			} catch (BadLocationException e) {
 				throw new IllegalArgumentException(e.getMessage());
 			} finally {
 				undoManager.endInternalAtomicEdit();
 			}
 		}
-    }
+	}
 
 
 	/**
@@ -1353,7 +1400,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 	public static void setActionProperties(int action, String name,
 							Integer mnemonic, KeyStroke accelerator) {
 
-		Action tempAction = null;
+		Action tempAction;
 
 		switch (action) {
 			case CUT_ACTION:
@@ -1619,7 +1666,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 	 * right-click popup menu's UI is updated.  The look and feel of an
 	 * <code>RTextArea</code> is independent of the Java Look and Feel, and so
 	 * this method does not change the text area itself.  Subclasses (such as
-	 * <code>RSyntaxTextArea</code> can call <code>setRTextAreaUI</code> if
+	 * <code>RSyntaxTextArea</code>) can call <code>setRTextAreaUI</code> if
 	 * they wish to install a new UI.
 	 *
 	 * @param ui This parameter is ignored.
@@ -1668,7 +1715,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 	private void writeObject(ObjectOutputStream s) throws IOException {
 
 		// UndoManagers cannot be serialized without Exceptions.  See
-		// http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4275892
+		// https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4275892
 		getDocument().removeUndoableEditListener(undoManager);
 		s.defaultWriteObject();
 		getDocument().addUndoableEditListener(undoManager);
@@ -1730,7 +1777,7 @@ public class RTextArea extends RTextAreaBase implements Printable {
 		@Override
 		public void mouseReleased(MouseEvent e) {
 			if (e.isPopupTrigger()) {
-				//showPopup(e);//不弹出右键菜单，避免与MyTextArea的右键菜单冲突 hqq 20231028
+				showPopup(e);
 			}
 		}
 

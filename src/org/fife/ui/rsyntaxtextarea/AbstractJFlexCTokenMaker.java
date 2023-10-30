@@ -5,7 +5,7 @@
  * braces to denote code blocks, such as C, C++, Java, Perl, etc.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -82,18 +82,12 @@ public abstract class AbstractJFlexCTokenMaker extends AbstractJFlexTokenMaker {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public boolean getMarkOccurrencesOfTokenType(int type) {
 		return type==Token.IDENTIFIER || type==Token.FUNCTION;
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public boolean getShouldIndentNextLineAfter(Token t) {
 		if (t!=null && t.length()==1) {
@@ -166,13 +160,13 @@ public abstract class AbstractJFlexCTokenMaker extends AbstractJFlexTokenMaker {
 		/**
 		 * Returns whether the MLC token containing <code>offs</code> appears
 		 * to have a "nested" comment (i.e., contains "<code>/*</code>"
-		 * somewhere inside of it).  This implies that it is likely a "new" MLC
+		 * somewhere inside it).  This implies that it is likely a "new" MLC
 		 * and needs to be closed.  While not foolproof, this is usually good
 		 * enough of a sign.
 		 *
-		 * @param textArea
-		 * @param line
-		 * @param offs
+		 * @param textArea The text area being examined.
+		 * @param line The line being examined.
+		 * @param offs The offset being examined.
 		 * @return Whether a comment appears to be nested inside this one.
 		 */
 		private boolean appearsNested(RSyntaxTextArea textArea,
@@ -182,7 +176,7 @@ public abstract class AbstractJFlexCTokenMaker extends AbstractJFlexTokenMaker {
 
 			while (line<textArea.getLineCount()) {
 				Token t = textArea.getTokenListForLine(line);
-				int i = 0;
+				int i;
 				// If examining the first line, start at offs.
 				if (line++==firstLine) {
 					t = RSyntaxUtilities.getTokenAtOffset(t, offs);
@@ -214,10 +208,10 @@ public abstract class AbstractJFlexCTokenMaker extends AbstractJFlexTokenMaker {
 		private void insertBreakInMLC(ActionEvent e, RSyntaxTextArea textArea,
 										int line) {
 
-			Matcher m = null;
-			int start = -1;
-			int end = -1;
-			String text = null;
+			Matcher m;
+			int start;
+			int end;
+			String text;
 			try {
 				start = textArea.getLineStartOffset(line);
 				end = textArea.getLineEndOffset(line);
@@ -271,7 +265,7 @@ public abstract class AbstractJFlexCTokenMaker extends AbstractJFlexTokenMaker {
 				textArea.replaceSelection("\n" + header);
 				if (nested) {
 					dot = textArea.getCaretPosition(); // Has changed
-					textArea.insert("\n" + leadingWS + " */", dot);
+					textArea.insert("\n" + leadingWS + (firstMlcLine ? " " : "") + "*/", dot);
 					textArea.setCaretPosition(dot);
 				}
 

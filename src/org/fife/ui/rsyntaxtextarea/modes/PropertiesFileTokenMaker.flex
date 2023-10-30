@@ -4,7 +4,7 @@
  * PropertiesFileTokenMaker.java - Scanner for properties files.
  * 
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.modes;
 
@@ -18,10 +18,10 @@ import org.fife.ui.rsyntaxtextarea.*;
  * This class splits up text into tokens representing a Java properties file.<p>
  *
  * This implementation was created using
- * <a href="http://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
+ * <a href="https://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
  * was modified for performance.  Memory allocation needs to be almost
  * completely removed to be competitive with the handwritten lexers (subclasses
- * of <code>AbstractTokenMaker</code>, so this class has been modified so that
+ * of <code>AbstractTokenMaker</code>), so this class has been modified so that
  * Strings are never allocated (via yytext()), and the scanner never has to
  * worry about refilling its buffer (needlessly copying chars around).
  * We can achieve this because RText always scans exactly 1 line of tokens at a
@@ -166,7 +166,6 @@ import org.fife.ui.rsyntaxtextarea.*;
 	 *
 	 * @return      <code>true</code> if EOF was reached, otherwise
 	 *              <code>false</code>.
-	 * @exception   IOException  if any I/O-Error occurs.
 	 */
 	private boolean zzRefill() {
 		return zzCurrentPos>=s.offset+s.count;

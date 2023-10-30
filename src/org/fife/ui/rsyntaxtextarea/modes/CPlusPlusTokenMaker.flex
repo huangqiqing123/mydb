@@ -5,7 +5,7 @@
  * return a linked list of tokens representing it in C++.
  * 
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.modes;
 
@@ -19,10 +19,10 @@ import org.fife.ui.rsyntaxtextarea.*;
  * A parser for the C++ programming language.
  *
  * This implementation was created using
- * <a href="http://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
+ * <a href="https://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
  * was modified for performance.  Memory allocation needs to be almost
  * completely removed to be competitive with the handwritten lexers (subclasses
- * of <code>AbstractTokenMaker</code>, so this class has been modified so that
+ * of <code>AbstractTokenMaker</code>), so this class has been modified so that
  * Strings are never allocated (via yytext()), and the scanner never has to
  * worry about refilling its buffer (needlessly copying chars around).
  * We can achieve this because RText always scans exactly 1 line of tokens at a
@@ -145,20 +145,25 @@ import org.fife.ui.rsyntaxtextarea.*;
 	 * @return The first <code>Token</code> in a linked list representing
 	 *         the syntax highlighted text.
 	 */
+	@Override
 	public Token getTokenList(Segment text, int initialTokenType, int startOffset) {
 
 		resetTokenList();
 		this.offsetShift = -text.offset + startOffset;
 
 		// Start off in the proper state.
-		int state = Token.NULL;
+		int state = YYINITIAL;
 		switch (initialTokenType) {
+			case Token.COMMENT_EOL:
+				state = EOL_COMMENT;
+				start = text.offset;
+				break;
 			case Token.COMMENT_MULTILINE:
 				state = MLC;
 				start = text.offset;
 				break;
 			default:
-				state = Token.NULL;
+				state = YYINITIAL;
 		}
 
 		s = text;
@@ -195,7 +200,7 @@ import org.fife.ui.rsyntaxtextarea.*;
 	 *
 	 * @param reader   the new input stream 
 	 */
-	public final void yyreset(java.io.Reader reader) {
+	public final void yyreset(Reader reader) {
 		// 's' has been updated.
 		zzBuffer = s.array;
 		/*
@@ -566,6 +571,27 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
 	{WhiteSpace}+					{ addToken(Token.WHITESPACE); }
 
 	/* Preprocessor directives */
+	/* Special-case <includes> for uniform appearance with "string" includes "*/
+	"#"{WhiteSpace}*"include"{WhiteSpace}*"<"[A-Za-z0-9_./-]+">" {
+                                                     // It's allowed, but discouraged, to have spaces after the '#'
+                                                     int start = zzStartRead;
+                                                     int end = start + 1;
+                                                     while (Character.isWhitespace(zzBuffer[end])) {
+                                                         end++;
+                                                     }
+                                                     end += "include".length() - 1;
+                                                     addToken(start, end, TokenTypes.PREPROCESSOR);
+
+                                                     // Arbitrary space between the #include and the header.
+                                                     // Bounds check isn't necessary since our regex was matched.
+                                                     start = end = end + 1;
+                                                     while (Character.isWhitespace(zzBuffer[end + 1])) {
+                                                         end++;
+                                                     }
+                                                     addToken(start, end, TokenTypes.WHITESPACE);
+
+                                                     addToken(end + 1, zzMarkedPos - 1, TokenTypes.LITERAL_STRING_DOUBLE_QUOTE);
+                                                 }
 	"#"{WhiteSpace}*{PreprocessorWord}	{ addToken(Token.PREPROCESSOR); }
 
 	/* String/Character Literals. */
@@ -666,10 +692,15 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
 }
 
 <EOL_COMMENT> {
-	[^hwf\n]+				{}
+	[^hwf\\\n]+				{}
 	{URL}					{ int temp=zzStartRead; addToken(start,zzStartRead-1, Token.COMMENT_EOL); addHyperlinkToken(temp,zzMarkedPos-1, Token.COMMENT_EOL); start = zzMarkedPos; }
 	[hwf]					{}
-	\n						{ addToken(start,zzStartRead-1, Token.COMMENT_EOL); addNullToken(); return firstToken; }
+	\\.						{ /* Skip all escaped chars. */ }
+	\\						{ /* Line ending in '\' => continue to next line. */
+								addToken(start,zzStartRead, Token.COMMENT_EOL);
+								return firstToken;
+							}
+	\n |
 	<<EOF>>					{ addToken(start,zzStartRead-1, Token.COMMENT_EOL); addNullToken(); return firstToken; }
 
 }

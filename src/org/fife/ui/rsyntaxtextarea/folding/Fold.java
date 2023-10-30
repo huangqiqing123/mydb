@@ -4,7 +4,7 @@
  * Fold.java - A foldable region of text in an RSyntaxTextArea instance.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.folding;
 
@@ -72,7 +72,7 @@ public class Fold implements Comparable<Fold> {
 		Fold child = new Fold(type, textArea, startOffs);
 		child.parent = this;
 		if (children==null) {
-			children = new ArrayList<Fold>();
+			children = new ArrayList<>();
 		}
 		children.add(child);
 		return child;
@@ -99,7 +99,7 @@ public class Fold implements Comparable<Fold> {
 	/**
 	 * Returns whether the specified line would be hidden in this fold.  Since
 	 * RSTA displays the "first" line in a fold, this means that the line must
-	 * must be between <code>(getStartLine()+1)</code> and
+	 * be between <code>(getStartLine()+1)</code> and
 	 * <code>getEndLine()</code>, inclusive.
 	 *
 	 * @param line The line to check.
@@ -297,7 +297,7 @@ public class Fold implements Comparable<Fold> {
 	 *
 	 * @return The end offset of this code block, or {@link Integer#MAX_VALUE}
 	 *         if this fold region isn't closed properly.  The latter causes
-	 *         this fold to collapsed all lines through the end of the file.
+	 *         this fold to collapse all lines through the end of the file.
 	 * @see #getEndLine()
 	 * @see #getStartOffset()
 	 */

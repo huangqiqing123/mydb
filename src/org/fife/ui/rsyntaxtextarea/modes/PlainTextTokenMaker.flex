@@ -4,7 +4,7 @@
  * PlainTextTokenMaker.flex - Scanner for plain text files.
  * 
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.modes;
 
@@ -18,7 +18,7 @@ import org.fife.ui.rsyntaxtextarea.*;
  * Scanner for plain text files.
  *
  * This implementation was created using
- * <a href="http://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
+ * <a href="https://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
  * was modified for performance.  Memory allocation needs to be almost
  * completely removed to be competitive with the handwritten lexers (subclasses
  * of <code>AbstractTokenMaker</code>), so this class has been modified so that
@@ -86,17 +86,17 @@ import org.fife.ui.rsyntaxtextarea.*;
 
 
 	/**
-	 * Always returns <code>Token.NULL</code>, as there are no multiline
+	 * Always returns <code>TokenTypes.NULL</code>, as there are no multiline
 	 * tokens in properties files.
 	 *
 	 * @param text The line of tokens to examine.
 	 * @param initialTokenType The token type to start with (i.e., the value
 	 *        of <code>getLastTokenTypeOnLine</code> for the line before
 	 *        <code>text</code>).
-	 * @return <code>Token.NULL</code>.
+	 * @return <code>TokenTypes.NULL</code>.
 	 */
 	public int getLastTokenTypeOnLine(Segment text, int initialTokenType) {
-		return Token.NULL;
+		return TokenTypes.NULL;
 	}
 
 
@@ -120,6 +120,7 @@ import org.fife.ui.rsyntaxtextarea.*;
 	 * @return Whether tokens of this type should have "mark occurrences"
 	 *         enabled.
 	 */
+	@Override
 	public boolean getMarkOccurrencesOfTokenType(int type) {
 		return false;
 	}
@@ -161,7 +162,6 @@ import org.fife.ui.rsyntaxtextarea.*;
 	 *
 	 * @return      <code>true</code> if EOF was reached, otherwise
 	 *              <code>false</code>.
-	 * @exception   IOException  if any I/O-Error occurs.
 	 */
 	private boolean zzRefill() {
 		return zzCurrentPos>=s.offset+s.count;
@@ -200,9 +200,9 @@ import org.fife.ui.rsyntaxtextarea.*;
 
 %}
 
-LetterOrDigit	= ([a-zA-Z0-9])
+LetterOrDigit	= ([[:letter:][:digit:]])
 Identifier		= ({LetterOrDigit}+)
-Separator		= ([^a-zA-Z0-9 \t\n])
+Separator		= ([^[:letter:][:digit:] \t\n])
 WhiteSpace		= ([ \t]+)
 LineTerminator	= ([\n])
 
@@ -217,11 +217,10 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
 %%
 
 <YYINITIAL> {
-	{URL}				{ addToken(Token.IDENTIFIER, true); }
-	{Identifier}		{ addToken(Token.IDENTIFIER, false); }
-	{Separator}			{ addToken(Token.IDENTIFIER, false); }
-	{WhiteSpace}		{ addToken(Token.WHITESPACE, false); }
-	{LineTerminator}	{ addNullToken(); return firstToken; }
+	{URL}				{ addToken(TokenTypes.IDENTIFIER, true); }
+	{Identifier}		{ addToken(TokenTypes.IDENTIFIER, false); }
+	{Separator}			{ addToken(TokenTypes.IDENTIFIER, false); }
+	{WhiteSpace}		{ addToken(TokenTypes.WHITESPACE, false); }
+	{LineTerminator} |
 	<<EOF>>				{ addNullToken(); return firstToken; }
-	.					{ /* Never happens */ addToken(Token.IDENTIFIER, false); }
 }

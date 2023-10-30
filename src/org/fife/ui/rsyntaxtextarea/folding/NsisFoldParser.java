@@ -4,7 +4,7 @@
  * NsisFoldParser.java - Fold parser for NSIS.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.folding;
 
@@ -22,7 +22,7 @@ import org.fife.ui.rsyntaxtextarea.Token;
  * A fold parser NSIS.<p>
  *
  * Note that this class may impose somewhat of a performance penalty on large
- * source files, since it re-parses the entire document each time folds are
+ * source files, since it reparses the entire document each time folds are
  * reevaluated.
  *
  * @author Robert Futrell
@@ -45,19 +45,16 @@ public class NsisFoldParser implements FoldParser {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public List<Fold> getFolds(RSyntaxTextArea textArea) {
 
-		List<Fold> folds = new ArrayList<Fold>();
+		List<Fold> folds = new ArrayList<>();
 
 		Fold currentFold = null;
 		int lineCount = textArea.getLineCount();
 		boolean inMLC = false;
 		int mlcStart = 0;
-		Stack<char[]> endWordStack = new Stack<char[]>();
+		Stack<char[]> endWordStack = new Stack<>();
 
 		try {
 

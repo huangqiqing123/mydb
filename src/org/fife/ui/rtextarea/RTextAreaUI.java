@@ -4,7 +4,7 @@
  * RTextAreaUI.java - UI used by instances of RTextArea.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -20,7 +20,7 @@ import javax.swing.plaf.basic.*;
 
 /**
  * The UI used by instances of <code>RTextArea</code>.  This UI takes into
- * account all of the "extras" involved in an <code>RTextArea</code>, including
+ * account all the "extras" involved in an <code>RTextArea</code>, including
  * having a special caret (for insert and overwrite), background images,
  * highlighting the current line, etc.
  *
@@ -168,9 +168,13 @@ public class RTextAreaUI extends BasicTextAreaUI {
 	 */
 	@Override
 	protected Caret createCaret() {
-		Caret caret = new ConfigurableCaret();
-		caret.setBlinkRate(500);
-		return caret;
+		return new ConfigurableCaret();
+	}
+
+
+	@Override
+	protected Highlighter createHighlighter() {
+		return new RTextAreaHighlighter();
 	}
 
 
@@ -216,13 +220,11 @@ public class RTextAreaUI extends BasicTextAreaUI {
 		// DefaultEditorKit).
 		ActionMap map = new ActionMapUIResource();
 		Action[] actions = textArea.getActions();
-		int n = actions.length;
-		for (int i = 0; i < n; i++) {
-			Action a = actions[i];
+		for (Action a : actions) {
 			map.put(a.getValue(Action.NAME), a);
 		}
 
-		// Not sure if we need these; not sure they are ever called
+		// Not sure if we need these; not sure if they are ever called
 		// (check their NAMEs).
 		map.put(TransferHandler.getCutAction().getValue(Action.NAME),
 									TransferHandler.getCutAction());
@@ -320,9 +322,6 @@ public class RTextAreaUI extends BasicTextAreaUI {
 			shared = new RTADefaultInputMap();
 			UIManager.put(SHARED_INPUT_MAP_NAME, shared);
 		}
-		//KeyStroke[] keys = shared.allKeys();
-		//for (int i=0; i<keys.length; i++)
-		//	System.err.println(keys[i] + " -> " + shared.get(keys[i]));
 		map.setParent(shared);
 		return map;
 	}
@@ -371,9 +370,6 @@ public class RTextAreaUI extends BasicTextAreaUI {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected void installKeyboardActions() {
 
@@ -384,7 +380,7 @@ public class RTextAreaUI extends BasicTextAreaUI {
 		// In BasicTextUI#createActionMap(), "editor.getActions()" is called,
 		// and the current editor's returned Actions are used to create the
 		// ActionMap, which is then cached and used in all future J/RTextAreas.
-		// Unfortunately, RTextArea actions don't worn in JTextAreas.
+		// Unfortunately, RTextArea actions don't work in JTextAreas.
 		//super.installKeyboardActions();
 
 		RTextArea textArea = getRTextArea();

@@ -4,7 +4,7 @@
  * TokenMakerBase.java - A base class for token makers.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -66,9 +66,6 @@ public abstract class TokenMakerBase implements TokenMaker {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void addNullToken() {
 		if (firstToken==null) {
@@ -101,9 +98,6 @@ public abstract class TokenMakerBase implements TokenMaker {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void addToken(char[] array, int start, int end, int tokenType,
 						int startOffset) {
@@ -215,9 +209,6 @@ public abstract class TokenMakerBase implements TokenMaker {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public int getLastTokenTypeOnLine(Segment text, int initialTokenType) {
 
@@ -233,9 +224,6 @@ public abstract class TokenMakerBase implements TokenMaker {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String[] getLineCommentStartAndEnd(int languageIndex) {
 		return null;
@@ -245,9 +233,9 @@ public abstract class TokenMakerBase implements TokenMaker {
 	/**
 	 * Returns whether tokens of the specified type should have "mark
 	 * occurrences" enabled for the current programming language.  The default
-	 * implementation returns true if <tt>type</tt> is {@link Token#IDENTIFIER}.
-	 * Subclasses can override this method to support other token types, such
-	 * as {@link Token#VARIABLE}.
+	 * implementation returns true if <tt>type</tt> is
+	 * {@link TokenTypes#IDENTIFIER}. Subclasses can override this method to
+	 * support other token types, such as {@link TokenTypes#VARIABLE}.
 	 *
 	 * @param type The token type.
 	 * @return Whether tokens of this type should have "mark occurrences"
@@ -255,13 +243,22 @@ public abstract class TokenMakerBase implements TokenMaker {
 	 */
 	@Override
 	public boolean getMarkOccurrencesOfTokenType(int type) {
-		return type==Token.IDENTIFIER;
+		return type==TokenTypes.IDENTIFIER;
 	}
 
 
 	/**
-	 * {@inheritDoc}
+	 * Returns whether no tokens have been identified yet.  Should only be
+	 * called by subclasses that need to identify tokens depending on whether
+	 * they are the "first" token on the line or not.
+	 *
+	 * @return Whether no tokens have been identified yet.
 	 */
+	protected boolean getNoTokensIdentifiedYet() {
+		return firstToken == null;
+	}
+
+
 	@Override
 	public OccurrenceMarker getOccurrenceMarker() {
 		if (occurrenceMarker==null) {

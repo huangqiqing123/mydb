@@ -330,7 +330,7 @@ public class Base64Frame extends JFrame {
 		});
 		originTextJson.setLineWrap(true);// 自动换行
 		originTextJson.setCodeFoldingEnabled(true);
-		originTextJson.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON_WITH_COMMENTS);
+		originTextJson.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
 		originTextJson.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(originTextJson);
@@ -341,6 +341,7 @@ public class Base64Frame extends JFrame {
 		targetTextJson.setLineWrap(true);
 		targetTextJson.setCodeFoldingEnabled(true);
 		targetTextJson.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON_WITH_COMMENTS);
+//		targetTextJson.setSyntax
 		splitPane.setBottomComponent(new JScrollPane(targetTextJson));
 		targetTextJson.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {

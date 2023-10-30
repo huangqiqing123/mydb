@@ -4,7 +4,7 @@
  * CodeTemplateManager.java - manages code templates.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -41,7 +41,7 @@ import org.fife.ui.rsyntaxtextarea.templates.CodeTemplate;
  * while <em>not</em> on the EDT could cause problems.<p>
  *
  * For more flexible boilerplate code insertion, consider using the
- * <a href="http://javadoc.fifesoft.com/autocomplete/org/fife/ui/autocomplete/TemplateCompletion.html">
+ * <a href="https://javadoc.fifesoft.com/autocomplete/org/fife/ui/autocomplete/TemplateCompletion.html">
  * TemplateCompletion class</a> in the
  * <a href="https://github.com/bobbylight/AutoComplete">AutoComplete
  * add-on library</a>.
@@ -65,7 +65,7 @@ public class CodeTemplateManager {
 	public CodeTemplateManager() {
 		s = new Segment();
 		comparator = new TemplateComparator();
-		templates = new ArrayList<CodeTemplate>();
+		templates = new ArrayList<>();
 	}
 
 
@@ -101,9 +101,8 @@ public class CodeTemplateManager {
 		try {
 			Document doc = textArea.getDocument();
 			doc.getText(caretPos-charsToGet, charsToGet, s);
-			@SuppressWarnings("unchecked")
 			int index = Collections.binarySearch(templates, s, comparator);
-			return index>=0 ? (CodeTemplate)templates.get(index) : null;
+			return index>=0 ? templates.get(index) : null;
 		} catch (BadLocationException ble) {
 			ble.printStackTrace();
 			throw new InternalError("Error in CodeTemplateManager");
@@ -116,7 +115,7 @@ public class CodeTemplateManager {
 	 *
 	 * @return The template count.
 	 */
-	public synchronized int getTemplateCount() {
+	private synchronized int getTemplateCount() {
 		return templates.size();
 	}
 
@@ -139,7 +138,7 @@ public class CodeTemplateManager {
 	 * @param ch The character to check.
 	 * @return Whether the character is a valid template character.
 	 */
-	public static final boolean isValidChar(char ch) {
+	private static boolean isValidChar(char ch) {
 		return RSyntaxUtilities.isLetterOrDigit(ch) || ch=='_';
 	}
 
@@ -207,9 +206,7 @@ public class CodeTemplateManager {
 	public synchronized void replaceTemplates(CodeTemplate[] newTemplates) {
 		templates.clear();
 		if (newTemplates!=null) {
-			for (int i=0; i<newTemplates.length; i++) {
-				templates.add(newTemplates[i]);
-			}
+			Collections.addAll(templates, newTemplates);
 		}
 		sortTemplates(); // Also recomputes maxTemplateIDLength.
 	}
@@ -218,7 +215,7 @@ public class CodeTemplateManager {
 	/**
 	 * Saves all templates as XML files in the current template directory.
 	 *
-	 * @return Whether or not the save was successful.
+	 * @return Whether the save was successful.
 	 */
 	public synchronized boolean saveTemplates() {
 
@@ -235,9 +232,9 @@ public class CodeTemplateManager {
 		if (oldXMLFiles==null) {
 			return false; // Either an IOException or it isn't a directory.
 		}
-		int count = oldXMLFiles.length;
-		for (int i=0; i<count; i++) {
-			/*boolean deleted = */oldXMLFiles[i].delete();
+		for (File oldXMLFile : oldXMLFiles) {
+			/*boolean deleted = */
+			oldXMLFile.delete();
 		}
 
 		// Save all current templates as XML.
@@ -280,7 +277,7 @@ public class CodeTemplateManager {
 			int oldCount = templates.size();
 
 			List<CodeTemplate> temp =
-					new ArrayList<CodeTemplate>(oldCount+newCount);
+				new ArrayList<>(oldCount + newCount);
 			temp.addAll(templates);
 
 			for (int i=0; i<newCount; i++) {
@@ -289,6 +286,7 @@ public class CodeTemplateManager {
 						new FileInputStream(files[i])));
 					Object obj = d.readObject();
 					if (!(obj instanceof CodeTemplate)) {
+						d.close();
 						throw new IOException("Not a CodeTemplate: " +
 										files[i].getAbsolutePath());
 					}
@@ -347,8 +345,8 @@ public class CodeTemplateManager {
 	 * parameter and a <code>Segment</code> as its second, and knows
 	 * to compare the template's ID to the segment's text.
 	 */
-	@SuppressWarnings("rawtypes")
-	private static class TemplateComparator implements Comparator, Serializable{
+	private static class TemplateComparator implements Comparator<Object>,
+			Serializable{
 
 		@Override
 		public int compare(Object template, Object segment) {

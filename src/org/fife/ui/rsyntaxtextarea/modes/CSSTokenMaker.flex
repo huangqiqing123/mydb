@@ -2,9 +2,9 @@
  * 09/03/2005
  *
  * CSSTokenMaker.java - Token maker for CSS 3 files.
- * 
+ *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.modes;
 
@@ -17,13 +17,13 @@ import org.fife.ui.rsyntaxtextarea.*;
 /**
  * This class splits up text into tokens representing a CSS 3 file.  It's
  * written with a few extra internal states so that it can easily be copy
- * and pasted into HTML, PHP, and JSP TokenMakres when it is updated.<p>
+ * and pasted into HTML, PHP, and JSP TokenMarkers when it is updated.<p>
  *
  * This implementation was created using
- * <a href="http://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
+ * <a href="https://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
  * was modified for performance.  Memory allocation needs to be almost
  * completely removed to be competitive with the handwritten lexers (subclasses
- * of <code>AbstractTokenMaker</code>, so this class has been modified so that
+ * of <code>AbstractTokenMaker</code>), so this class has been modified so that
  * Strings are never allocated (via yytext()), and the scanner never has to
  * worry about refilling its buffer (needlessly copying chars around).
  * We can achieve this because RText always scans exactly 1 line of tokens at a
@@ -202,18 +202,18 @@ import org.fife.ui.rsyntaxtextarea.*;
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
+	@Override
+	public String[] getLineCommentStartAndEnd(int languageIndex) {
+        return new String[] { "/*", "*/" };
+	}
+
+
 	@Override
 	public boolean getMarkOccurrencesOfTokenType(int type) {
 		return type==Token.RESERVED_WORD; // Used for CSS keys
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public boolean getShouldIndentNextLineAfter(Token t) {
 		if (t!=null && t.length()==1) {

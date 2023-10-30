@@ -5,7 +5,7 @@
  * RSyntaxTextArea, with special glyphs to denote spaces and tabs.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -48,9 +48,6 @@ import javax.swing.text.TabExpander;
 class VisibleWhitespaceTokenPainter extends DefaultTokenPainter {
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	protected float paintImpl(Token token, Graphics2D g, float x, float y,
 			RSyntaxTextArea host, TabExpander e, float clipStart,

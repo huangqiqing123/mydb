@@ -5,14 +5,13 @@
  * the file it is editing on disk.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
@@ -25,7 +24,6 @@ import javax.swing.text.Document;
 import org.fife.io.UnicodeReader;
 import org.fife.io.UnicodeWriter;
 import org.fife.ui.rtextarea.RTextAreaEditorKit;
-
 
 /**
  * An extension of {@link org.fife.ui.rsyntaxtextarea.RSyntaxTextArea}
@@ -42,7 +40,7 @@ import org.fife.ui.rtextarea.RTextAreaEditorKit;
  *
  * Loading and saving is also built into the editor.<p>
  *
- * When saving UTF-8 files, whether or not a BOM is written is controlled by
+ * When saving UTF-8 files, whether a BOM is written is controlled by
  * the {@link UnicodeWriter} class.
  * Use {@link UnicodeWriter#setWriteUtf8BOM(boolean)} to toggle writing BOMs
  * for UTF-8 files.<p>
@@ -59,9 +57,36 @@ public class TextEditorPane extends RSyntaxTextArea implements
 
 	private static final long serialVersionUID = 1L;
 
+	/**
+	 * Property change event fired when the file path this text area references
+	 * is updated.
+	 *
+	 * @see #load(FileLocation, String)
+	 * @see #saveAs(FileLocation)
+	 */
 	public static final String FULL_PATH_PROPERTY	= "TextEditorPane.fileFullPath";
+
+	/**
+	 * Property change event fired when the text area's dirty flag changes.
+	 *
+	 * @see #setDirty(boolean)
+	 */
 	public static final String DIRTY_PROPERTY	= "TextEditorPane.dirty";
+
+	/**
+	 * Property change event fired when the text area should be treated as
+	 * read-only, and previously it should not, or vice-versa.
+	 *
+	 * @see #setReadOnly(boolean)
+	 */
 	public static final String READ_ONLY_PROPERTY	= "TextEditorPane.readOnly";
+
+	/**
+	 * Property change event fired when the text area's encoding changes.
+	 *
+	 * @see #setEncoding(String)
+	 */
+	public static final String ENCODING_PROPERTY = "TextEditorPane.encoding";
 
 	/**
 	 * The location of the file being edited.
@@ -126,7 +151,7 @@ public class TextEditorPane extends RSyntaxTextArea implements
 	 *
 	 * @param textMode Either <code>INSERT_MODE</code> or
 	 *        <code>OVERWRITE_MODE</code>.
-	 * @param wordWrapEnabled Whether or not to use word wrap in this pane.
+	 * @param wordWrapEnabled Whether to use word wrap in this pane.
 	 */
 	public TextEditorPane(int textMode, boolean wordWrapEnabled) {
 		super(textMode);
@@ -144,7 +169,7 @@ public class TextEditorPane extends RSyntaxTextArea implements
 	 *
 	 * @param textMode Either <code>INSERT_MODE</code> or
 	 *        <code>OVERWRITE_MODE</code>.
-	 * @param wordWrapEnabled Whether or not to use word wrap in this pane.
+	 * @param wordWrapEnabled Whether to use word wrap in this pane.
 	 * @param loc The location of the text file being edited.  If this value
 	 *        is <code>null</code>, a file named "Untitled.txt" in the current
 	 *        directory is used.
@@ -163,7 +188,7 @@ public class TextEditorPane extends RSyntaxTextArea implements
 	 *
 	 * @param textMode Either <code>INSERT_MODE</code> or
 	 *        <code>OVERWRITE_MODE</code>.
-	 * @param wordWrapEnabled Whether or not to use word wrap in this pane.
+	 * @param wordWrapEnabled Whether to use word wrap in this pane.
 	 * @param loc The location of the text file being edited.  If this value
 	 *        is <code>null</code>, a file named "Untitled.txt" in the current
 	 *        directory is used.  This file is displayed as empty even if it
@@ -203,19 +228,7 @@ public class TextEditorPane extends RSyntaxTextArea implements
 	private static String getDefaultEncoding() {
 		// NOTE:  The "file.encoding" system property is not guaranteed to be
 		// set by the spec, so we cannot rely on it.
-		String encoding = Charset.defaultCharset().name();
-		if (encoding==null) {
-			try {
-				File f = File.createTempFile("rsta", null);
-				FileWriter w = new FileWriter(f);
-				encoding = w.getEncoding();
-				w.close();
-				f.deleteOnExit();//delete();  Keep FindBugs happy
-			} catch (IOException ioe) {
-				encoding = "US-ASCII";
-			}
-		}
-		return encoding;
+		return Charset.defaultCharset().name();
 	}
 
 
@@ -348,9 +361,9 @@ public class TextEditorPane extends RSyntaxTextArea implements
 
 
 	/**
-	 * Returns whether or not the text in this editor has unsaved changes.
+	 * Returns whether the text in this editor has unsaved changes.
 	 *
-	 * @return Whether or not the text has unsaved changes.
+	 * @return Whether the text has unsaved changes.
 	 * @see #setDirty(boolean)
 	 */
 	public boolean isDirty() {
@@ -379,7 +392,7 @@ public class TextEditorPane extends RSyntaxTextArea implements
 
 
 	/**
-	 * Returns whether the text file has been modified outside of this editor
+	 * Returns whether the text file has been modified outside this editor
 	 * since the last load or save operation.  Note that if this is a remote
 	 * file, this method will always return <code>false</code>.<p>
 	 *
@@ -387,7 +400,7 @@ public class TextEditorPane extends RSyntaxTextArea implements
 	 * feature, where the user is prompted to reload a file if it has been
 	 * modified since their last open or save.
 	 *
-	 * @return Whether the text file has been modified outside of this
+	 * @return Whether the text file has been modified outside this
 	 *         editor.
 	 * @see #getLastSaveOrLoadTime()
 	 */
@@ -397,13 +410,33 @@ public class TextEditorPane extends RSyntaxTextArea implements
 
 
 	/**
-	 * Returns whether or not the text area should be treated as read-only.
+	 * Returns whether the text area should be treated as read-only.
 	 *
-	 * @return Whether or not the text area should be treated as read-only.
+	 * @return Whether the text area should be treated as read-only.
 	 * @see #setReadOnly(boolean)
 	 */
 	public boolean isReadOnly() {
 		return readOnly;
+	}
+
+
+	/**
+	 * Loads the specified file in this editor.  This method fires a property
+	 * change event of type {@link #FULL_PATH_PROPERTY}.<p>
+	 * The file will be checked for a BOM; if one is found, the proper Unicode
+	 * flavor is used to load the file.  If not, the system default encoding
+	 * is assumed.
+	 *
+	 * @param loc The location of the file to load.  This cannot be
+	 *        <code>null</code>.
+	 * @throws IOException If an IO error occurs.
+	 * @see #load(FileLocation, String)
+	 * @see #load(FileLocation, Charset)
+	 * @see #save()
+	 * @see #saveAs(FileLocation)
+	 */
+	public void load(FileLocation loc) throws IOException {
+		load(loc, (String)null);
 	}
 
 
@@ -418,6 +451,29 @@ public class TextEditorPane extends RSyntaxTextArea implements
 	 *        If this value is <code>null</code>, the system default encoding
 	 *        is used.
 	 * @throws IOException If an IO error occurs.
+	 * @see #load(FileLocation)
+	 * @see #load(FileLocation, String)
+	 * @see #save()
+	 * @see #saveAs(FileLocation)
+	 */
+	public void load(FileLocation loc, Charset defaultEnc) throws IOException {
+		load(loc, defaultEnc == null ? null : defaultEnc.name());
+	}
+
+
+	/**
+	 * Loads the specified file in this editor.  This method fires a property
+	 * change event of type {@link #FULL_PATH_PROPERTY}.
+	 *
+	 * @param loc The location of the file to load.  This cannot be
+	 *        <code>null</code>.
+	 * @param defaultEnc The encoding to use when loading/saving the file.
+	 *        This encoding will only be used if the file is not Unicode.
+	 *        If this value is <code>null</code>, the system default encoding
+	 *        is used.
+	 * @throws IOException If an IO error occurs.
+	 * @see #load(FileLocation)
+	 * @see #load(FileLocation, Charset)
 	 * @see #save()
 	 * @see #saveAs(FileLocation)
 	 */
@@ -441,12 +497,10 @@ public class TextEditorPane extends RSyntaxTextArea implements
 		// Remove listener so dirty flag doesn't get set when loading a file.
 		Document doc = getDocument();
 		doc.removeDocumentListener(this);
-		BufferedReader r = new BufferedReader(ur);
-		try {
+		try (BufferedReader r = new BufferedReader(ur)) {
 			read(r, null);
 		} finally {
 			doc.addDocumentListener(this);
-			r.close();
 		}
 
 		// No IOException thrown, so we can finally change the location.
@@ -455,6 +509,7 @@ public class TextEditorPane extends RSyntaxTextArea implements
 		this.loc = loc;
 		setDirty(false);
 		setCaretPosition(0);
+		discardAllEdits();
 		firePropertyChange(FULL_PATH_PROPERTY, old, getFileFullPath());
 
 	}
@@ -481,11 +536,8 @@ public class TextEditorPane extends RSyntaxTextArea implements
 		String oldEncoding = getEncoding();
 		UnicodeReader ur = new UnicodeReader(loc.getInputStream(), oldEncoding);
 		String encoding = ur.getEncoding();
-		BufferedReader r = new BufferedReader(ur);
-		try {
+		try (BufferedReader r = new BufferedReader(ur)) {
 			read(r, null); // Dumps old contents.
-		} finally {
-			r.close();
 		}
 		setEncoding(encoding);
 		setDirty(false);
@@ -552,18 +604,15 @@ public class TextEditorPane extends RSyntaxTextArea implements
 	 */
 	private void saveImpl(FileLocation loc) throws IOException {
 		OutputStream out = loc.getOutputStream();
-		BufferedWriter w = new BufferedWriter(
-				new UnicodeWriter(out, getEncoding()));
-		try {
+		try (BufferedWriter w = new BufferedWriter(
+			new UnicodeWriter(out, getEncoding()))) {
 			write(w);
-		} finally {
-			w.close();
 		}
 	}
 
 
 	/**
-	 * Sets whether or not this text in this editor has unsaved changes.
+	 * Sets whether this text in this editor has unsaved changes.
 	 * This fires a property change event of type {@link #DIRTY_PROPERTY}.<p>
 	 *
 	 * Applications will usually have no need to call this method directly; the
@@ -575,7 +624,7 @@ public class TextEditorPane extends RSyntaxTextArea implements
 	 * <code>load()</code>, <code>reload()</code>, <code>save()</code>, or
 	 * <code>saveAs()</code> are called.
 	 *
-	 * @param dirty Whether or not the text has been modified.
+	 * @param dirty Whether the text has been modified.
 	 * @see #isDirty()
 	 */
 	public void setDirty(boolean dirty) {
@@ -604,7 +653,8 @@ public class TextEditorPane extends RSyntaxTextArea implements
 
 	/**
 	 * Sets the encoding to use when reading or writing this file.  This
-	 * method sets the editor's dirty flag when the encoding is changed.
+	 * method sets the editor's dirty flag when the encoding is changed, and
+	 * fires a property change event of type {@link #ENCODING_PROPERTY}.
 	 *
 	 * @param encoding The new encoding.
 	 * @throws UnsupportedCharsetException If the encoding is not supported.
@@ -620,7 +670,9 @@ public class TextEditorPane extends RSyntaxTextArea implements
 			throw new UnsupportedCharsetException(encoding);
 		}
 		if (charSet==null || !charSet.equals(encoding)) {
+			String oldEncoding = charSet;
 			charSet = encoding;
+			firePropertyChange(ENCODING_PROPERTY, oldEncoding, charSet);
 			setDirty(true);
 		}
 	}
@@ -685,10 +737,10 @@ public class TextEditorPane extends RSyntaxTextArea implements
 
 
 	/**
-	 * Sets whether or not this text area should be treated as read-only.
+	 * Sets whether this text area should be treated as read-only.
 	 * This fires a property change event of type {@link #READ_ONLY_PROPERTY}.
 	 *
-	 * @param readOnly Whether or not the document is read-only.
+	 * @param readOnly Whether the document is read-only.
 	 * @see #isReadOnly()
 	 */
 	public void setReadOnly(boolean readOnly) {
@@ -716,6 +768,4 @@ public class TextEditorPane extends RSyntaxTextArea implements
 			lastSaveOrLoadTime = loc.getActualLastModified();
 		}
 	}
-
-
 }

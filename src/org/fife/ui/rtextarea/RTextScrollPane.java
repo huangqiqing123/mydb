@@ -5,7 +5,7 @@
  * so that it can display line numbers, fold indicators, and icons.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -130,7 +130,7 @@ public class RTextScrollPane extends JScrollPane {
 		RTextArea textArea = getFirstRTextAreaDescendant(comp);
 
 		// Create the gutter for this document.
-		Font defaultFont = new Font("Monospaced", Font.PLAIN, 12);
+		Font defaultFont = new Font(Font.MONOSPACED, Font.PLAIN, 12);
 		gutter = new Gutter(textArea);
 		gutter.setLineNumberFont(defaultFont);
 		gutter.setLineNumberColor(lineNumberColor);
@@ -174,7 +174,7 @@ public class RTextScrollPane extends JScrollPane {
 	/**
 	 * Returns <code>true</code> if the line numbers are enabled and visible.
 	 *
-	 * @return Whether or not line numbers are visible.
+	 * @return Whether line numbers are visible.
 	 * @see #setLineNumbersEnabled(boolean)
 	 */
 	public boolean getLineNumbersEnabled() {
@@ -189,7 +189,11 @@ public class RTextScrollPane extends JScrollPane {
 	 * @see #setViewportView(Component)
 	 */
 	public RTextArea getTextArea() {
-		return (RTextArea)getViewport().getView();
+		Component view = getViewport().getView();
+		if (view instanceof RTextArea) {
+			return (RTextArea)view;
+		}
+		return getFirstRTextAreaDescendant(view);
 	}
 
 
@@ -241,9 +245,9 @@ public class RTextScrollPane extends JScrollPane {
 
 
 	/**
-	 * Toggles whether or not line numbers are visible.
+	 * Toggles whether line numbers are visible.
 	 *
-	 * @param enabled Whether or not line numbers should be visible.
+	 * @param enabled Whether line numbers should be visible.
 	 * @see #getLineNumbersEnabled()
 	 */
 	public void setLineNumbersEnabled(boolean enabled) {
@@ -261,7 +265,7 @@ public class RTextScrollPane extends JScrollPane {
 	@Override
 	public void setViewportView(Component view) {
 
-		RTextArea rtaCandidate = null;
+		RTextArea rtaCandidate;
 
 		if (!(view instanceof RTextArea)) {
 			rtaCandidate = getFirstRTextAreaDescendant(view);
@@ -290,7 +294,7 @@ public class RTextScrollPane extends JScrollPane {
 	 *         is found.
 	 */
 	private static RTextArea getFirstRTextAreaDescendant(Component comp) {
-		Stack<Component> stack = new Stack<Component>();
+		Stack<Component> stack = new Stack<>();
 		stack.add(comp);
 		while (!stack.isEmpty()) {
 			Component current = stack.pop();

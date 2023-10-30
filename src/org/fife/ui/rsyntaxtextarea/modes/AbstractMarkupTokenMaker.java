@@ -5,7 +5,7 @@
  * languages.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.modes;
 
@@ -29,9 +29,6 @@ public abstract class AbstractMarkupTokenMaker extends AbstractJFlexTokenMaker {
 	public abstract boolean getCompleteCloseTags();
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public String[] getLineCommentStartAndEnd(int languageIndex) {
 		return new String[] { "<!--", "-->" };

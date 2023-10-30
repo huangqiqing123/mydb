@@ -4,7 +4,7 @@
  * RTextAreaBase.java - The base class for an RTextArea.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -62,7 +62,7 @@ public abstract class RTextAreaBase extends JTextArea {
 	private boolean fadeCurrentLineHighlight;	// "Fade effect" for current line highlight.
 	private boolean roundedSelectionEdges;
 	private int previousCaretY;
-    int currentCaretY;							// Used to know when to rehighlight current line.
+	int currentCaretY;							// Used to know when to rehighlight current line.
 
 	private BackgroundPainterStrategy backgroundPainter;	// Paints the background.
 
@@ -166,8 +166,8 @@ public abstract class RTextAreaBase extends JTextArea {
 	private void addCurrentLineHighlightListeners() {
 		boolean add = true;
 		MouseMotionListener[] mouseMotionListeners = getMouseMotionListeners();
-		for (int i=0; i<mouseMotionListeners.length; i++) {
-			if (mouseMotionListeners[i]==mouseListener) {
+		for (MouseMotionListener mouseMotionListener : mouseMotionListeners) {
+			if (mouseMotionListener == mouseListener) {
 				add = false;
 				break;
 			}
@@ -177,8 +177,8 @@ public abstract class RTextAreaBase extends JTextArea {
 			addMouseMotionListener(mouseListener);
 		}
 		MouseListener[] mouseListeners = getMouseListeners();
-		for (int i=0; i<mouseListeners.length; i++) {
-			if (mouseListeners[i]==mouseListener) {
+		for (MouseListener listener : mouseListeners) {
+			if (listener == mouseListener) {
 				add = false;
 				break;
 			}
@@ -196,12 +196,7 @@ public abstract class RTextAreaBase extends JTextArea {
 		// highlight y-offset after the text area is sized.  This seems to be
 		// the best way to do it.
 		if (getCaretPosition() != 0) {
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					possiblyUpdateCurrentLineHighlightLocation();
-				}
-			});
+			SwingUtilities.invokeLater(this::possiblyUpdateCurrentLineHighlightLocation);
 		}
 	}
 
@@ -209,9 +204,9 @@ public abstract class RTextAreaBase extends JTextArea {
 	/*
 	 * TODO: Figure out why RTextArea doesn't work with RTL orientation!
 	 */
-//	public void applyComponentOrientation(ComponentOrientation orientation) {
-//		super.applyComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
-//	}
+	//public void applyComponentOrientation(ComponentOrientation orientation) {
+	//	super.applyComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+	//}
 
 
 	/**
@@ -230,7 +225,7 @@ public abstract class RTextAreaBase extends JTextArea {
 
 		int caretPosition = getCaretPosition();
 		int tabSize = getTabSize();
-        StringBuilder stringBuilder = new StringBuilder();
+		StringBuilder stringBuilder = new StringBuilder();
 		for (int i=0; i<tabSize; i++) {
 			stringBuilder.append(" ");
 		}
@@ -287,7 +282,7 @@ public abstract class RTextAreaBase extends JTextArea {
 
 
 	/**
-	 * Returns the a real UI to install on this text component.  Subclasses
+	 * Returns a real UI to install on this text component.  Subclasses
 	 * can override this method to return an extended version of
 	 * <code>RTextAreaUI</code>.
 	 *
@@ -360,10 +355,8 @@ public abstract class RTextAreaBase extends JTextArea {
 			return null;
 		}
 		return (backgroundPainter instanceof ImageBackgroundPainterStrategy) ?
-			(Object)((ImageBackgroundPainterStrategy)backgroundPainter).
-					getMasterImage() :
-			(Object)((ColorBackgroundPainterStrategy)backgroundPainter).
-					getColor();
+			((ImageBackgroundPainterStrategy)backgroundPainter).getMasterImage() :
+			((ColorBackgroundPainterStrategy)backgroundPainter).getColor();
 	}
 
 
@@ -428,7 +421,7 @@ public abstract class RTextAreaBase extends JTextArea {
 	 *
 	 * @return The default caret color.
 	 */
-	public static final Color getDefaultCaretColor() {
+	public static Color getDefaultCaretColor() {
 		return DEFAULT_CARET_COLOR;
 	}
 
@@ -440,7 +433,7 @@ public abstract class RTextAreaBase extends JTextArea {
 	 *
 	 * @return The default color for highlighting the current line.
 	 */
-	public static final Color getDefaultCurrentLineHighlightColor() {
+	public static Color getDefaultCurrentLineHighlightColor() {
 		return DEFAULT_CURRENT_LINE_HIGHLIGHT_COLOR;
 	}
 
@@ -450,12 +443,12 @@ public abstract class RTextAreaBase extends JTextArea {
 	 *
 	 * @return The default font.
 	 */
-	public static final Font getDefaultFont() {
+	public static Font getDefaultFont() {
 
 		// Use StyleContext to get a composite font for better Asian language
 		// support; see Sun bug S282887.
 		StyleContext sc = StyleContext.getDefaultStyleContext();
-		Font font = null;
+		Font font;
 
 		if (isOSX()) {
 			// Snow Leopard (1.6) uses Menlo as default monospaced font,
@@ -464,7 +457,7 @@ public abstract class RTextAreaBase extends JTextArea {
 			if (!"Menlo".equals(font.getFamily())) {
 				font = sc.getFont("Monaco", Font.PLAIN, 12);
 				if (!"Monaco".equals(font.getFamily())) { // Shouldn't happen
-					font = sc.getFont("Monospaced", Font.PLAIN, 13);
+					font = sc.getFont(Font.MONOSPACED, Font.PLAIN, 13);
 				}
 			}
 		}
@@ -472,7 +465,7 @@ public abstract class RTextAreaBase extends JTextArea {
 			// Consolas added in Vista, used by VS2010+.
 			font = sc.getFont("Consolas", Font.PLAIN, 13);
 			if (!"Consolas".equals(font.getFamily())) {
-				font = sc.getFont("Monospaced", Font.PLAIN, 13);
+				font = sc.getFont(Font.MONOSPACED, Font.PLAIN, 13);
 			}
 		}
 
@@ -487,7 +480,7 @@ public abstract class RTextAreaBase extends JTextArea {
 	 *
 	 * @return The default foreground color.
 	 */
-	public static final Color getDefaultForeground() {
+	public static Color getDefaultForeground() {
 		return Color.BLACK;
 	}
 
@@ -499,7 +492,7 @@ public abstract class RTextAreaBase extends JTextArea {
 	 * @see #getMarginLineColor()
 	 * @see #setMarginLineColor(Color)
 	 */
-	public static final Color getDefaultMarginLineColor() {
+	public static Color getDefaultMarginLineColor() {
 		return DEFAULT_MARGIN_LINE_COLOR;
 	}
 
@@ -511,7 +504,7 @@ public abstract class RTextAreaBase extends JTextArea {
 	 * @see #getMarginLinePosition
 	 * @see #setMarginLinePosition
 	 */
-	public static final int getDefaultMarginLinePosition() {
+	public static int getDefaultMarginLinePosition() {
 		return DEFAULT_MARGIN_LINE_POSITION;
 	}
 
@@ -521,7 +514,7 @@ public abstract class RTextAreaBase extends JTextArea {
 	 *
 	 * @return The default tab size.
 	 */
-	public static final int getDefaultTabSize() {
+	public static int getDefaultTabSize() {
 		return DEFAULT_TAB_SIZE;
 	}
 
@@ -538,7 +531,7 @@ public abstract class RTextAreaBase extends JTextArea {
 
 
 	/**
-	 * Returns whether or not the current line is highlighted.
+	 * Returns whether the current line is highlighted.
 	 *
 	 * @return Whether or the current line is highlighted.
 	 * @see #setHighlightCurrentLine(boolean)
@@ -639,7 +632,7 @@ public abstract class RTextAreaBase extends JTextArea {
 
 
 	/**
-	 * Returns whether or not tabs are emulated with spaces (i.e., "soft"
+	 * Returns whether tabs are emulated with spaces (i.e., "soft"
 	 * tabs).
 	 *
 	 * @return <code>true</code> if tabs are emulated with spaces;
@@ -691,9 +684,9 @@ public abstract class RTextAreaBase extends JTextArea {
 
 
 	/**
-	 * Returns whether or not the margin line is being painted.
+	 * Returns whether the margin line is being painted.
 	 *
-	 * @return Whether or not the margin line is being painted.
+	 * @return Whether the margin line is being painted.
 	 * @see #setMarginLineEnabled
 	 */
 	public boolean isMarginLineEnabled() {
@@ -707,8 +700,6 @@ public abstract class RTextAreaBase extends JTextArea {
 	 * @return Whether the OS we're running on is OS X.
 	 */
 	public static boolean isOSX() {
-		// Recommended at:
-		// http://developer.apple.com/mac/library/technotes/tn2002/tn2110.html
 		String osName = System.getProperty("os.name").toLowerCase();
 		return osName.startsWith("mac os x");
 	}
@@ -721,8 +712,6 @@ public abstract class RTextAreaBase extends JTextArea {
 	 */
 	@Override
 	protected void paintComponent(Graphics g) {
-
-		//long startTime = System.currentTimeMillis();
 
 		backgroundPainter.paint(g, getVisibleRect());
 
@@ -737,9 +726,6 @@ public abstract class RTextAreaBase extends JTextArea {
 				scratchGraphics.dispose();
 			}
 		}
-
-		//long endTime = System.currentTimeMillis();
-		//System.err.println(endTime-startTime);
 
 	}
 
@@ -805,7 +791,7 @@ try {
 	/**
 	 * Overridden so we can tell when the text area is resized and update the
 	 * current-line highlight, if necessary (i.e., if it is enabled and if
-	 * lineWrap is enabled.
+	 * lineWrap is enabled).
 	 *
 	 * @param e The component event about to be sent to all registered
 	 *        <code>ComponentListener</code>s.
@@ -920,12 +906,12 @@ try {
 	 * TODO: Figure out why RTextArea doesn't work with RTL (e.g. Arabic)
 	 * and fix it!
 	 */
-//	public void setComponentOrientation(ComponentOrientation o) {
-//		if (!o.isLeftToRight()) {
-//			o = ComponentOrientation.LEFT_TO_RIGHT;
-//		}
-//		super.setComponentOrientation(o);
-//	}
+	//public void setComponentOrientation(ComponentOrientation o) {
+	//	if (!o.isLeftToRight()) {
+	//		o = ComponentOrientation.LEFT_TO_RIGHT;
+	//	}
+	//	super.setComponentOrientation(o);
+	//}
 
 
 	/**
@@ -996,10 +982,10 @@ try {
 
 
 	/**
-	 * Sets whether or not the current line is highlighted.  This method
+	 * Sets whether the current line is highlighted.  This method
 	 * fires a property change of type {@link #HIGHLIGHT_CURRENT_LINE_PROPERTY}.
 	 *
-	 * @param highlight Whether or not to highlight the current line.
+	 * @param highlight Whether to highlight the current line.
 	 * @see #getHighlightCurrentLine()
 	 * @see #getCurrentLineHighlightColor
 	 * @see #setCurrentLineHighlightColor
@@ -1015,10 +1001,10 @@ try {
 
 
 	/**
-	 * Sets whether or not word wrap is enabled.  This is overridden so that
+	 * Sets whether word wrap is enabled.  This is overridden so that
 	 * the "current line highlight" gets updated if it needs to be.
 	 *
-	 * @param wrap Whether or not word wrap should be enabled.
+	 * @param wrap Whether word wrap should be enabled.
 	 */
 	@Override
 	public void setLineWrap(boolean wrap) {
@@ -1065,7 +1051,7 @@ try {
 	/**
 	 * Enables or disables the margin line.
 	 *
-	 * @param enabled Whether or not the margin line should be enabled.
+	 * @param enabled Whether the margin line should be enabled.
 	 * @see #isMarginLineEnabled
 	 */
 	public void setMarginLineEnabled(boolean enabled) {
@@ -1083,7 +1069,7 @@ try {
 	 * Sets the number of 'm' widths the margin line is over.
 	 *
 	 * @param size The margin size.
-	 * #see #getDefaultMarginLinePosition
+	 * @see #getDefaultMarginLinePosition
 	 * @see #getMarginLinePosition
 	 */
 	public void setMarginLinePosition(int size) {
@@ -1111,7 +1097,7 @@ try {
 			Caret c = getCaret();
 			if (c instanceof ConfigurableCaret) {
 				((ConfigurableCaret)c).setRoundedSelectionEdges(rounded);
-				if (c.getDot()!=c.getMark()) { // e.g., there's is a selection
+				if (c.getDot()!=c.getMark()) { // e.g., there's a selection
 					repaint();
 				}
 			}
@@ -1144,12 +1130,12 @@ try {
 
 
 	/**
-	 * Changes whether or not tabs should be emulated with spaces (i.e., soft
+	 * Changes whether tabs should be emulated with spaces (i.e., soft
 	 * tabs).  Note that this affects all tabs inserted AFTER this call, not
 	 * tabs already in the document.  For that, see
 	 * {@link #convertTabsToSpaces} and {@link #convertSpacesToTabs}.
 	 *
-	 * @param areEmulated Whether or not tabs should be emulated with spaces.
+	 * @param areEmulated Whether tabs should be emulated with spaces.
 	 * @see #convertSpacesToTabs
 	 * @see #convertTabsToSpaces
 	 * @see #getTabsEmulated
@@ -1227,7 +1213,7 @@ try {
 	/**
 	 * Listens for mouse events in this component.
 	 */
-	protected class RTAMouseListener extends CaretEvent implements
+	protected static class RTAMouseListener extends CaretEvent implements
 					MouseListener, MouseMotionListener, FocusListener {
 
 		RTAMouseListener(RTextAreaBase textArea) {
@@ -1235,23 +1221,40 @@ try {
 		}
 
 		@Override
-		public void focusGained(FocusEvent e) {}
+		public void focusGained(FocusEvent e) {
+		}
+
 		@Override
-		public void focusLost(FocusEvent e) {}
+		public void focusLost(FocusEvent e) {
+		}
+
 		@Override
-		public void mouseDragged(MouseEvent e) {}
+		public void mouseDragged(MouseEvent e) {
+		}
+
 		@Override
-		public void mouseMoved(MouseEvent e) {}
+		public void mouseMoved(MouseEvent e) {
+		}
+
 		@Override
-		public void mouseClicked(MouseEvent e) {}
+		public void mouseClicked(MouseEvent e) {
+		}
+
 		@Override
-		public void mousePressed(MouseEvent e) {}
+		public void mousePressed(MouseEvent e) {
+		}
+
 		@Override
-		public void mouseReleased(MouseEvent e) {}
+		public void mouseReleased(MouseEvent e) {
+		}
+
 		@Override
-		public void mouseEntered(MouseEvent e) {}
+		public void mouseEntered(MouseEvent e) {
+		}
+
 		@Override
-		public void mouseExited(MouseEvent e) {}
+		public void mouseExited(MouseEvent e) {
+		}
 
 		@Override
 		public int getDot() {

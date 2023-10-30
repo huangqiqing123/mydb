@@ -5,11 +5,12 @@
  * programs such as JFlex.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
 import javax.swing.text.Segment;
+import java.io.IOException;
 
 
 /**
@@ -38,6 +39,14 @@ public abstract class AbstractJFlexTokenMaker extends TokenMakerBase {
 
 
 	/**
+	 * Closes the input stream.  This method is defined for test purposes.
+	 *
+	 * @throws IOException If an IO error occurs.
+	 */
+	public abstract void yyclose() throws IOException;
+
+
+	/**
 	 * Starts a new JFlex state and changes the current language index.
 	 *
 	 * @param state The new JFlex state to enter.
@@ -49,4 +58,5 @@ public abstract class AbstractJFlexTokenMaker extends TokenMakerBase {
 	}
 
 
+	public abstract String yytext();
 }

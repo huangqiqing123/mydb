@@ -4,12 +4,13 @@
  * SearchContext.java - Container for options of a search/replace operation.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.Serializable;
 
 
 /**
@@ -23,7 +24,7 @@ import java.beans.PropertyChangeSupport;
  * @version 2.0
  * @see SearchEngine
  */
-public class SearchContext implements Cloneable {
+public class SearchContext implements Cloneable, Serializable {
 
 	/** Fired when the "search for" property is modified. */
 	public static final String PROPERTY_SEARCH_FOR		= "Search.searchFor";
@@ -40,6 +41,9 @@ public class SearchContext implements Cloneable {
 	/** Fired when search direction is toggled. */
 	public static final String PROPERTY_SEARCH_FORWARD = "Search.Forward";
 
+	/** Fired when search wrap is toggled. */
+	public static final String PROPERTY_SEARCH_WRAP = "Search.Wrap";
+
 	/** Fired when "search in selection" is toggled (not currently supported). */
 	public static final String PROPERTY_SELECTION_ONLY = "Search.SelectionOnly";
 
@@ -52,13 +56,16 @@ public class SearchContext implements Cloneable {
 	private String searchFor;
 	private String replaceWith;
 	private boolean forward;
+	private boolean wrap;
 	private boolean matchCase;
 	private boolean wholeWord;
 	private boolean regex;
 	private boolean selectionOnly;
 	private boolean markAll;
 
-	private PropertyChangeSupport support;
+	private transient PropertyChangeSupport support;
+
+	private static final long serialVersionUID = 1L;
 
 
 	/**
@@ -94,6 +101,7 @@ public class SearchContext implements Cloneable {
 		this.matchCase = matchCase;
 		markAll = true;
 		forward = true;
+		wrap = false;
 	}
 
 
@@ -111,8 +119,7 @@ public class SearchContext implements Cloneable {
 	@Override
 	public SearchContext clone() {
 		try {
-			SearchContext context = null;
-			context = (SearchContext)super.clone();
+			SearchContext context = (SearchContext)super.clone();
 			// Don't copy over listeners
 			context.support = new PropertyChangeSupport(context);
 			return context;
@@ -189,6 +196,17 @@ public class SearchContext implements Cloneable {
 	 */
 	public boolean getSearchForward() {
 		return forward;
+	}
+
+
+	/**
+	 * Returns whether the search should wrap.
+	 *
+	 * @return Whether we should search wrap
+	 * @see #setSearchWrap(boolean)
+	 */
+	public boolean getSearchWrap() {
+		return wrap;
 	}
 
 
@@ -335,6 +353,22 @@ public class SearchContext implements Cloneable {
 		if (forward!=this.forward) {
 			this.forward = forward;
 			firePropertyChange(PROPERTY_SEARCH_FORWARD, !forward, forward);
+		}
+	}
+
+
+	/**
+	 * Sets whether the search should be wrap through the text.
+	 * This method fires a property change event of type
+	 * {@link #PROPERTY_SEARCH_WRAP}.
+	 *
+	 * @param wrap Whether we should search wrap
+	 * @see #getSearchWrap()
+	 */
+	public void setSearchWrap(boolean wrap) {
+		if (wrap!=this.wrap) {
+			this.wrap = wrap;
+			firePropertyChange(PROPERTY_SEARCH_WRAP, !wrap, wrap);
 		}
 	}
 

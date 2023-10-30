@@ -5,7 +5,7 @@
  * of Objects.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.util;
 
@@ -269,23 +269,29 @@ public class DynamicIntArray implements Serializable {
 	}
 
 
+	/**
+	 * Inserts a specific value multiple times into a specific
+	 * offset in this array.
+	 *
+	 * @param offs The offset to insert at.
+	 * @param count The number of values to insert.
+	 * @param value The value to insert.
+	 */
 	public void insertRange(int offs, int count, int value) {
 		if (offs>size) {
 			throwException2(offs);
 		}
 		ensureCapacity(size+count);
 		System.arraycopy(data,offs, data,offs+count, size-offs);
-		if (value!=0) {
-			Arrays.fill(data, offs, offs+count, value);
-		}
+		Arrays.fill(data, offs, offs+count, value);
 		size += count;
 	}
 
 
 	/**
-	 * Returns whether or not this array object is empty.
+	 * Returns whether this array object is empty.
 	 *
-	 * @return Whether or not this array object contains no elements.
+	 * @return Whether this array object contains no elements.
 	 */
 	public boolean isEmpty() {
 		return size==0;
@@ -371,7 +377,7 @@ public class DynamicIntArray implements Serializable {
 	 * not usually make any expensive method calls (since their callers will
 	 * usually not pass illegal arguments to them).
 	 *
-	 * See <a href="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5103956">
+	 * See <a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=5103956">
 	 * this Sun bug report</a> for more information.
 	 *
 	 * @param index The invalid index.
@@ -389,7 +395,7 @@ public class DynamicIntArray implements Serializable {
 	 * inlined, as well as not usually make any expensive method calls (since
 	 * their callers will usually not pass illegal arguments to them).
 	 *
-	 * See <a href="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5103956">
+	 * See <a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=5103956">
 	 * this Sun bug report</a> for more information.
 	 *
 	 * @param index The invalid index.
@@ -407,10 +413,11 @@ public class DynamicIntArray implements Serializable {
 	 * inlined, as well as not usually make any expensive method calls (since
 	 * their callers will usually not pass illegal arguments to them).
 	 *
-	 * See <a href="http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5103956">
+	 * See <a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=5103956">
 	 * this Sun bug report</a> for more information.
 	 *
-	 * @param index The invalid index.
+	 * @param fromIndex The from-index.
+	 * @param toIndex The to-index.
 	 * @throws IndexOutOfBoundsException Always.
 	 */
 	private void throwException3(int fromIndex, int toIndex) {

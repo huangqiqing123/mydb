@@ -4,7 +4,7 @@
  * XMLParser.java - Simple XML parser.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.parser;
 
@@ -97,9 +97,6 @@ public class XmlParser extends AbstractParser {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public ParseResult parse(RSyntaxDocument doc, String style) {
 
@@ -142,35 +139,6 @@ public class XmlParser extends AbstractParser {
 	public void setValidating(boolean validating) {
 		spf.setValidating(validating);
 	}
-
-/*
-	public static void main(String[] args) {
-		javax.swing.JFrame frame = new javax.swing.JFrame();
-		org.fife.ui.rsyntaxtextarea.RSyntaxTextArea textArea = new
-			org.fife.ui.rsyntaxtextarea.RSyntaxTextArea(25, 40);
-		textArea.setSyntaxEditingStyle("text/xml");
-		XmlParser parser = new XmlParser(new EntityResolver() {
-			public InputSource resolveEntity(String publicId, String systemId)
-					throws SAXException, IOException {
-		    	if ("http://fifesoft.com/rsyntaxtextarea/theme.dtd".equals(systemId)) {
-		    		return new org.xml.sax.InputSource(getClass().getResourceAsStream("/theme.dtd"));
-		    	}
-		    	return null;
-			}
-		});
-		parser.setValidating(true);
-		textArea.addParser(parser);
-		try {
-			textArea.read(new java.io.BufferedReader(new java.io.FileReader("C:/temp/test.xml")), null);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		frame.setContentPane(new org.fife.ui.rtextarea.RTextScrollPane(textArea));
-		frame.pack();
-		frame.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
-		frame.setVisible(true);
-	}
-*/
 
 	/**
 	 * Callback notified when errors are found in the XML document.  Adds a

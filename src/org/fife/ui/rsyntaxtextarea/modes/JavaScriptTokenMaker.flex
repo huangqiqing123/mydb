@@ -4,12 +4,13 @@
  * JavaScriptTokenMaker.java - Parses a document into JavaScript tokens.
  * 
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea.modes;
 
 import java.io.*;
 import javax.swing.text.Segment;
+import java.util.Stack;
 
 import org.fife.ui.rsyntaxtextarea.*;
 
@@ -21,10 +22,10 @@ import org.fife.ui.rsyntaxtextarea.*;
  * performance.<p>
  *
  * This implementation was created using
- * <a href="http://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
+ * <a href="https://www.jflex.de/">JFlex</a> 1.4.1; however, the generated file
  * was modified for performance.  Memory allocation needs to be almost
  * completely removed to be competitive with the handwritten lexers (subclasses
- * of <code>AbstractTokenMaker</code>, so this class has been modified so that
+ * of <code>AbstractTokenMaker</code>), so this class has been modified so that
  * Strings are never allocated (via yytext()), and the scanner never has to
  * worry about refilling its buffer (needlessly copying chars around).
  * We can achieve this because RText always scans exactly 1 line of tokens at a
@@ -66,405 +67,427 @@ import org.fife.ui.rsyntaxtextarea.*;
 %{
 
 	/**
-	 * Token type specifying we're in a JavaScript multiline comment.
-	 */
-	private static final int INTERNAL_IN_JS_MLC				= -8;
+     * Token type specifying we're in a JavaScript multiline comment.
+     */
+    static final int INTERNAL_IN_JS_MLC				= -8;
 
-	/**
-	 * Token type specifying we're in a JavaScript documentation comment.
-	 */
-	private static final int INTERNAL_IN_JS_COMMENT_DOCUMENTATION = -9;
-	
-	/**
-	 * Token type specifying we're in an invalid multi-line JS string.
-	 */
-	private static final int INTERNAL_IN_JS_STRING_INVALID	= -10;
+    /**
+     * Token type specifying we're in a JavaScript documentation comment.
+     */
+    static final int INTERNAL_IN_JS_COMMENT_DOCUMENTATION = -9;
 
-	/**
-	 * Token type specifying we're in a valid multi-line JS string.
-	 */
-	private static final int INTERNAL_IN_JS_STRING_VALID		= -11;
+    /**
+     * Token type specifying we're in an invalid multi-line JS string.
+     */
+    static final int INTERNAL_IN_JS_STRING_INVALID	= -10;
 
-	/**
-	 * Token type specifying we're in an invalid multi-line JS single-quoted string.
-	 */
-	private static final int INTERNAL_IN_JS_CHAR_INVALID	= -12;
+    /**
+     * Token type specifying we're in a valid multi-line JS string.
+     */
+    static final int INTERNAL_IN_JS_STRING_VALID		= -11;
 
-	/**
-	 * Token type specifying we're in a valid multi-line JS single-quoted string.
-	 */
-	private static final int INTERNAL_IN_JS_CHAR_VALID		= -13;
+    /**
+     * Token type specifying we're in an invalid multi-line JS single-quoted string.
+     */
+    static final int INTERNAL_IN_JS_CHAR_INVALID	= -12;
 
-	private static final int INTERNAL_E4X = -14;
+    /**
+     * Token type specifying we're in a valid multi-line JS single-quoted string.
+     */
+    static final int INTERNAL_IN_JS_CHAR_VALID		= -13;
 
-	private static final int INTERNAL_E4X_INTAG = -15;
+    static final int INTERNAL_E4X = -14;
 
-	private static final int INTERNAL_E4X_MARKUP_PROCESSING_INSTRUCTION = -16;
+    static final int INTERNAL_E4X_INTAG = -15;
 
-	private static final int INTERNAL_IN_E4X_COMMENT = -17;
+    static final int INTERNAL_E4X_MARKUP_PROCESSING_INSTRUCTION = -16;
 
-	private static final int INTERNAL_E4X_DTD = -18;
+    static final int INTERNAL_E4X_COMMENT = -17;
 
-	private static final int INTERNAL_E4X_DTD_INTERNAL = -19;
+    static final int INTERNAL_E4X_DTD = -18;
 
-	private static final int INTERNAL_E4X_ATTR_SINGLE = -20;
+    static final int INTERNAL_E4X_DTD_INTERNAL = -19;
 
-	private static final int INTERNAL_E4X_ATTR_DOUBLE = -21;
+    static final int INTERNAL_E4X_ATTR_SINGLE = -20;
 
-	private static final int INTERNAL_E4X_MARKUP_CDATA = -22;
+    static final int INTERNAL_E4X_ATTR_DOUBLE = -21;
 
-	/**
-	 * When in the JS_STRING state, whether the current string is valid.
-	 */
-	private boolean validJSString;
+    static final int INTERNAL_E4X_MARKUP_CDATA = -22;
 
-	/**
-	 * Whether we're in an internal DTD.  Only valid if in an e4x DTD.
-	 */
-	private boolean e4x_inInternalDtd;
+    /**
+     * Token type specifying we're in a valid multi-line template literal.
+     */
+    static final int INTERNAL_IN_JS_TEMPLATE_LITERAL_VALID = -23;
 
-	/**
-	 * The previous e4x state.  Only valid if in an e4x state.
-	 */
-	private int e4x_prevState;
+    /**
+     * Token type specifying we're in an invalid multi-line template literal.
+     */
+    static final int INTERNAL_IN_JS_TEMPLATE_LITERAL_INVALID = -24;
 
-	/**
-	 * The version of JavaScript being highlighted.
-	 */
-	private static String jsVersion;
+    /**
+     * When in the JS_STRING state, whether the current string is valid.
+     */
+    private boolean validJSString;
 
-	/**
-	 * Whether e4x is being highlighted.
-	 */
-	private static boolean e4xSupported;
+    /**
+     * Whether we're in an internal DTD.  Only valid if in an e4x DTD.
+     */
+    private boolean e4x_inInternalDtd;
 
-	/**
-	 * Language state set on JS tokens.  Must be 0.
-	 */
-	private static final int LANG_INDEX_DEFAULT	= 0;
+    /**
+     * The previous e4x state.  Only valid if in an e4x state.
+     */
+    private int e4x_prevState;
 
-	/**
-	 * Language state set on E4X tokens.
-	 */
-	private static final int LANG_INDEX_E4X = 1;
+    /**
+     * The version of JavaScript being highlighted.
+     */
+    private static String jsVersion;
 
-	/**
-	 * Constructor.  This must be here because JFlex does not generate a
-	 * no-parameter constructor.
-	 */
-	public JavaScriptTokenMaker() {
-		super();
-	}
+    /**
+     * Whether e4x is being highlighted.
+     */
+    private static boolean e4xSupported;
 
+    /**
+     * Language state set on JS tokens.  Must be 0.
+     */
+    private static final int LANG_INDEX_DEFAULT	= 0;
 
-	static {
-		jsVersion = "1.7"; // Many folks using JS tend to be bleeding edge
-		e4xSupported = true;
-	}
+    /**
+     * Language state set on E4X tokens.
+     */
+    private static final int LANG_INDEX_E4X = 1;
 
+    private Stack<Boolean> varDepths;
 
-	/**
-	 * Adds the token specified to the current linked list of tokens as an
-	 * "end token;" that is, at <code>zzMarkedPos</code>.
-	 *
-	 * @param tokenType The token's type.
-	 */
-	private void addEndToken(int tokenType) {
-		addToken(zzMarkedPos,zzMarkedPos, tokenType);
-	}
+    /**
+     * Constructor.  This must be here because JFlex does not generate a
+     * no-parameter constructor.
+     */
+    public JavaScriptTokenMaker() {
+        super();
+    }
 
 
-	/**
-	 * Adds the token specified to the current linked list of tokens.
-	 *
-	 * @param tokenType The token's type.
-	 * @see #addToken(int, int, int)
-	 */
-	private void addHyperlinkToken(int start, int end, int tokenType) {
-		int so = start + offsetShift;
-		addToken(zzBuffer, start,end, tokenType, so, true);
-	}
+    static {
+        jsVersion = "1.7"; // Many folks using JS tend to be bleeding edge
+        e4xSupported = true;
+    }
 
 
-	/**
-	 * Adds the token specified to the current linked list of tokens.
-	 *
-	 * @param tokenType The token's type.
-	 */
-	private void addToken(int tokenType) {
-		addToken(zzStartRead, zzMarkedPos-1, tokenType);
-	}
+    /**
+     * Adds the token specified to the current linked list of tokens as an
+     * "end token;" that is, at <code>zzMarkedPos</code>.
+     *
+     * @param tokenType The token's type.
+     */
+    private void addEndToken(int tokenType) {
+        addToken(zzMarkedPos,zzMarkedPos, tokenType);
+    }
 
 
-	/**
-	 * Adds the token specified to the current linked list of tokens.
-	 *
-	 * @param tokenType The token's type.
-	 */
-	private void addToken(int start, int end, int tokenType) {
-		int so = start + offsetShift;
-		addToken(zzBuffer, start,end, tokenType, so);
-	}
+    /**
+     * Adds the token specified to the current linked list of tokens.
+     *
+     * @param tokenType The token's type.
+     * @see #addToken(int, int, int)
+     */
+    private void addHyperlinkToken(int start, int end, int tokenType) {
+        int so = start + offsetShift;
+        addToken(zzBuffer, start,end, tokenType, so, true);
+    }
 
 
-	/**
-	 * Adds the token specified to the current linked list of tokens.
-	 *
-	 * @param array The character array.
-	 * @param start The starting offset in the array.
-	 * @param end The ending offset in the array.
-	 * @param tokenType The token's type.
-	 * @param startOffset The offset in the document at which this token
-	 *                    occurs.
-	 */
-	@Override
-	public void addToken(char[] array, int start, int end, int tokenType, int startOffset) {
-		super.addToken(array, start,end, tokenType, startOffset);
-		zzStartRead = zzMarkedPos;
-	}
+    /**
+     * Adds the token specified to the current linked list of tokens.
+     *
+     * @param tokenType The token's type.
+     */
+    private void addToken(int tokenType) {
+        addToken(zzStartRead, zzMarkedPos-1, tokenType);
+    }
 
 
-	/**
-	 * Returns the closest {@link TokenTypes "standard" token type} for a given
-	 * "internal" token type (e.g. one whose value is <code>&lt; 0</code>).
-	 */
-	 @Override
-	public int getClosestStandardTokenTypeForInternalType(int type) {
-		switch (type) {
-			case INTERNAL_IN_JS_MLC:
-				return TokenTypes.COMMENT_MULTILINE;
-			case INTERNAL_IN_JS_COMMENT_DOCUMENTATION:
-				return TokenTypes.COMMENT_DOCUMENTATION;
-			case INTERNAL_IN_JS_STRING_INVALID:
-			case INTERNAL_IN_JS_STRING_VALID:
-			case INTERNAL_IN_JS_CHAR_INVALID:
-			case INTERNAL_IN_JS_CHAR_VALID:
-				return TokenTypes.LITERAL_STRING_DOUBLE_QUOTE;
-		}
-		return type;
-	}
+    /**
+     * Adds the token specified to the current linked list of tokens.
+     *
+     * @param tokenType The token's type.
+     */
+    private void addToken(int start, int end, int tokenType) {
+        int so = start + offsetShift;
+        addToken(zzBuffer, start,end, tokenType, so);
+    }
 
 
-	/**
-	 * Returns the JavaScript version being highlighted.
-	 *
-	 * @return Supported JavaScript version.
-	 * @see #isJavaScriptCompatible(String)
-	 */
-	public static String getJavaScriptVersion() {
-		return jsVersion;
-	}
+    /**
+     * Adds the token specified to the current linked list of tokens.
+     *
+     * @param array The character array.
+     * @param start The starting offset in the array.
+     * @param end The ending offset in the array.
+     * @param tokenType The token's type.
+     * @param startOffset The offset in the document at which this token
+     *                    occurs.
+     */
+    @Override
+    public void addToken(char[] array, int start, int end, int tokenType, int startOffset) {
+        super.addToken(array, start,end, tokenType, startOffset);
+        zzStartRead = zzMarkedPos;
+    }
 
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String[] getLineCommentStartAndEnd(int languageIndex) {
-		return new String[] { "//", null };
-	}
+    /**
+     * Returns the closest {@link TokenTypes} "standard" token type for a given
+     * "internal" token type (e.g. one whose value is <code>&lt; 0</code>).
+     */
+     @Override
+    public int getClosestStandardTokenTypeForInternalType(int type) {
+        switch (type) {
+            case INTERNAL_IN_JS_MLC:
+                return TokenTypes.COMMENT_MULTILINE;
+            case INTERNAL_IN_JS_COMMENT_DOCUMENTATION:
+                return TokenTypes.COMMENT_DOCUMENTATION;
+            case INTERNAL_IN_JS_STRING_INVALID:
+            case INTERNAL_IN_JS_STRING_VALID:
+            case INTERNAL_IN_JS_CHAR_INVALID:
+            case INTERNAL_IN_JS_CHAR_VALID:
+                return TokenTypes.LITERAL_STRING_DOUBLE_QUOTE;
+            case INTERNAL_IN_JS_TEMPLATE_LITERAL_VALID:
+                return TokenTypes.LITERAL_BACKQUOTE;
+            case INTERNAL_IN_JS_TEMPLATE_LITERAL_INVALID:
+                return TokenTypes.ERROR_STRING_DOUBLE;
+        }
+        return type;
+    }
 
 
-	/**
-	 * Returns the first token in the linked list of tokens generated
-	 * from <code>text</code>.  This method must be implemented by
-	 * subclasses so they can correctly implement syntax highlighting.
-	 *
-	 * @param text The text from which to get tokens.
-	 * @param initialTokenType The token type we should start with.
-	 * @param startOffset The offset into the document at which
-	 *        <code>text</code> starts.
-	 * @return The first <code>Token</code> in a linked list representing
-	 *         the syntax highlighted text.
-	 */
-	public Token getTokenList(Segment text, int initialTokenType, int startOffset) {
-
-		resetTokenList();
-		this.offsetShift = -text.offset + startOffset;
-		validJSString = true;
-		e4x_prevState = YYINITIAL;
-		e4x_inInternalDtd = false;
-		int languageIndex = LANG_INDEX_DEFAULT;
-
-		// Start off in the proper state.
-		int state = YYINITIAL;
-		switch (initialTokenType) {
-			case INTERNAL_IN_JS_MLC:
-				state = JS_MLC;
-				break;
-			case INTERNAL_IN_JS_COMMENT_DOCUMENTATION:
-				state = JS_DOCCOMMENT;
-				start = text.offset;
-				break;
-			case INTERNAL_IN_JS_STRING_INVALID:
-				state = JS_STRING;
-				validJSString = false;
-				break;
-			case INTERNAL_IN_JS_STRING_VALID:
-				state = JS_STRING;
-				break;
-			case INTERNAL_IN_JS_CHAR_INVALID:
-				state = JS_CHAR;
-				validJSString = false;
-				break;
-			case INTERNAL_IN_JS_CHAR_VALID:
-				state = JS_CHAR;
-				break;
-			case INTERNAL_E4X:
-				state = E4X;
-				languageIndex = LANG_INDEX_E4X;
-				break;
-			case INTERNAL_E4X_INTAG:
-				state = E4X_INTAG;
-				languageIndex = LANG_INDEX_E4X;
-				break;
-			case INTERNAL_E4X_MARKUP_PROCESSING_INSTRUCTION:
-				state = E4X_PI;
-				languageIndex = LANG_INDEX_E4X;
-				break;
-			case INTERNAL_E4X_DTD:
-				state = E4X_DTD;
-				languageIndex = LANG_INDEX_E4X;
-				break;
-			case INTERNAL_E4X_DTD_INTERNAL:
-				state = E4X_DTD;
-				e4x_inInternalDtd = true;
-				languageIndex = LANG_INDEX_E4X;
-				break;
-			case INTERNAL_E4X_ATTR_SINGLE:
-				state = E4X_INATTR_SINGLE;
-				languageIndex = LANG_INDEX_E4X;
-				break;
-			case INTERNAL_E4X_ATTR_DOUBLE:
-				state = E4X_INATTR_DOUBLE;
-				languageIndex = LANG_INDEX_E4X;
-				break;
-			case INTERNAL_E4X_MARKUP_CDATA:
-				state = E4X_CDATA;
-				languageIndex = LANG_INDEX_E4X;
-				break;
-			default:
-				if (initialTokenType<-1024) { // INTERNAL_IN_E4X_COMMENT - prevState
-					int main = -(-initialTokenType & 0xffffff00);
-					switch (main) {
-						default: // Should never happen
-						case INTERNAL_IN_E4X_COMMENT:
-							state = E4X_COMMENT;
-							break;
-					}
-					e4x_prevState = -initialTokenType&0xff;
-					languageIndex = LANG_INDEX_E4X;
-				}
-				else { // Shouldn't happen
-					state = Token.NULL;
-				}
-		}
-
-		setLanguageIndex(languageIndex);
-		start = text.offset;
-		s = text;
-		try {
-			yyreset(zzReader);
-			yybegin(state);
-			return yylex();
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-			return new TokenImpl();
-		}
-
-	}
+    /**
+     * Returns the JavaScript version being highlighted.
+     *
+     * @return Supported JavaScript version.
+     * @see #isJavaScriptCompatible(String)
+     */
+    public static String getJavaScriptVersion() {
+        return jsVersion;
+    }
 
 
-	/**
-	 * Returns whether e4x is being highlighted.
-	 *
-	 * @return Whether e4x is being highlighted.
-	 * @see #setE4xSupported(boolean)
-	 */
-	public static boolean isE4xSupported() {
-		return e4xSupported;
-	}
+    @Override
+    public String[] getLineCommentStartAndEnd(int languageIndex) {
+        return new String[] { "//", null };
+    }
 
 
-	/**
-	 * Returns whether features for a specific JS version should be honored
-	 * while highlighting.
-	 * 
-	 * @param version JavaScript version required 
-	 * @return Whether the JavaScript version is the same or greater than
-	 *         version required. 
-	 */
-	public static boolean isJavaScriptCompatible(String version) {
-		return jsVersion.compareTo(version) >= 0;
-	}
+    /**
+     * Returns the first token in the linked list of tokens generated
+     * from <code>text</code>.  This method must be implemented by
+     * subclasses so they can correctly implement syntax highlighting.
+     *
+     * @param text The text from which to get tokens.
+     * @param initialTokenType The token type we should start with.
+     * @param startOffset The offset into the document at which
+     *        <code>text</code> starts.
+     * @return The first <code>Token</code> in a linked list representing
+     *         the syntax highlighted text.
+     */
+    @Override
+    public Token getTokenList(Segment text, int initialTokenType, int startOffset) {
+
+        resetTokenList();
+        this.offsetShift = -text.offset + startOffset;
+        validJSString = true;
+        e4x_prevState = YYINITIAL;
+        e4x_inInternalDtd = false;
+        int languageIndex = LANG_INDEX_DEFAULT;
+
+        // Start off in the proper state.
+        int state;
+        switch (initialTokenType) {
+            case INTERNAL_IN_JS_MLC:
+                state = JS_MLC;
+                break;
+            case INTERNAL_IN_JS_COMMENT_DOCUMENTATION:
+                state = JS_DOCCOMMENT;
+                start = text.offset;
+                break;
+            case INTERNAL_IN_JS_STRING_INVALID:
+                state = JS_STRING;
+                validJSString = false;
+                break;
+            case INTERNAL_IN_JS_STRING_VALID:
+                state = JS_STRING;
+                break;
+            case INTERNAL_IN_JS_CHAR_INVALID:
+                state = JS_CHAR;
+                validJSString = false;
+                break;
+            case INTERNAL_IN_JS_CHAR_VALID:
+                state = JS_CHAR;
+                break;
+            case INTERNAL_E4X:
+                state = E4X;
+                languageIndex = LANG_INDEX_E4X;
+                break;
+            case INTERNAL_E4X_INTAG:
+                state = E4X_INTAG;
+                languageIndex = LANG_INDEX_E4X;
+                break;
+            case INTERNAL_E4X_MARKUP_PROCESSING_INSTRUCTION:
+                state = E4X_PI;
+                languageIndex = LANG_INDEX_E4X;
+                break;
+            case INTERNAL_E4X_DTD:
+                state = E4X_DTD;
+                languageIndex = LANG_INDEX_E4X;
+                break;
+            case INTERNAL_E4X_DTD_INTERNAL:
+                state = E4X_DTD;
+                e4x_inInternalDtd = true;
+                languageIndex = LANG_INDEX_E4X;
+                break;
+            case INTERNAL_E4X_ATTR_SINGLE:
+                state = E4X_INATTR_SINGLE;
+                languageIndex = LANG_INDEX_E4X;
+                break;
+            case INTERNAL_E4X_ATTR_DOUBLE:
+                state = E4X_INATTR_DOUBLE;
+                languageIndex = LANG_INDEX_E4X;
+                break;
+            case INTERNAL_E4X_MARKUP_CDATA:
+                state = E4X_CDATA;
+                languageIndex = LANG_INDEX_E4X;
+                break;
+            case INTERNAL_IN_JS_TEMPLATE_LITERAL_VALID:
+                state = JS_TEMPLATE_LITERAL;
+                validJSString = true;
+                break;
+            case INTERNAL_IN_JS_TEMPLATE_LITERAL_INVALID:
+                state = JS_TEMPLATE_LITERAL;
+                validJSString = false;
+                break;
+            default:
+                if (initialTokenType<-1024) { // INTERNAL_E4X_COMMENT - prevState
+                    int main = -(-initialTokenType & 0xffffff00);
+                    switch (main) {
+                        default: // Should never happen
+                        case INTERNAL_E4X_COMMENT:
+                            state = E4X_COMMENT;
+                            break;
+                    }
+                    e4x_prevState = -initialTokenType&0xff;
+                    languageIndex = LANG_INDEX_E4X;
+                }
+                else { // Shouldn't happen
+                    state = YYINITIAL;
+                }
+        }
+
+        setLanguageIndex(languageIndex);
+        start = text.offset;
+        s = text;
+        try {
+            yyreset(zzReader);
+            yybegin(state);
+            return yylex();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+            return new TokenImpl();
+        }
+
+    }
 
 
-	/**
-	 * Sets whether e4x should be highlighted.  A repaint should be forced on
-	 * all <code>RSyntaxTextArea</code>s editing JavaScript if this property
-	 * is changed to see the difference.
-	 *
-	 * @param supported Whether e4x should be highlighted.
-	 * @see #isE4xSupported()
-	 */
-	public static void setE4xSupported(boolean supported) {
-		e4xSupported = supported;
-	}
+    /**
+     * Returns whether e4x is being highlighted.
+     *
+     * @return Whether e4x is being highlighted.
+     * @see #setE4xSupported(boolean)
+     */
+    public static boolean isE4xSupported() {
+        return e4xSupported;
+    }
 
 
-	/**
-	 * Set the supported JavaScript version because some keywords were
-	 * introduced on or after this version.
-	 *
-	 * @param javaScriptVersion The version of JavaScript to support, such as
-	 *        "<code>1.5</code>" or "<code>1.6</code>".
-	 * @see #isJavaScriptCompatible(String)
-	 * @see #getJavaScriptVersion()
-	 */
-	public static void setJavaScriptVersion(String javaScriptVersion) {
-		jsVersion = javaScriptVersion;
-	}
+    /**
+     * Returns whether features for a specific JS version should be honored
+     * while highlighting.
+     *
+     * @param version JavaScript version required
+     * @return Whether the JavaScript version is the same or greater than
+     *         version required.
+     */
+    public static boolean isJavaScriptCompatible(String version) {
+        return jsVersion.compareTo(version) >= 0;
+    }
 
 
-	/**
-	 * Refills the input buffer.
-	 *
-	 * @return      <code>true</code> if EOF was reached, otherwise
-	 *              <code>false</code>.
-	 */
-	private boolean zzRefill() {
-		return zzCurrentPos>=s.offset+s.count;
-	}
+    /**
+     * Sets whether e4x should be highlighted.  A repaint should be forced on
+     * all <code>RSyntaxTextArea</code>s editing JavaScript if this property
+     * is changed to see the difference.
+     *
+     * @param supported Whether e4x should be highlighted.
+     * @see #isE4xSupported()
+     */
+    public static void setE4xSupported(boolean supported) {
+        e4xSupported = supported;
+    }
 
 
-	/**
-	 * Resets the scanner to read from a new input stream.
-	 * Does not close the old reader.
-	 *
-	 * All internal variables are reset, the old input stream 
-	 * <b>cannot</b> be reused (internal buffer is discarded and lost).
-	 * Lexical state is set to <tt>YY_INITIAL</tt>.
-	 *
-	 * @param reader   the new input stream 
-	 */
-	public final void yyreset(java.io.Reader reader) {
-		// 's' has been updated.
-		zzBuffer = s.array;
-		/*
-		 * We replaced the line below with the two below it because zzRefill
-		 * no longer "refills" the buffer (since the way we do it, it's always
-		 * "full" the first time through, since it points to the segment's
-		 * array).  So, we assign zzEndRead here.
-		 */
-		//zzStartRead = zzEndRead = s.offset;
-		zzStartRead = s.offset;
-		zzEndRead = zzStartRead + s.count - 1;
-		zzCurrentPos = zzMarkedPos = zzPushbackPos = s.offset;
-		zzLexicalState = YYINITIAL;
-		zzReader = reader;
-		zzAtBOL  = true;
-		zzAtEOF  = false;
-	}
+    /**
+     * Set the supported JavaScript version because some keywords were
+     * introduced on or after this version.
+     *
+     * @param javaScriptVersion The version of JavaScript to support, such as
+     *        "<code>1.5</code>" or "<code>1.6</code>".
+     * @see #isJavaScriptCompatible(String)
+     * @see #getJavaScriptVersion()
+     */
+    public static void setJavaScriptVersion(String javaScriptVersion) {
+        jsVersion = javaScriptVersion;
+    }
+
+
+    /**
+     * Refills the input buffer.
+     *
+     * @return      <code>true</code> if EOF was reached, otherwise
+     *              <code>false</code>.
+     */
+    private boolean zzRefill() {
+        return zzCurrentPos>=s.offset+s.count;
+    }
+
+
+    /**
+     * Resets the scanner to read from a new input stream.
+     * Does not close the old reader.
+     *
+     * All internal variables are reset, the old input stream
+     * <b>cannot</b> be reused (internal buffer is discarded and lost).
+     * Lexical state is set to <tt>YY_INITIAL</tt>.
+     *
+     * @param reader   the new input stream
+     */
+    public final void yyreset(java.io.Reader reader) {
+        // 's' has been updated.
+        zzBuffer = s.array;
+        /*
+         * We replaced the line below with the two below it because zzRefill
+         * no longer "refills" the buffer (since the way we do it, it's always
+         * "full" the first time through, since it points to the segment's
+         * array).  So, we assign zzEndRead here.
+         */
+        //zzStartRead = zzEndRead = s.offset;
+        zzStartRead = s.offset;
+        zzEndRead = zzStartRead + s.count - 1;
+        zzCurrentPos = zzMarkedPos = zzPushbackPos = s.offset;
+        zzLexicalState = YYINITIAL;
+        zzReader = reader;
+        zzAtBOL  = true;
+        zzAtEOF  = false;
+    }
 
 
 %}
@@ -479,7 +502,7 @@ HexDigit							= ({Digit}|[A-Fa-f])
 OctalDigit						= ([0-7])
 LetterOrDigit					= ({Letter}|{Digit})
 EscapedSourceCharacter				= ("u"{HexDigit}{HexDigit}{HexDigit}{HexDigit})
-NonSeparator						= ([^\t\f\r\n\ \(\)\{\}\[\]\;\,\.\=\>\<\!\~\?\:\+\-\*\/\&\|\^\%\"\']|"#"|"\\")
+NonSeparator						= ([^\t\f\r\n\ \(\)\{\}\[\]\;\,\.\=\>\<\!\~\?\:\+\-\*\/\&\|\^\%\"\'\`]|"#"|"\\")
 IdentifierStart					= ({Letter}|"_"|"$")
 IdentifierPart						= ({IdentifierStart}|{Digit}|("\\"{EscapedSourceCharacter}))
 JS_MLCBegin				= "/*"
@@ -518,6 +541,7 @@ JS_BlockTag					= ("abstract"|"access"|"alias"|"augments"|"author"|"borrows"|
 								"static"|"summary"|"this"|"throws"|"todo"|
 								"type"|"typedef"|"variation"|"version")
 JS_InlineTag				= ("link"|"linkplain"|"linkcode"|"tutorial")
+JS_TemplateLiteralExprStart	= ("${")
 
 e4x_NameStartChar		= ([\:A-Z_a-z])
 e4x_NameChar			= ({e4x_NameStartChar}|[\-\.0-9])
@@ -551,28 +575,50 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
 %state E4X_INATTR_DOUBLE
 %state E4X_INATTR_SINGLE
 %state E4X_CDATA
-
+%state JS_TEMPLATE_LITERAL
+%state JS_TEMPLATE_LITERAL_EXPR
 
 %%
 
 <YYINITIAL> {
 
-	// ECMA 3+ keywords.
+	// Keywords
+	"async" |
+	"await" |
 	"break" |
+	"case" |
+	"catch"	|
+	"class"	|
+	"const"	|
 	"continue" |
+	"debugger" |
 	"delete" |
+	"do" |
 	"else" |
+	"export" |
+	"extends" |
+	"finally" |
 	"for" |
 	"function" |
 	"if" |
+	"import" |
 	"in" |
+	"instanceof" |
 	"new" |
+	"null" |
+	"of" |
+	"static" |
+	"super" |
+	"switch" |
 	"this" |
+	"throw" |
+	"try" |
 	"typeof" |
 	"var" |
 	"void" |
 	"while" |
-	"with"						{ addToken(Token.RESERVED_WORD); }
+	"with" |
+    "yield"                     { addToken(Token.RESERVED_WORD); }
 	"return"					{ addToken(Token.RESERVED_WORD_2); }
 	
 	//e4X
@@ -586,25 +632,14 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
 	"abstract"					{ addToken(Token.RESERVED_WORD); }
 	"boolean"						{ addToken(Token.DATA_TYPE); }
 	"byte"						{ addToken(Token.DATA_TYPE); }
-	"case"						{ addToken(Token.RESERVED_WORD); }
-	"catch"						{ addToken(Token.RESERVED_WORD); }
 	"char"						{ addToken(Token.DATA_TYPE); }
-	"class"						{ addToken(Token.RESERVED_WORD); }
-	"const"						{ addToken(Token.RESERVED_WORD); }
-	"debugger"					{ addToken(Token.RESERVED_WORD); }
 	"default"						{ addToken(Token.RESERVED_WORD); }
-	"do"							{ addToken(Token.RESERVED_WORD); }
 	"double"						{ addToken(Token.DATA_TYPE); }
 	"enum"						{ addToken(Token.RESERVED_WORD); }
-	"export"						{ addToken(Token.RESERVED_WORD); }
-	"extends"						{ addToken(Token.RESERVED_WORD); }
 	"final"						{ addToken(Token.RESERVED_WORD); }
-	"finally"						{ addToken(Token.RESERVED_WORD); }
 	"float"						{ addToken(Token.DATA_TYPE); }
 	"goto"						{ addToken(Token.RESERVED_WORD); }
 	"implements"					{ addToken(Token.RESERVED_WORD); }
-	"import"						{ addToken(Token.RESERVED_WORD); }
-	"instanceof"					{ addToken(Token.RESERVED_WORD); }
 	"int"						{ addToken(Token.DATA_TYPE); }
 	"interface"					{ addToken(Token.RESERVED_WORD); }
 	"long"						{ addToken(Token.DATA_TYPE); }
@@ -614,16 +649,10 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
 	"protected"					{ addToken(Token.RESERVED_WORD); }
 	"public"						{ addToken(Token.RESERVED_WORD); }
 	"short"						{ addToken(Token.DATA_TYPE); }
-	"static"						{ addToken(Token.RESERVED_WORD); }
-	"super"						{ addToken(Token.RESERVED_WORD); }
-	"switch"						{ addToken(Token.RESERVED_WORD); }
 	"synchronized"					{ addToken(Token.RESERVED_WORD); }
-	"throw"						{ addToken(Token.RESERVED_WORD); }
 	"throws"						{ addToken(Token.RESERVED_WORD); }
 	"transient"					{ addToken(Token.RESERVED_WORD); }
-	"try"						{ addToken(Token.RESERVED_WORD); }
 	"volatile"					{ addToken(Token.RESERVED_WORD); }
-	"null"						{ addToken(Token.RESERVED_WORD); }
 
 	// Literals.
 	"false" |
@@ -647,6 +676,7 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
 	/* String/Character literals. */
 	[\']							{ start = zzMarkedPos-1; validJSString = true; yybegin(JS_CHAR); }
 	[\"]							{ start = zzMarkedPos-1; validJSString = true; yybegin(JS_STRING); }
+	[\`]							{ start = zzMarkedPos-1; validJSString = true; yybegin(JS_TEMPLATE_LITERAL); }
 
 	/* Comment literals. */
 	"/**/"							{ addToken(Token.COMMENT_MULTILINE); }
@@ -766,6 +796,67 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
 	<<EOF>>					{ addToken(start,zzStartRead-1, Token.ERROR_CHAR); addNullToken(); return firstToken; }
 }
 
+<JS_TEMPLATE_LITERAL> {
+	[^\n\\\$\`]+				{}
+	\\x{HexDigit}{2}		{}
+	\\x						{ /* Invalid latin-1 character \xXX */ validJSString = false; }
+	\\u{HexDigit}{4}		{}
+	\\u						{ /* Invalid Unicode character \\uXXXX */ validJSString = false; }
+	\\.						{ /* Skip all escaped chars. */ }
+
+	{JS_TemplateLiteralExprStart}	{
+								addToken(start, zzStartRead - 1, Token.LITERAL_BACKQUOTE);
+								start = zzMarkedPos-2;
+								if (varDepths==null) {
+									varDepths = new Stack<>();
+								}
+								else {
+									varDepths.clear();
+								}
+								varDepths.push(Boolean.TRUE);
+								yybegin(JS_TEMPLATE_LITERAL_EXPR);
+							}
+	"$"						{ /* Skip valid '$' that is not part of template literal expression start */ }
+	
+	\`						{ int type = validJSString ? Token.LITERAL_BACKQUOTE : Token.ERROR_STRING_DOUBLE; addToken(start,zzStartRead, type); yybegin(YYINITIAL); }
+
+	/* Line ending in '\' => continue to next line, though not necessary in template strings. */
+	\\ |
+	\n |
+	<<EOF>>					{
+								if (validJSString) {
+									addToken(start, zzStartRead - 1, Token.LITERAL_BACKQUOTE);
+									addEndToken(INTERNAL_IN_JS_TEMPLATE_LITERAL_VALID);
+								}
+								else {
+									addToken(start,zzStartRead - 1, Token.ERROR_STRING_DOUBLE);
+									addEndToken(INTERNAL_IN_JS_TEMPLATE_LITERAL_INVALID);
+								}
+								return firstToken;
+							}
+}
+
+<JS_TEMPLATE_LITERAL_EXPR> {
+	[^\}\$\n]+			{}
+	"}"					{
+							if (!varDepths.empty()) {
+								varDepths.pop();
+								if (varDepths.empty()) {
+									addToken(start,zzStartRead, Token.VARIABLE);
+									start = zzMarkedPos;
+									yybegin(JS_TEMPLATE_LITERAL);
+								}
+							}
+						}
+	{JS_TemplateLiteralExprStart} { varDepths.push(Boolean.TRUE); }
+	"$"					{}
+	\n |
+	<<EOF>>				{
+							// TODO: This isn't right.  The expression and its depth should continue to the next line.
+							addToken(start,zzStartRead-1, Token.VARIABLE); addEndToken(INTERNAL_IN_JS_TEMPLATE_LITERAL_INVALID); return firstToken;
+						}
+}
+
 <JS_MLC> {
 	// JavaScript MLC's.  This state is essentially Java's MLC state.
 	[^hwf\n\*]+			{}
@@ -836,7 +927,7 @@ URL						= (((https?|f(tp|ile))"://"|"www.")({URLCharacters}{URLEndCharacter})?)
 	"-->"						{ int temp = zzMarkedPos; addToken(start,zzStartRead+2, Token.MARKUP_COMMENT); start = temp; yybegin(e4x_prevState); }
 	"-"							{}
 	{LineTerminator} |
-	<<EOF>>						{ addToken(start,zzStartRead-1, Token.MARKUP_COMMENT); addEndToken(INTERNAL_IN_E4X_COMMENT - e4x_prevState); return firstToken; }
+	<<EOF>>						{ addToken(start,zzStartRead-1, Token.MARKUP_COMMENT); addEndToken(INTERNAL_E4X_COMMENT - e4x_prevState); return firstToken; }
 }
 
 <E4X_PI> {

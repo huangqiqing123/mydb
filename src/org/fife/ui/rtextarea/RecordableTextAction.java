@@ -5,7 +5,7 @@
  * in an RTextArea macro.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -32,7 +32,7 @@ import javax.swing.text.TextAction;
 public abstract class RecordableTextAction extends TextAction {
 
 	/**
-	 * Whether or not this text action should be recorded in a macro.
+	 * Whether this text action should be recorded in a macro.
 	 */
 	private boolean isRecordable;
 
@@ -89,10 +89,10 @@ public abstract class RecordableTextAction extends TextAction {
 				// action like paste (e.g., paste would return Ctrl+V, but
 				// its action would be "paste-action").
 				String macroID = getMacroID();
-//System.err.println(macroID);
-//System.err.println("... " + (mod&ActionEvent.ALT_MASK));
-//System.err.println("... " + (mod&ActionEvent.CTRL_MASK));
-//System.err.println("... " + (mod&ActionEvent.META_MASK));
+				//System.err.println(macroID);
+				//System.err.println("... " + (mod&ActionEvent.ALT_MASK));
+				//System.err.println("... " + (mod&ActionEvent.CTRL_MASK));
+				//System.err.println("... " + (mod&ActionEvent.META_MASK));
 				if (!DefaultEditorKit.defaultKeyTypedAction.equals(macroID) || (
 						(mod&ActionEvent.ALT_MASK)==0 &&
 						(mod&ActionEvent.CTRL_MASK)==0 &&
@@ -175,7 +175,7 @@ public abstract class RecordableTextAction extends TextAction {
 	 */
 	public int getMnemonic() {
 		Integer i = (Integer)getValue(MNEMONIC_KEY);
-		return i!=null ? i.intValue() : -1;
+		return i!=null ? i : -1;
 	}
 
 
@@ -189,12 +189,21 @@ public abstract class RecordableTextAction extends TextAction {
 		return (String)getValue(NAME);
 	}
 
+	/**
+	 * Returns the short description for this action.
+	 *
+	 * @return The short description for this action.
+	 * @see #setShortDescription(String)
+	 */
+	public String getShortDescription() {
+		return (String)getValue(SHORT_DESCRIPTION);
+	}
 
 	/**
-	 * Returns whether or not this action will be recorded and replayed in
+	 * Returns whether this action will be recorded and replayed in
 	 * a macro.
 	 *
-	 * @return Whether or not this action will be recorded and replayed.
+	 * @return Whether this action will be recorded and replayed.
 	 * @see #setRecordable(boolean)
 	 */
 	public boolean isRecordable() {
@@ -265,10 +274,10 @@ public abstract class RecordableTextAction extends TextAction {
 
 
 	/**
-	 * Sets whether or not this action will be recorded and replayed in
+	 * Sets whether this action will be recorded and replayed in
 	 * a macro.
 	 *
-	 * @param recordable Whether or not this action should be recorded
+	 * @param recordable Whether this action should be recorded
 	 *        and replayed.
 	 * @see #isRecordable()
 	 */

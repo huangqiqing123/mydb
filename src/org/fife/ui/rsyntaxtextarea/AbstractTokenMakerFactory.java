@@ -4,7 +4,7 @@
  * AbstractTokenMakerFactory.java - Base class for TokenMaker implementations.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -35,7 +35,7 @@ public abstract class AbstractTokenMakerFactory extends TokenMakerFactory {
 	 * Constructor.
 	 */
 	protected AbstractTokenMakerFactory() {
-		tokenMakerMap = new HashMap<String, Object>();
+		tokenMakerMap = new HashMap<>();
 		initTokenMakerMap();
 	}
 
@@ -75,9 +75,6 @@ public abstract class AbstractTokenMakerFactory extends TokenMakerFactory {
 	protected abstract void initTokenMakerMap();
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public Set<String> keySet() {
 		return tokenMakerMap.keySet();

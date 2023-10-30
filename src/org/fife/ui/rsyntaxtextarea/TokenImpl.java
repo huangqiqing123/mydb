@@ -4,7 +4,7 @@
  * Token.java - A token used in syntax highlighting.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rsyntaxtextarea;
 
@@ -30,7 +30,7 @@ import javax.swing.text.Utilities;
  * @author Robert Futrell
  * @version 0.3
  */
-@SuppressWarnings({ "checkstyle:visibilitymodifier" })
+@SuppressWarnings("checkstyle:visibilitymodifier")
 public class TokenImpl implements Token {
 
 	/**
@@ -233,6 +233,12 @@ public class TokenImpl implements Token {
 					sb.append(tabsToSpaces ? tabStr : "&#09;");
 					lastWasSpace = false;
 					break;
+				case '&':
+					sb.append(text, lastI, i-lastI);
+					lastI = i+1;
+					sb.append("&amp;");
+					lastWasSpace = false;
+					break;
 				case '<':
 					sb.append(text, lastI, i-lastI);
 					lastI = i+1;
@@ -243,6 +249,24 @@ public class TokenImpl implements Token {
 					sb.append(text, lastI, i-lastI);
 					lastI = i+1;
 					sb.append("&gt;");
+					lastWasSpace = false;
+					break;
+				case '\'':
+					sb.append(text, lastI, i-lastI);
+					lastI = i+1;
+					sb.append("&#39;");
+					lastWasSpace = false;
+					break;
+				case '"':
+					sb.append(text, lastI, i-lastI);
+					lastI = i+1;
+					sb.append("&#34;");
+					lastWasSpace = false;
+					break;
+				case '/': // OWASP-recommended to escape even though unnecessary
+					sb.append(text, lastI, i-lastI);
+					lastI = i+1;
+					sb.append("&#47;");
 					lastWasSpace = false;
 					break;
 				default:
@@ -419,7 +443,10 @@ public class TokenImpl implements Token {
 
 	@Override
 	public String getLexeme() {
-		return text==null ? null : new String(text, textOffset, textCount);
+		if (text == null) {
+			return null;
+		}
+		return isPaintable() ? new String(text, textOffset, textCount) : null;
 	}
 
 
@@ -437,7 +464,7 @@ public class TokenImpl implements Token {
 		float stableX = x0; // Cached ending x-coord. of last tab or token.
 		TokenImpl token = this;
 		int last = getOffset();
-		FontMetrics fm = null;
+		FontMetrics fm;
 
 		while (token != null && token.isPaintable()) {
 
@@ -620,7 +647,9 @@ public class TokenImpl implements Token {
 
 	@Override
 	public boolean isComment() {
-		return getType()>=Token.COMMENT_EOL && getType()<=Token.COMMENT_MARKUP;
+		int type = getType();
+		return (type >= TokenTypes.COMMENT_EOL && type <= TokenTypes.COMMENT_MARKUP) ||
+			type == TokenTypes.MARKUP_COMMENT;
 	}
 
 
@@ -668,7 +697,7 @@ public class TokenImpl implements Token {
 
 	@Override
 	public boolean isSingleChar(int type, char ch) {
-		return this.getType()==type && isSingleChar(ch);
+		return getType()==type && isSingleChar(ch);
 	}
 
 
@@ -690,14 +719,14 @@ public class TokenImpl implements Token {
 
 		int stableX = x0; // Cached ending x-coord. of last tab or token.
 		TokenImpl token = this;
-		FontMetrics fm = null;
+		FontMetrics fm;
 		Segment s = new Segment();
 
 		while (token != null && token.isPaintable()) {
 
 			fm = textArea.getFontMetricsForTokenType(token.getType());
 			if (fm == null) {
-				return rect; // Don't return null as things'll error.
+				return rect; // Don't return null as things will error.
 			}
 			char[] text = token.text;
 			int start = token.textOffset;
@@ -881,18 +910,12 @@ public class TokenImpl implements Token {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public void setType(int type) {
 		this.type = type;
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public boolean startsWith(char[] chars) {
 		if (chars.length<=textCount){
@@ -907,9 +930,6 @@ public class TokenImpl implements Token {
 	}
 
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	public int tokenToDocument(int pos) {
 		return pos + (getOffset()-textOffset);

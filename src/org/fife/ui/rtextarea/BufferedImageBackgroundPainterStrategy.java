@@ -5,15 +5,11 @@
  * background as an image using a BufferedImage.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
-import java.awt.Image;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
@@ -89,7 +85,7 @@ public class BufferedImageBackgroundPainterStrategy
 		if (master!=null) {
 
 			Map<RenderingHints.Key, Object> hints =
-					new HashMap<RenderingHints.Key, Object>();
+				new HashMap<>();
 			switch (hint) {
 				default:
 				case Image.SCALE_AREA_AVERAGING:
@@ -117,8 +113,16 @@ public class BufferedImageBackgroundPainterStrategy
 
 	private BufferedImage createAcceleratedImage(int width, int height) {
 		GraphicsConfiguration gc= getRTextAreaBase().getGraphicsConfiguration();
-		BufferedImage image = gc.createCompatibleImage(width, height);
-		return image;
+		if (gc != null) {
+			return gc.createCompatibleImage(width, height);
+		}
+		if (!GraphicsEnvironment.isHeadless()) {
+			return GraphicsEnvironment.getLocalGraphicsEnvironment()
+				.getDefaultScreenDevice()
+				.getDefaultConfiguration()
+				.createCompatibleImage(width, height);
+		}
+		return new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 	}
 
 

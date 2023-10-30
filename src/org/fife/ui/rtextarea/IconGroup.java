@@ -4,7 +4,7 @@
  * IconGroup.java - Class encapsulating images used for RTextArea actions.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -22,7 +22,29 @@ import javax.swing.ImageIcon;
  * This class encapsulates the location, properties, etc. of an icon set used
  * for an instance of <code>RTextArea</code>.  If the location of the icon
  * group is invalid in any way, any attempt to retrieve icons from an icon
- * group will return <code>null</code>.
+ * group will return {@code null}.
+ *
+ * An icon group can logically refer to any set of icons.  You will primarily fetch
+ * icons via the {@link #getIcon(String)} method, which fetches an icon at the
+ * specified path from the icon group's jar.<p>
+ *
+ * However, to support embedding RSTA in applications that are code editors, icon
+ * groups also support defining icons for file types that RSTA supports, as defined
+ * in {@link org.fife.ui.rsyntaxtextarea.SyntaxConstants}.  To use this feature,
+ * have your icon group have icons in a {@code fileTypes/} subpath.  The icon names
+ * should be the second "part" of the syntax constant values.  For example:
+ *
+ * <ul>
+ *     <li>fileTypes/default.png</li>
+ *     <li>fileTypes/java.png</li>
+ *     <li>fileTypes/javascript.png</li>
+ * </ul>
+ *
+ * In this scenario, calling {@link #getFileTypeIcon(String)} is shorthand for
+ * {@code getIcon("fileTypes/" + fileTypePart)}.  The only added benefit to
+ * using {@code getFileTypeIcon()} is that method will default to the icon
+ * named {@code "fileTypes/default.&lt;extension&gt;"} if the actually-requested
+ * icon does not exist.
  *
  * @author Robert Futrell
  * @version 0.5
@@ -118,7 +140,7 @@ public class IconGroup {
 	 */
 	@Override
 	public boolean equals(Object o2) {
-		if (o2!=null && o2 instanceof IconGroup) {
+		if (o2 instanceof IconGroup) {
 			IconGroup ig2 = (IconGroup)o2;
 			if (ig2.getName().equals(getName()) &&
 					separateLargeIcons==ig2.hasSeparateLargeIcons()) {
@@ -136,11 +158,35 @@ public class IconGroup {
 
 
 	/**
+	 * Returns an icon that represents the file type specified.
+	 *
+	 * @param rstaSyntax The syntax value, from {@code SyntaxConstants}.
+	 * @return The icon, or {@code null} if a fallback icon should be used.
+	 */
+	public Icon getFileTypeIcon(String rstaSyntax) {
+
+		int slash = rstaSyntax.indexOf('/');
+
+		if (slash > -1) {
+			String fileType = rstaSyntax.substring(slash + 1).toLowerCase();
+			String path = "fileTypes/" + fileType + '.' + extension;
+			Icon icon = getIconImpl(path);
+			if (icon == null) {
+				icon = getIconImpl("fileTypes/default." + extension);
+			}
+			return icon;
+		}
+
+		return null;
+	}
+
+
+	/**
 	 * Returns the icon from this icon group with the specified name.
 	 *
 	 * @param name The name of the icon.  For example, if you want the icon
-	 * specified in <code>new.gif</code>, this value should be
-	 * <code>new</code>.
+	 *        specified in <code>new.gif</code>, this value should be
+	 *        <code>new</code>.
 	 * @return The icon, or <code>null</code> if it could not be found or
 	 *         loaded.
 	 * @see #getLargeIcon
@@ -160,14 +206,18 @@ public class IconGroup {
 
 
 	/**
-	 * Does the dirty work of loading an image.
+	 * Does the dirty work of loading an image.<p>
+	 *
+	 * This method is protected so applications can provide other
+	 * implementations, for example, adding the ability to load SVG
+	 * icons.
 	 *
 	 * @param iconFullPath The full path to the icon, either on the local
 	 *        file system or in the Jar file, if this icon group represents
 	 *        icons in a Jar file.
 	 * @return The icon.
 	 */
-	private Icon getIconImpl(String iconFullPath) {
+	protected Icon getIconImpl(String iconFullPath) {
 		try {
 			if (jarFile==null) {
 				// First see if it's on our classpath (e.g. an icon in
@@ -185,11 +235,11 @@ public class IconGroup {
 				URL url = new URL("jar:file:///" +
 									jarFile + "!/" + iconFullPath);
 				//System.err.println("***** " + url.toString());
-				return new ImageIcon(url);
+				Icon icon = new ImageIcon(url);
+				// URLs that are valid but simply don't exist can create -1x-1 ImageIcons
+				return icon.getIconWidth() == -1 ? null : icon;
 			}
-		} catch (AccessControlException ace) {
-			return null; // Likely in an applet or WebStart
-		} catch (IOException ioe) {
+		} catch (AccessControlException | IOException ace) {
 			return null;
 		}
 	}
@@ -226,7 +276,7 @@ public class IconGroup {
 	/**
 	 * Returns whether a separate directory for the large icons exists.
 	 *
-	 * @return Whether a directory containing "large versions" ov the icons
+	 * @return Whether a directory containing "large versions" of the icons
 	 *         exists.
 	 * @see #getLargeIcon(String)
 	 */
@@ -235,11 +285,6 @@ public class IconGroup {
 	}
 
 
-	/**
-	 * Overridden since we also override {@link #equals(Object)}, to honor
-	 * the invariant that equal objects must have equal hashcodes.  This also
-	 * keeps FindBugs happy.
-	 */
 	@Override
 	public int hashCode() {
 		return getName().hashCode();

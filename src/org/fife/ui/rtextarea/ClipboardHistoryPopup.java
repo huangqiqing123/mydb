@@ -4,7 +4,7 @@
  * ClipboardHistoryPopup.java - Shows clipboard history in a popup window.
  *
  * This library is distributed under a modified BSD license.  See the included
- * RSyntaxTextArea.License.txt file for details.
+ * LICENSE file for details.
  */
 package org.fife.ui.rtextarea;
 
@@ -80,9 +80,9 @@ class ClipboardHistoryPopup extends JWindow {
 
 		JPanel cp = new JPanel(new BorderLayout());
 		cp.setBorder(BorderFactory.createCompoundBorder(
-				org.fife.ui.rsyntaxtextarea.focusabletip.TipUtil.getToolTipBorder(),
+				TipUtil.getToolTipBorder(),
 				BorderFactory.createEmptyBorder(2, 5, 5, 5)));
-		cp.setBackground(org.fife.ui.rsyntaxtextarea.focusabletip.TipUtil.getToolTipBackground());
+		cp.setBackground(TipUtil.getToolTipBackground());
 		setContentPane(cp);
 
 		ResourceBundle msg = ResourceBundle.getBundle(MSG);
@@ -120,10 +120,10 @@ class ClipboardHistoryPopup extends JWindow {
 	 * Inserts the selected item into the editor and disposes of this popup.
 	 */
 	private void insertSelectedItem() {
-		Object lvp = list.getSelectedValue();
+		LabelValuePair lvp = list.getSelectedValue();
 		if (lvp!=null) {
 			listener.uninstallAndHide();
-			String text = ((LabelValuePair)lvp).value;
+			String text = lvp.value;
 			textArea.replaceSelection(text);
 			ClipboardHistory.get().add(text); // Move this item to the top
 		}
@@ -159,7 +159,7 @@ class ClipboardHistoryPopup extends JWindow {
 	 */
 	private void setLocation() {
 
-		Rectangle r = null;
+		Rectangle r;
 		try {
 			r = textArea.modelToView(textArea.getCaretPosition());
 		} catch (Exception e) {
@@ -210,15 +210,12 @@ class ClipboardHistoryPopup extends JWindow {
 		super.setVisible(visible);
 		updateTextAreaCaret(visible);
 		if (visible) {
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					requestFocus();
-					if (list.getModel().getSize()>0) {
-						list.setSelectedIndex(0);
-					}
-					list.requestFocusInWindow();
+			SwingUtilities.invokeLater(() -> {
+				requestFocus();
+				if (list.getModel().getSize()>0) {
+					list.setSelectedIndex(0);
 				}
+				list.requestFocusInWindow();
 			});
 		}
 	}
@@ -353,10 +350,10 @@ class ClipboardHistoryPopup extends JWindow {
 	/**
 	 * The list component used in this popup.
 	 */
-	private static final class ChoiceList extends JList {
+	private static final class ChoiceList extends JList<LabelValuePair> {
 
 		private ChoiceList() {
-			super(new DefaultListModel());
+			super(new DefaultListModel<>());
 			setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 			installKeyboardActions();
 		}
@@ -392,7 +389,7 @@ class ClipboardHistoryPopup extends JWindow {
 		}
 
 		private void setContents(List<String> contents) {
-			DefaultListModel model = (DefaultListModel)getModel();
+			DefaultListModel<LabelValuePair> model = (DefaultListModel<LabelValuePair>)getModel();
 			model.clear();
 			for (String str : contents) {
 				model.addElement(new LabelValuePair(str));
