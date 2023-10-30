@@ -63,7 +63,7 @@ public class RSyntaxTextAreaDefaultInputMap extends RTADefaultInputMap {
 			// different OSes & keyboard layouts, we do the simplest thing and
 			// (unfortunately) don't have a ToggleCommentAction for *nix out-of-the-box.
 			// Applications can add one easily enough if they want one.
-			put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, defaultMod),		RSyntaxTextAreaEditorKit.rstaToggleCommentAction);
+			//put(KeyStroke.getKeyStroke(KeyEvent.VK_SLASH, defaultMod),		RSyntaxTextAreaEditorKit.rstaToggleCommentAction);
 		}
 
 		put(KeyStroke.getKeyStroke(KeyEvent.VK_OPEN_BRACKET, defaultMod),	RSyntaxTextAreaEditorKit.rstaGoToMatchingBracketAction);
