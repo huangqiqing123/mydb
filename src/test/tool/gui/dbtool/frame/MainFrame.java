@@ -116,6 +116,7 @@ import org.dbunit.dataset.excel.XlsDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.operation.DatabaseOperation;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.themes.ThemesUtil;
 import org.jvnet.substance.SubstanceDefaultTreeCellRenderer;
 
 import test.tool.gui.common.FontSet;
@@ -843,9 +844,10 @@ public class MainFrame extends JFrame{
         
         //设置默认背景色
         MyColor defaultColor = (MyColor)ConfigUtil.getConfInfo().get(Const.EYE_SAFETY_COLOR);
-        jTextArea1.setBackground(defaultColor.getColor());
         jTextArea1.setCodeFoldingEnabled(true);//开启代码折叠
         jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);//设置SQL语言高亮
+        ThemesUtil.updateTheme(jTextArea1, ThemesUtil.IDEA);
+        jTextArea1.setBackground(defaultColor.getColor());
         
         //动态生成menuItem
         ButtonGroup btgp_color = new ButtonGroup();

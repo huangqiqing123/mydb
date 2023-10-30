@@ -35,27 +35,27 @@
    <!-- Syntax tokens. -->
    <tokenStyles>
       <style token="IDENTIFIER" fg="000000" />
-      <style token="RESERVED_WORD" fg="000080" bold="true" />
-      <style token="RESERVED_WORD_2" fg="000080" bold="true" />
+      <style token="RESERVED_WORD" fg="0000ff" bold="false" />
+      <style token="RESERVED_WORD_2" fg="0000ff" bold="false" />
       <style token="ANNOTATION" fg="808000" />
       <style token="COMMENT_DOCUMENTATION" fg="808080" italic="true" />
       <style token="COMMENT_EOL" fg="808080" italic="true" />
       <style token="COMMENT_MULTILINE" fg="808080" italic="true" />
-      <style token="COMMENT_KEYWORD" fg="808080" bold="true" underline="true" italic="true" />
+      <style token="COMMENT_KEYWORD" fg="808080" bold="false" underline="true" italic="true" />
       <style token="COMMENT_MARKUP" fg="808080" bg="e2ffe2" italic="true" />
-      <style token="DATA_TYPE" fg="000080" bold="true" />
+      <style token="DATA_TYPE" fg="000080" bold="false" />
       <style token="FUNCTION" fg="000000" />
-      <style token="LITERAL_BOOLEAN" fg="000080" bold="true" />
+      <style token="LITERAL_BOOLEAN" fg="000080" bold="false" />
       <style token="LITERAL_NUMBER_DECIMAL_INT" fg="0000ff" />
       <style token="LITERAL_NUMBER_FLOAT" fg="0000ff" />
       <style token="LITERAL_NUMBER_HEXADECIMAL" fg="0000ff" />
-      <style token="LITERAL_STRING_DOUBLE_QUOTE" fg="008000" bold="true" />
-      <style token="LITERAL_CHAR" fg="008000" bold="true" />
-      <style token="LITERAL_BACKQUOTE" fg="008000" bold="true" />
-      <style token="MARKUP_TAG_DELIMITER" fg="000000" bold="true" />
-      <style token="MARKUP_TAG_NAME" fg="000080" bold="true" />
-      <style token="MARKUP_TAG_ATTRIBUTE" fg="0000ff" bold="true" />
-      <style token="MARKUP_TAG_ATTRIBUTE_VALUE" fg="008000" bold="true" />
+      <style token="LITERAL_STRING_DOUBLE_QUOTE" fg="008000" bold="false" />
+      <style token="LITERAL_CHAR" fg="DC009C" bold="false" />
+      <style token="LITERAL_BACKQUOTE" fg="DC009C" bold="false" />
+      <style token="MARKUP_TAG_DELIMITER" fg="000000" bold="false" />
+      <style token="MARKUP_TAG_NAME" fg="000080" bold="false" />
+      <style token="MARKUP_TAG_ATTRIBUTE" fg="0000ff" bold="false" />
+      <style token="MARKUP_TAG_ATTRIBUTE_VALUE" fg="008000" bold="false" />
       <style token="MARKUP_COMMENT" fg="808080" italic="true"/>
       <style token="MARKUP_DTD" fg="808080"/>
       <style token="MARKUP_PROCESSING_INSTRUCTION"  fg="808080"/>
@@ -66,7 +66,7 @@
       <style token="PREPROCESSOR" fg="808080" />
       <style token="REGEX" fg="008040" />
       <style token="SEPARATOR" fg="000000" />
-      <style token="VARIABLE" fg="810ca8" bold="true" />
+      <style token="VARIABLE" fg="810ca8" bold="false" />
       <style token="WHITESPACE" fg="000000" />
 
       <style token="ERROR_IDENTIFIER" fg="ff0000" />

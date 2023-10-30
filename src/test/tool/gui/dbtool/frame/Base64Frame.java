@@ -145,8 +145,8 @@ public class Base64Frame extends JFrame {
 		getContentPane().add(tabbedPane, BorderLayout.CENTER);
 		
 	}
-	final MyJextArea originTextBase64 = new MyJextArea(true);
-	final MyJextArea targetTextBase64 = new MyJextArea(true);
+	final MyJextAreaColor originTextBase64 = new MyJextAreaColor(true);
+	final MyJextAreaColor targetTextBase64 = new MyJextAreaColor(true);
 	private JPanel initBase64Tab() {
 		// base64panel中区域划分为两部分，上部分是分隔栏，下部分是设置和按钮区域。
 		JPanel base64Panel = new JPanel(new BorderLayout());
@@ -173,6 +173,8 @@ public class Base64Frame extends JFrame {
 			}
 		});
 		originTextBase64.setLineWrap(true);// 自动换行
+		originTextBase64.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);//设置json语言高亮
+		ThemesUtil.updateTheme(originTextBase64, ThemesUtil.IDEA);
 		originTextBase64.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(originTextBase64);
@@ -181,6 +183,8 @@ public class Base64Frame extends JFrame {
 		// 将JTextArea放入JScrollPane可以解决滚动条不展示的问题
 		splitPane.setTopComponent(new JScrollPane(originTextBase64));
 		targetTextBase64.setLineWrap(true);
+		targetTextBase64.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);//设置json语言高亮
+		ThemesUtil.updateTheme(targetTextBase64, ThemesUtil.IDEA);
 		targetTextBase64.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(targetTextBase64);
@@ -413,8 +417,8 @@ public class Base64Frame extends JFrame {
 		return jsonPanel;
 	}
 	//====================================================
-	final MyJextArea originTextSql = new MyJextArea(true);
-	final MyJextArea targetTextSql = new MyJextArea(true);
+	final MyJextAreaColor originTextSql = new MyJextAreaColor(true);
+	final MyJextAreaColor targetTextSql = new MyJextAreaColor(true);
 	private JPanel initSqlFormatTab() {
 		// jsonpanel中区域划分为两部分，上部分是分隔栏面板(上栏是待格式化数据，下栏是格式化结果)，下部分是按钮区域。
 		JPanel jsonPanel = new JPanel(new BorderLayout());
@@ -441,6 +445,9 @@ public class Base64Frame extends JFrame {
 			}
 		});
 		originTextSql.setLineWrap(true);// 自动换行
+		originTextSql.setCodeFoldingEnabled(true);
+		originTextSql.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
+		ThemesUtil.updateTheme(originTextSql, ThemesUtil.IDEA);
 		originTextSql.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(originTextSql);
@@ -449,6 +456,9 @@ public class Base64Frame extends JFrame {
 		// 将JTextArea放入JScrollPane可以解决滚动条不展示的问题
 		splitPane.setTopComponent(new JScrollPane(originTextSql));
 		targetTextSql.setLineWrap(true);
+		targetTextSql.setCodeFoldingEnabled(true);
+		targetTextSql.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
+		ThemesUtil.updateTheme(targetTextSql, ThemesUtil.IDEA);
 		splitPane.setBottomComponent(new JScrollPane(targetTextSql));
 		targetTextSql.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
@@ -513,7 +523,7 @@ public class Base64Frame extends JFrame {
 		return jsonPanel;
 	}
 	//===============================================
-	final MyJextArea originTextJwt = new MyJextArea(true);
+	final MyJextAreaColor originTextJwt = new MyJextAreaColor(true);
 	final MyJextAreaColor targetTextJwt = new MyJextAreaColor(true);
 	private JPanel initJwtTab() {
 		JPanel jsonPanel = new JPanel(new BorderLayout());
@@ -539,6 +549,9 @@ public class Base64Frame extends JFrame {
 			}
 		});
 		originTextJwt.setLineWrap(true);// 自动换行
+		originTextJwt.setCodeFoldingEnabled(true);
+		originTextJwt.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+		ThemesUtil.updateTheme(originTextJwt, ThemesUtil.IDEA);
 		originTextJwt.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(originTextJwt);
@@ -548,7 +561,8 @@ public class Base64Frame extends JFrame {
 		splitPane.setTopComponent(new JScrollPane(originTextJwt));
 		targetTextJwt.setLineWrap(true);
 		targetTextJwt.setCodeFoldingEnabled(true);
-		targetTextJwt.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT);//设置json语言高亮
+		targetTextJwt.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON_WITH_COMMENTS);//设置json语言高亮
+		ThemesUtil.updateTheme(targetTextJwt, ThemesUtil.IDEA);
 		splitPane.setBottomComponent(new JScrollPane(targetTextJwt));
 		originTextJwt.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
@@ -579,7 +593,7 @@ public class Base64Frame extends JFrame {
 					JOptionPane.showMessageDialog(frame, "JWT格式不正确【应该是.分割的三段】");
 					return;
 				}
-				targetTextJwt.setText("----header信息----\n");
+				targetTextJwt.setText("// ----header信息----\n");
 				String header = arr[0];
 				try {
 					header = new String(Base64.getUrlDecoder().decode(header.getBytes("utf-8")),"utf-8");
@@ -591,7 +605,7 @@ public class Base64Frame extends JFrame {
 					targetTextJwt.setText(e1.toString());
 					return;
 				}
-				targetTextJwt.append("\n----payload信息----\n");
+				targetTextJwt.append("\n// ----payload信息----\n");
 				String payload = arr[1];
 				try {
 					payload = new String(Base64.getUrlDecoder().decode(payload.getBytes("utf-8")),"utf-8");
@@ -603,7 +617,7 @@ public class Base64Frame extends JFrame {
 					targetTextJwt.setText(e1.toString());
 					return;
 				}
-				targetTextJwt.append("\n----signature信息----\n");
+				targetTextJwt.append("\n //----signature信息----\n");
 				String signature = arr[2];
 				targetTextJwt.append(signature);
 			}
