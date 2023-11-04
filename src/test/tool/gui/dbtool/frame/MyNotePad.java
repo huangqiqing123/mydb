@@ -68,7 +68,6 @@ public class MyNotePad extends javax.swing.JFrame {
 	public JLabel status = new JLabel();
 	public JLabel row_col_status = new JLabel();
 	public JLabel encode_status = new JLabel();
-    private LineNumber lineNumber = new LineNumber(); //行号
     private JButton jButton_new = new JButton("新建",ImageIcons.newtext_png_24);
     private JButton jButton_open = new JButton("打开",ImageIcons.open_png_24);
     private JButton jButton_reload = new JButton("重新载入",ImageIcons.reload_png24);
@@ -80,7 +79,7 @@ public class MyNotePad extends javax.swing.JFrame {
     private JButton jButton_redo = new JButton("恢复",ImageIcons.redo_png_24);
     private JButton jButton_undo = new JButton("撤销",ImageIcons.undo_png_24);
     
-    private JComboBox<String> syntaxStyle = new JComboBox<String>();//语法样式
+    public JComboBox<String> syntaxStyle = new JComboBox<String>();//语法样式
     private Map<String,String> syntaxStyleMap = new LinkedHashMap<String,String>();
     
     private JButton jButton_moveup = new JButton("上移",ImageIcons.moveup_png24);
@@ -237,7 +236,6 @@ public class MyNotePad extends javax.swing.JFrame {
 	            	Font font = jTextArea1.getFont();
 	            	Font newFont = new Font(font.getName(),font.getStyle(),font.getSize()+1);
 	            	jTextArea1.setFont(newFont);
-	            	lineNumber.setFont(newFont);
 	            }
 	        });
 		//缩小
@@ -247,7 +245,6 @@ public class MyNotePad extends javax.swing.JFrame {
 	            	Font font = jTextArea1.getFont();
 	            	Font newFont = new Font(font.getName(),font.getStyle(),(font.getSize()-1)>0?(font.getSize()-1):1);
 	            	jTextArea1.setFont(newFont);
-	            	lineNumber.setFont(newFont);
 	            }
 	        });
 		
@@ -408,8 +405,8 @@ public class MyNotePad extends javax.swing.JFrame {
 		
 		//设置jtextArea 与 lineNumber 字体保持一致
     	jTextArea1.setFont((Font)( ConfigUtil.getConfInfo().get(Const.NOTEPAD_FONT)));
-    	lineNumber.setFont(jTextArea1.getFont());
     	jTextArea1.setCodeFoldingEnabled(true);
+    	jTextArea1.setHighlightCurrentLine(false);//设置当前行不高亮
       
     	//东西南北布局
     	getContentPane().add(jScrollPane1, java.awt.BorderLayout.CENTER);
@@ -421,7 +418,6 @@ public class MyNotePad extends javax.swing.JFrame {
   		bottomPanel.add(row_col_status);
   		bottomPanel.add(new JSeparator(SwingConstants.VERTICAL));
   		bottomPanel.add(encode_status);
-  		//bottomPanel.add(new JSeparator(SwingConstants.VERTICAL));
   		bottomPanel.add(syntaxStyle);
   		
   		//底部区域 添加BorderLayout布局的面板 bottomPanel
@@ -690,7 +686,6 @@ public class MyNotePad extends javax.swing.JFrame {
     		
     		//更新界面字体
     		this.jTextArea1.setFont(newFont);
-    		this.lineNumber.setFont(newFont);
     		
     		//更新至磁盘
     		ConfigUtil.getConfInfo().put(Const.NOTEPAD_FONT, newFont);

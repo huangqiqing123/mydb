@@ -29,6 +29,7 @@ import javax.swing.undo.UndoManager;
 
 import org.apache.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 
 import test.tool.gui.dbtool.consts.Const;
 import test.tool.gui.dbtool.dialog.FindReplaceDialog;
@@ -240,15 +241,19 @@ public class MyJextAreaColor extends RSyntaxTextArea implements DropTargetListen
 		}
 	}
 	
-	//实现接口 DropTargetListener，需要实现以下4个方法
+	//实现接口 DropTargetListener，需要实现以下5个方法
+	@Override
 	public void dragEnter(DropTargetDragEvent dtde) {
 	}
+	@Override
 	public void dragExit(DropTargetEvent dte) {
 	}
+	@Override
 	public void dragOver(DropTargetDragEvent dtde) {}
+	@Override
 	public void dropActionChanged(DropTargetDragEvent dtde) {}
-
 	//文件拖放处理
+	@Override
 	public void drop(DropTargetDropEvent event) {
 		
 		event.acceptDrop(DnDConstants.ACTION_COPY);
@@ -285,8 +290,90 @@ public class MyJextAreaColor extends RSyntaxTextArea implements DropTargetListen
 							notePade.setTitle(str[0]);
 							notePade.filePath = str[0];
 							if(str[2] != null){
-								notePade.status.setText("当前文件编码："+str[2]);
+								notePade.encode_status.setText(str[2]);
 							}
+							
+							//根据文件后缀，设置语法样式
+				 			if(path.endsWith(".java")||path.endsWith(".JAVA")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);//设置语言高亮 
+				 				notePade.syntaxStyle.setSelectedItem("Java");
+				 			}else if(path.endsWith(".js")||path.endsWith(".JS")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVASCRIPT);
+				 				notePade.syntaxStyle.setSelectedItem("JavaScript");
+				 			}else if(path.endsWith(".c")||path.endsWith(".C")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_C);
+				 				notePade.syntaxStyle.setSelectedItem("C");
+				 			}else if(path.endsWith(".css")||path.endsWith(".CSS")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CSS);
+				 				notePade.syntaxStyle.setSelectedItem("Css");
+				 			}else if(path.endsWith(".csv")||path.endsWith(".CSV")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CSV);
+				 				notePade.syntaxStyle.setSelectedItem("Csv");
+				 			}else if(path.endsWith(".dtd")||path.endsWith(".DTD")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_DTD);
+				 				notePade.syntaxStyle.setSelectedItem("Dtd");
+				 			}else if(path.endsWith(".dockerfile")||path.endsWith(".DOCKERFILE")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_DOCKERFILE);
+				 				notePade.syntaxStyle.setSelectedItem("Dockerfile");
+				 			}else if(path.endsWith(".go")||path.endsWith(".GO")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GO);
+				 				notePade.syntaxStyle.setSelectedItem("GO");
+				 			}else if(path.endsWith(".groovy")||path.endsWith(".GROOVY")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_GROOVY);
+				 				notePade.syntaxStyle.setSelectedItem("Groovy");
+				 			}else if(path.endsWith(".html")||path.endsWith(".HTML")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_HTML);
+				 				notePade.syntaxStyle.setSelectedItem("Html");
+				 			}else if(path.endsWith(".hosts")||path.endsWith(".HOSTS")|| (path.substring(path.lastIndexOf("\\")+1)).equalsIgnoreCase("hosts")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_HOSTS);
+				 				notePade.syntaxStyle.setSelectedItem("Hosts");
+				 			}else if(path.endsWith(".ini")||path.endsWith(".INI")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_INI);
+				 				notePade.syntaxStyle.setSelectedItem("Ini");
+				 			}else if(path.endsWith(".jsp")||path.endsWith(".JSP")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSP);
+				 				notePade.syntaxStyle.setSelectedItem("Jsp");
+				 			}else if(path.endsWith(".json")||path.endsWith(".JSON")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON_WITH_COMMENTS);
+				 				notePade.syntaxStyle.setSelectedItem("Json");
+				 			}else if(path.endsWith(".lua")||path.endsWith(".LUA")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_LUA);
+				 				notePade.syntaxStyle.setSelectedItem("Lua");
+				 			}else if(path.endsWith(".md")||path.endsWith(".MD")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
+				 				notePade.syntaxStyle.setSelectedItem("Markdown");
+				 			}else if(path.endsWith(".php")||path.endsWith(".PHP")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PHP);
+				 				notePade.syntaxStyle.setSelectedItem("Php");
+				 			}else if(path.endsWith(".perl")||path.endsWith(".PERL")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PERL);
+				 				notePade.syntaxStyle.setSelectedItem("Perl");
+				 			}else if(path.endsWith(".properties")||path.endsWith(".PROPERTIES")||path.endsWith(".conf")||path.endsWith(".CONF")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PROPERTIES_FILE);
+				 				notePade.syntaxStyle.setSelectedItem("Properties");
+				 			}else if(path.endsWith(".py")||path.endsWith(".PY")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_PYTHON);
+				 				notePade.syntaxStyle.setSelectedItem("Python");
+				 			}else if(path.endsWith(".rb")||path.endsWith(".RB")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_RUBY);
+				 				notePade.syntaxStyle.setSelectedItem("Ruby");
+				 			}else if(path.endsWith(".sql")||path.endsWith(".SQL")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
+				 				notePade.syntaxStyle.setSelectedItem("SQL");
+				 			}else if(path.endsWith(".sh")||path.endsWith(".SH")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_UNIX_SHELL);
+				 				notePade.syntaxStyle.setSelectedItem("Shell");
+				 			}else if(path.endsWith(".xml")||path.endsWith(".XML")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_XML);
+				 				notePade.syntaxStyle.setSelectedItem("Xml");
+				 			}else if(path.endsWith(".yaml")||path.endsWith(".YAML")||path.endsWith(".yml")||path.endsWith(".YML")){
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_YAML);
+				 				notePade.syntaxStyle.setSelectedItem("Yaml");
+				 			}else{
+				 				this.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+				 				notePade.syntaxStyle.setSelectedItem("Text");
+				 			}
+							
 							//记事本中，拖放新打开文件时，重置textIsChanged为false
 							this.textIsChanged = false;
 						}

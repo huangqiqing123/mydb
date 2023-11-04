@@ -337,6 +337,7 @@ public class Base64Frame extends JFrame {
 		originTextJson.setLineWrap(true);// 自动换行
 		originTextJson.setCodeFoldingEnabled(true);
 		originTextJson.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+		originTextJson.setHighlightCurrentLine(false);
 		ThemesUtil.updateTheme(originTextJson, ThemesUtil.IDEA);
 		originTextJson.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
@@ -347,6 +348,7 @@ public class Base64Frame extends JFrame {
 		splitPane.setTopComponent(new JScrollPane(originTextJson));
 		targetTextJson.setLineWrap(true);
 		targetTextJson.setCodeFoldingEnabled(true);
+		targetTextJson.setHighlightCurrentLine(false);
 		targetTextJson.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON_WITH_COMMENTS);
 		ThemesUtil.updateTheme(targetTextJson, ThemesUtil.IDEA);
 		splitPane.setBottomComponent(new JScrollPane(targetTextJson));
@@ -446,6 +448,7 @@ public class Base64Frame extends JFrame {
 		});
 		originTextSql.setLineWrap(true);// 自动换行
 		originTextSql.setCodeFoldingEnabled(true);
+		originTextSql.setHighlightCurrentLine(false);
 		originTextSql.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
 		ThemesUtil.updateTheme(originTextSql, ThemesUtil.IDEA);
 		originTextSql.find.addActionListener(new ActionListener(){
@@ -457,6 +460,7 @@ public class Base64Frame extends JFrame {
 		splitPane.setTopComponent(new JScrollPane(originTextSql));
 		targetTextSql.setLineWrap(true);
 		targetTextSql.setCodeFoldingEnabled(true);
+		targetTextSql.setHighlightCurrentLine(false);
 		targetTextSql.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
 		ThemesUtil.updateTheme(targetTextSql, ThemesUtil.IDEA);
 		splitPane.setBottomComponent(new JScrollPane(targetTextSql));
@@ -550,6 +554,7 @@ public class Base64Frame extends JFrame {
 		});
 		originTextJwt.setLineWrap(true);// 自动换行
 		originTextJwt.setCodeFoldingEnabled(true);
+		originTextJwt.setHighlightCurrentLine(false);
 		originTextJwt.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
 		ThemesUtil.updateTheme(originTextJwt, ThemesUtil.IDEA);
 		originTextJwt.find.addActionListener(new ActionListener(){
@@ -561,6 +566,7 @@ public class Base64Frame extends JFrame {
 		splitPane.setTopComponent(new JScrollPane(originTextJwt));
 		targetTextJwt.setLineWrap(true);
 		targetTextJwt.setCodeFoldingEnabled(true);
+		targetTextJwt.setHighlightCurrentLine(false);
 		targetTextJwt.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON_WITH_COMMENTS);//设置json语言高亮
 		ThemesUtil.updateTheme(targetTextJwt, ThemesUtil.IDEA);
 		splitPane.setBottomComponent(new JScrollPane(targetTextJwt));

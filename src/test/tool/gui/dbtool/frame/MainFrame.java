@@ -117,6 +117,7 @@ import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.operation.DatabaseOperation;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.themes.ThemesUtil;
+import org.fife.ui.rtextarea.RTextScrollPane;
 import org.jvnet.substance.SubstanceDefaultTreeCellRenderer;
 
 import test.tool.gui.common.FontSet;
@@ -307,13 +308,12 @@ public class MainFrame extends JFrame{
 	
 	private IDatabaseConnection dbUnitconnection = null;
 	private MyJextAreaColor jTextArea1 = new MyJextAreaColor(true);
+	private JScrollPane jScrollPane1 = new RTextScrollPane(jTextArea1);
     private JButton jButton_do = new JButton("执行",ImageIcons.go_png_24);
     private JButton jButton_connect = new JButton("切换连接",ImageIcons.key_png24);
     private JButton jButton_clear = new JButton("清空",ImageIcons.empty_png_24);;
    
     private JMenuBar jMenuBar1 = new JMenuBar();
-    //jScrollPane1 用于放置 sql编辑器  jTextArea1
-    private JScrollPane jScrollPane1 = new JScrollPane();
     private JMenu jMenu_help = new JMenu("关于");
     private JMenuItem connectme = new JMenuItem("关于");
     
@@ -735,8 +735,6 @@ public class MainFrame extends JFrame{
 				showFindDialog(jTextArea1);
 			}   	
         });    
-        jScrollPane1.setViewportView(jTextArea1);
-        
         /*
          * 为jTextArea1设置键盘监听事件
          * 1、智能提示
@@ -845,6 +843,7 @@ public class MainFrame extends JFrame{
         //设置默认背景色
         MyColor defaultColor = (MyColor)ConfigUtil.getConfInfo().get(Const.EYE_SAFETY_COLOR);
         jTextArea1.setCodeFoldingEnabled(true);//开启代码折叠
+        jTextArea1.setHighlightCurrentLine(false);
         jTextArea1.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);//设置SQL语言高亮
         ThemesUtil.updateTheme(jTextArea1, ThemesUtil.IDEA);
         jTextArea1.setBackground(defaultColor.getColor());
@@ -1251,9 +1250,6 @@ public class MainFrame extends JFrame{
 	            }
 	        });
 	        
-	        //设置行号 
-	        jScrollPane1.setRowHeaderView(lineNumber);
-	        
 	        //是否启用智能提示
 	        jButton_tips.setToolTipText("快捷键：Ctrl+T");
 	        boolean isSelected = "true".equals(ConfigUtil.getConfInfo().get(Const.IS_ENABLE_SMART_TIPS)+"");
@@ -1290,7 +1286,6 @@ public class MainFrame extends JFrame{
 	        jSplitPane_top_bottom.setContinuousLayout(true);//打开连续布局属性，打开后不会再有虚拟分割线出现，但是由于不断重绘界面组件，可能会影响性能。
 	        jSplitPane_top_bottom.setOrientation(JSplitPane.VERTICAL_SPLIT);//设置分隔方式：上下分隔
 	        
-	        jScrollPane1.setMinimumSize(miniSize);
 	        jSplitPane_top_bottom.setTopComponent(jScrollPane1);
 	        jSplitPane_top_bottom.setOneTouchExpandable(true);//设置 显示一键展开/收缩图标
 	        jSplitPane_top_bottom.setDividerSize(dividerSize);//分隔栏宽度
