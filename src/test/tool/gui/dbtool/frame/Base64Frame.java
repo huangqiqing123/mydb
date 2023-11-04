@@ -11,7 +11,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.ButtonGroup;
 import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
 import javax.swing.JButton;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
@@ -21,6 +20,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rsyntaxtextarea.themes.ThemesUtil;
+import org.fife.ui.rtextarea.RTextScrollPane;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -173,24 +173,28 @@ public class Base64Frame extends JFrame {
 			}
 		});
 		originTextBase64.setLineWrap(true);// 自动换行
-		originTextBase64.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);//设置json语言高亮
+		originTextBase64.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+		originTextBase64.setHighlightCurrentLine(false);
+		originTextBase64.setCodeFoldingEnabled(true);
 		ThemesUtil.updateTheme(originTextBase64, ThemesUtil.IDEA);
 		originTextBase64.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(originTextBase64);
 			}   	
         });    
-		// 将JTextArea放入JScrollPane可以解决滚动条不展示的问题
-		splitPane.setTopComponent(new JScrollPane(originTextBase64));
+		// 将JTextArea放入RTextScrollPane可以解决滚动条不展示的问题
+		splitPane.setTopComponent(new RTextScrollPane(originTextBase64));
 		targetTextBase64.setLineWrap(true);
-		targetTextBase64.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);//设置json语言高亮
+		targetTextBase64.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+		targetTextBase64.setHighlightCurrentLine(false);
+		targetTextBase64.setCodeFoldingEnabled(true);
 		ThemesUtil.updateTheme(targetTextBase64, ThemesUtil.IDEA);
 		targetTextBase64.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(targetTextBase64);
 			}   	
         });    
-		splitPane.setBottomComponent(new JScrollPane(targetTextBase64));
+		splitPane.setBottomComponent(new RTextScrollPane(targetTextBase64));
 
 		base64Panel.add(splitPane, BorderLayout.CENTER);
 
@@ -222,9 +226,9 @@ public class Base64Frame extends JFrame {
 				if (basicRadio.isSelected()) {
 					try {
 						String result = Base64.getEncoder().encodeToString(originTextBase64.getText().getBytes("utf-8"));
-						originTextBase64.setText(result);
+						targetTextBase64.setText(result);
 					} catch (Exception e1) {
-						originTextBase64.setText(e1.toString());
+						targetTextBase64.setText(e1.toString());
 					}
 				} else if (urlRadio.isSelected()) {
 					try {
@@ -344,14 +348,14 @@ public class Base64Frame extends JFrame {
 				showFindReplaceDialog(originTextJson);
 			}   	
         });    
-		// 将JTextArea放入JScrollPane可以解决滚动条不展示的问题
-		splitPane.setTopComponent(new JScrollPane(originTextJson));
+		// 将JTextArea放入RTextScrollPane可以解决滚动条不展示的问题
+		splitPane.setTopComponent(new RTextScrollPane(originTextJson));
 		targetTextJson.setLineWrap(true);
 		targetTextJson.setCodeFoldingEnabled(true);
 		targetTextJson.setHighlightCurrentLine(false);
 		targetTextJson.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON_WITH_COMMENTS);
 		ThemesUtil.updateTheme(targetTextJson, ThemesUtil.IDEA);
-		splitPane.setBottomComponent(new JScrollPane(targetTextJson));
+		splitPane.setBottomComponent(new RTextScrollPane(targetTextJson));
 		targetTextJson.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(targetTextJson);
@@ -456,14 +460,14 @@ public class Base64Frame extends JFrame {
 				showFindReplaceDialog(originTextSql);
 			}   	
         });    
-		// 将JTextArea放入JScrollPane可以解决滚动条不展示的问题
-		splitPane.setTopComponent(new JScrollPane(originTextSql));
+		// 将JTextArea放入RTextScrollPane可以解决滚动条不展示的问题
+		splitPane.setTopComponent(new RTextScrollPane(originTextSql));
 		targetTextSql.setLineWrap(true);
 		targetTextSql.setCodeFoldingEnabled(true);
 		targetTextSql.setHighlightCurrentLine(false);
 		targetTextSql.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
 		ThemesUtil.updateTheme(targetTextSql, ThemesUtil.IDEA);
-		splitPane.setBottomComponent(new JScrollPane(targetTextSql));
+		splitPane.setBottomComponent(new RTextScrollPane(targetTextSql));
 		targetTextSql.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(targetTextSql);
@@ -562,14 +566,14 @@ public class Base64Frame extends JFrame {
 				showFindReplaceDialog(originTextJwt);
 			}   	
         });    
-		// 将JTextArea放入JScrollPane可以解决滚动条不展示的问题
-		splitPane.setTopComponent(new JScrollPane(originTextJwt));
+		// 将JTextArea放入RTextScrollPane可以解决滚动条不展示的问题
+		splitPane.setTopComponent(new RTextScrollPane(originTextJwt));
 		targetTextJwt.setLineWrap(true);
 		targetTextJwt.setCodeFoldingEnabled(true);
 		targetTextJwt.setHighlightCurrentLine(false);
 		targetTextJwt.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JSON_WITH_COMMENTS);//设置json语言高亮
 		ThemesUtil.updateTheme(targetTextJwt, ThemesUtil.IDEA);
-		splitPane.setBottomComponent(new JScrollPane(targetTextJwt));
+		splitPane.setBottomComponent(new RTextScrollPane(targetTextJwt));
 		originTextJwt.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(targetTextJwt);
@@ -713,8 +717,8 @@ public class Base64Frame extends JFrame {
 		return sdf.format(new Date(Long.valueOf(seconds + "000")));
 	} 
 
-	final MyJextArea originTextUrl = new MyJextArea(true);
-	final MyJextArea targetTextUrl = new MyJextArea(true);
+	final MyJextAreaColor originTextUrl = new MyJextAreaColor(true);
+	final MyJextAreaColor targetTextUrl = new MyJextAreaColor(true);
 	private JPanel initUrlEncodeTab() {
 		// urlpanel中区域划分为两部分，上部分是分隔栏，下部分是设置和按钮区域。
 		JPanel urlpanel = new JPanel(new BorderLayout());
@@ -740,15 +744,17 @@ public class Base64Frame extends JFrame {
 			}
 		});
 		originTextUrl.setLineWrap(true);// 自动换行
+		originTextUrl.setHighlightCurrentLine(false);
 		originTextUrl.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(originTextUrl);
 			}   	
         });    
-		// 将JTextArea放入JScrollPane可以解决滚动条不展示的问题
-		splitPane.setTopComponent(new JScrollPane(originTextUrl));
+		// 将JTextArea放入RTextScrollPane可以解决滚动条不展示的问题
+		splitPane.setTopComponent(new RTextScrollPane(originTextUrl));
 		targetTextUrl.setLineWrap(true);
-		splitPane.setBottomComponent(new JScrollPane(targetTextUrl));
+		targetTextUrl.setHighlightCurrentLine(false);
+		splitPane.setBottomComponent(new RTextScrollPane(targetTextUrl));
 		targetTextUrl.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(targetTextUrl);
@@ -848,8 +854,8 @@ public class Base64Frame extends JFrame {
 		urlpanel.add(bottomPanel, BorderLayout.SOUTH);
 		return urlpanel;
 	}
-	final MyJextArea originTextHash = new MyJextArea(true);
-	final MyJextArea targetTextHash = new MyJextArea(true);
+	final MyJextAreaColor originTextHash = new MyJextAreaColor(true);
+	final MyJextAreaColor targetTextHash = new MyJextAreaColor(true);
 	private JPanel initHashTab() {
 		
 		//分为两部分，上部分是分隔栏，下部分是设置和按钮区域。
@@ -876,15 +882,18 @@ public class Base64Frame extends JFrame {
 			}
 		});
 		originTextHash.setLineWrap(true);// 自动换行
+		originTextHash.setHighlightCurrentLine(false);
 		originTextHash.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(originTextUrl);
 			}   	
         });    
-		// 将JTextArea放入JScrollPane可以解决滚动条不展示的问题
-		splitPane.setTopComponent(new JScrollPane(originTextHash));
+		// 将JTextArea放入RTextScrollPane可以解决滚动条不展示的问题
+		splitPane.setTopComponent(new RTextScrollPane(originTextHash));
 		targetTextHash.setLineWrap(true);
-		splitPane.setBottomComponent(new JScrollPane(targetTextHash));
+		targetTextHash.setHighlightCurrentLine(false);
+		targetTextHash.setCodeFoldingEnabled(false);
+		splitPane.setBottomComponent(new RTextScrollPane(targetTextHash));
 		targetTextHash.find.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent arg0) {
 				showFindReplaceDialog(targetTextHash);
@@ -990,9 +999,6 @@ public class Base64Frame extends JFrame {
 		return hashpanel;
 	}
 
-	private void showFindReplaceDialog(MyJextArea area) {
-		area.showFindDialog(this);
-	}
 	private void showFindReplaceDialog(MyJextAreaColor area) {
 		area.showFindDialog(this);
 	}
