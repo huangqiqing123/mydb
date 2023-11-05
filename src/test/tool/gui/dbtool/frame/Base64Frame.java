@@ -16,6 +16,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
@@ -934,42 +935,47 @@ public class Base64Frame extends JFrame {
 					JOptionPane.showMessageDialog(frame, "请输入原值！");
 					return;
 				}
+				byte[] resultByteArr = null;
 				if (md5Radio.isSelected()) {
 					try {
-						String result = DigestUtils.md5Hex(originTextHash.getText().getBytes("utf-8"));
-						targetTextHash.setText(result);
+						resultByteArr = DigestUtils.md5(originTextHash.getText().getBytes("utf-8"));
 					} catch (Exception e1) {
 						targetTextHash.setText(e1.toString());
 					}
 				} else if (sha1Radio.isSelected()) {
 					try {
-						String result = DigestUtils.sha1Hex(originTextHash.getText().getBytes("utf-8"));
-						targetTextHash.setText(result);
+						resultByteArr  = DigestUtils.sha1(originTextHash.getText().getBytes("utf-8"));
 					} catch (Exception e1) {
 						targetTextHash.setText(e1.toString());
 					}
 				}else if (sha256Radio.isSelected()) {
 					try {
-						String result = DigestUtils.sha256Hex(originTextHash.getText().getBytes("utf-8"));
-						targetTextHash.setText(result);
+						resultByteArr = DigestUtils.sha256(originTextHash.getText().getBytes("utf-8"));
 					} catch (Exception e1) {
 						targetTextHash.setText(e1.toString());
 					}
 				} else if (sha512Radio.isSelected()) {
 					try {
-						String result = DigestUtils.sha512Hex(originTextHash.getText().getBytes("utf-8"));
-						targetTextHash.setText(result);
+						resultByteArr = DigestUtils.sha512(originTextHash.getText().getBytes("utf-8"));
 					} catch (Exception e1) {
 						targetTextHash.setText(e1.toString());
 					}
 				} else if (sha384Radio.isSelected()) {
 					try {
-						String result = DigestUtils.sha384Hex(originTextHash.getText().getBytes("utf-8"));
-						targetTextHash.setText(result);
+						resultByteArr = DigestUtils.sha384(originTextHash.getText().getBytes("utf-8"));
 					} catch (Exception e1) {
 						targetTextHash.setText(e1.toString());
 					}
 				}
+				String resultHex = new String(Hex.encodeHex(resultByteArr));
+				String resultBase64 = Base64.getEncoder().encodeToString(resultByteArr);
+				targetTextHash.setText("哈希后字节长度："+resultByteArr.length);
+				targetTextHash.append("\n");
+				targetTextHash.append("哈希后摘要位数："+resultByteArr.length*8);
+				targetTextHash.append("\n");
+				targetTextHash.append("哈希后16进制编码结果："+resultHex);
+				targetTextHash.append("\n");
+				targetTextHash.append("哈希后Base64编码结果："+resultBase64);
 			}
 		});
 		buttonPannel.add(button);
