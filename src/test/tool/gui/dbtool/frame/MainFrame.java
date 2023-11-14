@@ -168,6 +168,7 @@ public class MainFrame extends JFrame{
 	//jTree当前选中节点Value值
 	private Object currentSelectedNodeValue = null;
 	private Object currentSelectedCellValue = null;
+	private Object currentSelectedHeaderValue = null;
 	private String currentPre = null;
 	private boolean isOnlyFieldTips = false;
 	
@@ -417,10 +418,14 @@ public class MainFrame extends JFrame{
 	//JVM进度条
 	 private JProgressBar jProgressBar_jvm = new JProgressBar(JProgressBar.HORIZONTAL);;
 	
-    //Jtable右键菜单
+    //Jtable 右键菜单
 	private JPopupMenu jPopupMenu_table = new JPopupMenu();
-	private JMenuItem jtable_right_copy = new JMenuItem("复制【当前单元格值】");//复制--单元格value
-	private JMenuItem linewrapshow = new JMenuItem("换行显示【当前单元格值】");//换行显示
+	private JMenuItem jtable_right_copy = new JMenuItem("复制");//复制--单元格value
+	private JMenuItem linewrapshow = new JMenuItem("换行显示");//换行显示
+	//Jtable header右键菜单
+	private JPopupMenu jPopupMenu_table_header = new JPopupMenu();
+	private JMenuItem jtable_header_right_copy = new JMenuItem("复制");//复制--单元格value
+	private JMenuItem jtable_header_right_filter = new JMenuItem("筛选");//换行显示
 
     //完成初始化
     private void initComponents() {
@@ -1374,6 +1379,29 @@ public class MainFrame extends JFrame{
      jPopupMenu_table.add(jtable_right_copy);
      jPopupMenu_table.addSeparator();
      jPopupMenu_table.add(linewrapshow);
+     
+     //初始化Jtable-header右键菜单--复制到剪贴板
+     jtable_header_right_copy.setIcon(ImageIcons.copy_gif);
+     jtable_header_right_copy.addActionListener(new ActionListener(){
+ 		public void actionPerformed(ActionEvent arg0) {
+ 			//将	当前单元格值，放入剪贴板
+ 			Transferable contents = new StringSelection(currentSelectedHeaderValue+"");
+ 			Clipboard clip = Toolkit.getDefaultToolkit().getSystemClipboard();
+ 			clip.setContents(contents, null);
+ 		}   	
+     });
+     //初始化Jtable-header 右键菜单--筛选
+     jtable_header_right_filter.setIcon(ImageIcons.find_png16);
+     jtable_header_right_filter.addActionListener(new ActionListener(){
+ 		public void actionPerformed(ActionEvent arg0) {
+ 			FilterDialog fd = FilterDialog.getInstance(getInstance(), false);
+ 			fd.getFilterList().setSelectedValue(currentSelectedHeaderValue, true);
+ 			fd.setVisible(true);
+ 		}   	
+     });
+     jPopupMenu_table_header.add(jtable_header_right_copy);
+     jPopupMenu_table_header.addSeparator();
+     jPopupMenu_table_header.add(jtable_header_right_filter);
 
    //点击右下角【生成插入SQL】按钮
      jLabel_sql.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -4655,8 +4683,8 @@ public class MainFrame extends JFrame{
 			return ;//如果是在第一列右击，则直接return。
 		}
 		TableColumn tc = jtableHeader.getColumnModel().getColumn(c);
-		currentSelectedCellValue = tc.getHeaderValue()+"";
-		jPopupMenu_table.show(e.getComponent(), e.getX(), e.getY());
+		currentSelectedHeaderValue = tc.getHeaderValue()+"";
+		jPopupMenu_table_header.show(e.getComponent(), e.getX(), e.getY());
 	
     }
     /**

@@ -1,6 +1,11 @@
-/package.html
+/config/
+/ladon-stru-index.sql
+/ladon-stru.sql
+/lib/
+/log4j.properties
 /org/
 /test/
+/CopyOfRSyntaxTextAreaDemoApp.class
 /DemoRootPane$AboutAction.class
 /DemoRootPane$AnimateBracketMatchingAction.class
 /DemoRootPane$BookmarksAction.class
@@ -16,10 +21,9 @@
 /DemoRootPane$ViewLineNumbersAction.class
 /DemoRootPane$WordWrapAction.class
 /DemoRootPane.class
-/FindAndReplaceDemo.class
-/RSyntaxTextAreaDemoApp.class
-/SyntaxSchemeDemo.class
 /FindAndReplaceDemo$1.class
 /FindAndReplaceDemo$2.class
 /FindAndReplaceDemo$3.class
-/CopyOfRSyntaxTextAreaDemoApp.class
+/FindAndReplaceDemo.class
+/RSyntaxTextAreaDemoApp.class
+/SyntaxSchemeDemo.class

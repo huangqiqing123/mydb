@@ -7,13 +7,16 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
 import javax.swing.DefaultListModel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.RowFilter;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
+
 import test.tool.gui.dbtool.frame.MainFrame;
 import test.tool.gui.dbtool.frame.MyNotePad;
 import test.tool.gui.dbtool.image.ImageIcons;
@@ -33,6 +36,10 @@ public class FilterDialog extends javax.swing.JDialog {
     
 	private static FilterDialog instance = null;
 	private static JTable jtable = null;
+	
+	public JList getFilterList(){
+		return this.jList1;
+	}
 	
 	/*
 	 * 刷新Jlist
