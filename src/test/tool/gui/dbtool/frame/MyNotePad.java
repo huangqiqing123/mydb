@@ -432,15 +432,15 @@ public class MyNotePad extends javax.swing.JFrame {
      public void open(String defaultPath){
     	 
     	//弹出路径选择对话框
-    	FileDialog saveDialog = new FileDialog(this, "打开文件",FileDialog.LOAD);
+    	FileDialog openDialog = new FileDialog(this, "打开文件",FileDialog.LOAD);
     	if(defaultPath != null){
-    		saveDialog.setDirectory(defaultPath);
+    		openDialog.setDirectory(defaultPath);
     	}
- 		saveDialog.setVisible(true);
+    	openDialog.setVisible(true);
  		
  		// 点击了【确定】按钮
- 		if (saveDialog.getDirectory() != null && saveDialog.getFile() != null) {
- 			String path = saveDialog.getDirectory() + saveDialog.getFile();
+ 		if (openDialog.getDirectory() != null && openDialog.getFile() != null) {
+ 			String path = openDialog.getDirectory() + openDialog.getFile();
  			String str[] = DocUtil.getCharDocContent(path);
  			
  			//记录打开的文件的路径，并设置为标题显示

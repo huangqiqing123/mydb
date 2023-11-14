@@ -2,6 +2,7 @@ package test.tool.gui.dbtool.frame;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FileDialog;
 import java.awt.FlowLayout;
 import java.awt.Font;
 
@@ -18,6 +19,8 @@ import javax.swing.JTextField;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.log4j.lf5.util.StreamUtils;
+import org.apache.poi.util.IOUtils;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rsyntaxtextarea.themes.ThemesUtil;
@@ -39,6 +42,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
@@ -73,20 +79,26 @@ public class Base64Frame extends JFrame {
 	public void showBase64Tab(){
 		getInstance().tabbedPane.setSelectedIndex(1);
 	}
-	public void showJsonTab(){
+	public void showBase64FileTab(){
 		getInstance().tabbedPane.setSelectedIndex(2);
 	}
-	public void showSqlTab(){
+	public void showJsonTab(){
 		getInstance().tabbedPane.setSelectedIndex(3);
 	}
-	public void showTimeStampTab(){
+	public void showSqlTab(){
 		getInstance().tabbedPane.setSelectedIndex(4);
 	}
-	public void showUrlTab(){
+	public void showTimeStampTab(){
 		getInstance().tabbedPane.setSelectedIndex(5);
 	}
-	public void showHashTab(){
+	public void showUrlTab(){
 		getInstance().tabbedPane.setSelectedIndex(6);
+	}
+	public void showHashTab(){
+		getInstance().tabbedPane.setSelectedIndex(7);
+	}
+	public void showHashFileTab(){
+		getInstance().tabbedPane.setSelectedIndex(8);
 	}
 	public void setBackColor(){
 		MyColor mycolor = (MyColor)ConfigUtil.getConfInfo().get(Const.EYE_SAFETY_COLOR);
@@ -99,6 +111,7 @@ public class Base64Frame extends JFrame {
 	
 		targetTextJwt.setBackground(mycolor.getColor());
 		targetTextBase64.setBackground(mycolor.getColor());
+		targetTextBase64File.setBackground(mycolor.getColor());
 		targetTextJson.setBackground(mycolor.getColor());
 		targetTextSql.setBackground(mycolor.getColor());
 		targetTextUrl.setBackground(mycolor.getColor());
@@ -114,6 +127,7 @@ public class Base64Frame extends JFrame {
 	
 		targetTextJwt.setFont(font);
 		targetTextBase64.setFont(font);
+		targetTextBase64File.setFont(font);
 		targetTextJson.setFont(font);
 		targetTextSql.setFont(font);
 		targetTextUrl.setFont(font);
@@ -136,13 +150,16 @@ public class Base64Frame extends JFrame {
 		
 		//整体JTabbedPane，一个JTabbedPane中可以加入多个选项卡。
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 		tabbedPane.addTab("JWT解码", ImageIcons.txt_gif, initJwtTab(), "JWT编码解码");
-		tabbedPane.addTab("Base64编码解码", ImageIcons.txt_gif, initBase64Tab(), "Base64编码解码");
+		tabbedPane.addTab("Base64(文本)", ImageIcons.txt_gif, initBase64Tab(), "Base64编码解码(文本)");
+		tabbedPane.addTab("Base64(文件)", ImageIcons.txt_gif, initBase64FileTab(), "Base64编码解码(文件)");
 		tabbedPane.addTab("Json格式化", ImageIcons.txt_gif, initJsonFormatTab(), "Json格式化");
-		tabbedPane.addTab("SQL格式化", ImageIcons.txt_gif, initSqlFormatTab(), "SQL格式化");
+		tabbedPane.addTab("SQL格式化", ImageIcons.sql_png, initSqlFormatTab(), "SQL格式化");
 		tabbedPane.addTab("时间戳转换", ImageIcons.txt_gif, initTimeStampFormatTab(), "时间戳转换");
-		tabbedPane.addTab("URL编码解码", ImageIcons.txt_gif, initUrlEncodeTab(), "URL编码解码");
-		tabbedPane.addTab("哈希计算", ImageIcons.txt_gif, initHashTab(), "哈希计算");
+		tabbedPane.addTab("URL编码", ImageIcons.txt_gif, initUrlEncodeTab(), "URL编码解码");
+		tabbedPane.addTab("哈希(文本)", ImageIcons.key_gif, initHashTab(), "哈希计算(文本)");
+		tabbedPane.addTab("哈希(文件)", ImageIcons.key_gif, initHashTab(), "哈希计算(文件)");
 		getContentPane().add(tabbedPane, BorderLayout.CENTER);
 		
 	}
@@ -299,6 +316,151 @@ public class Base64Frame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				originTextBase64.setText("");
 				targetTextBase64.setText("");
+			}
+		});
+		buttonPannel.add(emptyAll);
+
+		// 将设置区域、按钮区域加入bottomPanel
+		bottomPanel.add(settingsPannel, BorderLayout.NORTH);
+		bottomPanel.add(buttonPannel, BorderLayout.SOUTH);
+
+		// 将bottomPanel加入base64Panel
+		base64Panel.add(bottomPanel, BorderLayout.SOUTH);
+		return base64Panel;
+	}
+	
+	String originFilePathBase64 = null;
+	FileDialog openDialogBase64 = null;
+	JButton jButtonOpenBase64 = null;
+	final MyJextAreaColor targetTextBase64File = new MyJextAreaColor(true);
+	private JPanel initBase64FileTab() {
+		// base64panel中区域划分为两部分，上部分是分隔栏，下部分是设置和按钮区域。
+		JPanel base64Panel = new JPanel(new BorderLayout());
+
+		// 分隔栏
+		JSplitPane splitPane = new JSplitPane();
+		splitPane.setContinuousLayout(true);
+		splitPane.setOneTouchExpandable(true);
+		splitPane.setBorder(null);
+		splitPane.setDividerSize(8);// 分隔栏宽度
+		splitPane.setMinimumSize(new Dimension(0, 0)); // 最小可以为0
+		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);// 上下分割
+		splitPane.setDividerLocation(100);// 分隔栏初始位置
+
+		jButtonOpenBase64 = new JButton("请选择要编码的文件...",ImageIcons.open_png_24);
+		jButtonOpenBase64.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				//弹出路径选择对话框
+				openDialogBase64 = new FileDialog(Base64Frame.getInstance(), "请选择要编码的文件...",FileDialog.LOAD);
+		    	//openDialog.setDirectory(defaultPath);//设置默认打开的路径
+				openDialogBase64.setVisible(true);
+		 		
+		 		// 点击了【确定】按钮
+		 		if (openDialogBase64.getDirectory() != null && openDialogBase64.getFile() != null) {
+		 			originFilePathBase64 = openDialogBase64.getDirectory() + openDialogBase64.getFile();
+		 			jButtonOpenBase64.setText("已选择文件："+originFilePathBase64);;
+		 		}
+			}
+		});
+		splitPane.setTopComponent(jButtonOpenBase64);
+		targetTextBase64File.setLineWrap(true);
+		targetTextBase64File.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+		targetTextBase64File.setHighlightCurrentLine(false);
+		ThemesUtil.updateTheme(targetTextBase64File, ThemesUtil.IDEA);
+		targetTextBase64File.find.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				showFindReplaceDialog(targetTextBase64File);
+			}   	
+        });    
+		splitPane.setBottomComponent(new RTextScrollPane(targetTextBase64File));
+
+		base64Panel.add(splitPane, BorderLayout.CENTER);
+
+		// bottomPanel，东南西北布局， 包含设置区域、按钮区域
+		JPanel bottomPanel = new JPanel(new BorderLayout());
+
+		// 设置区域，流式布局，居中对齐
+		JPanel settingsPannel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		ButtonGroup buttonGroup = new ButtonGroup();
+		final JRadioButton basicRadio = new JRadioButton("Basic模式");
+		basicRadio.setSelected(true);// 默认选中basic模式
+		final JRadioButton urlRadio = new JRadioButton("URL模式");
+		final JRadioButton mimeRadio = new JRadioButton("MIME模式");
+		buttonGroup.add(basicRadio);
+		buttonGroup.add(urlRadio);
+		buttonGroup.add(mimeRadio);
+		settingsPannel.add(basicRadio);
+		settingsPannel.add(urlRadio);
+		settingsPannel.add(mimeRadio);
+
+		// 按钮区域，流式布局，居中对齐
+		JPanel buttonPannel = new JPanel(new FlowLayout(FlowLayout.CENTER));// 按钮居中对齐
+		JButton button = new JButton("编码");
+		button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (originFilePathBase64 == null || originFilePathBase64.isEmpty()) {
+					JOptionPane.showMessageDialog(frame, "请选择待编码的文件！");
+				}
+				FileInputStream input = null;
+				byte[] fileBytes = null;
+				try {
+					input = new FileInputStream(originFilePathBase64);
+					fileBytes = StreamUtils.getBytes(input);
+				} catch (FileNotFoundException e2) {
+					targetTextBase64File.setText(e2.toString());
+				} catch (IOException e1) {
+					targetTextBase64File.setText(e1.toString());
+				}finally{
+					try {
+						input.close();
+					} catch (Exception e2) {
+					}
+				}
+				if(fileBytes == null){
+					return;
+				}
+				if (basicRadio.isSelected()) {
+					try {
+						String result = Base64.getEncoder().encodeToString(fileBytes);
+						targetTextBase64File.setText(result);
+					} catch (Exception e1) {
+						targetTextBase64File.setText(e1.toString());
+					}
+				} else if (urlRadio.isSelected()) {
+					try {
+						String result = Base64.getUrlEncoder().encodeToString(fileBytes);
+						targetTextBase64File.setText(result);
+					} catch (Exception e1) {
+						targetTextBase64File.setText(e1.toString());
+					}
+				} else if (mimeRadio.isSelected()) {
+					try {
+						String result = Base64.getMimeEncoder().encodeToString(fileBytes);
+						targetTextBase64File.setText(result);
+					} catch (Exception e1) {
+						targetTextBase64File.setText(e1.toString());
+					}
+				} else {
+					JOptionPane.showMessageDialog(frame, "请选择编码模式！");
+				}
+			}
+		});
+		buttonPannel.add(button);
+
+		JButton emptyResult = new JButton("清空结果");
+		emptyResult.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				targetTextBase64File.setText("");
+			}
+		});
+		buttonPannel.add(emptyResult);
+		JButton emptyAll = new JButton("清空全部");
+		emptyAll.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				originFilePathBase64 = null;
+				jButtonOpenBase64.setText("请选择要编码的文件...");
+				targetTextBase64File.setText("");
 			}
 		});
 		buttonPannel.add(emptyAll);

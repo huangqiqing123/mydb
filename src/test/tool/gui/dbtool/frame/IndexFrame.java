@@ -101,8 +101,10 @@ public class IndexFrame extends JFrame {
 		jwttool.setFont(SysFontAndFace.font14);
 		JButton notepad = new JButton("记事本");
 		notepad.setFont(SysFontAndFace.font14);
-		JButton base64 = new JButton("Base64编码解码");
+		JButton base64 = new JButton("Base64编码解码(文本)");
 		base64.setFont(SysFontAndFace.font14);
+		JButton base64File = new JButton("Base64编码(文件)");
+		base64File.setFont(SysFontAndFace.font14);
 		JButton url = new JButton("URL编码解码");
 		url.setFont(SysFontAndFace.font14);
 		JButton datetime = new JButton("时间戳转换");
@@ -111,14 +113,18 @@ public class IndexFrame extends JFrame {
 		json.setFont(SysFontAndFace.font14);
 		JButton sql = new JButton("SQL格式化");
 		sql.setFont(SysFontAndFace.font14);
-		JButton hash = new JButton("哈希计算");
+		JButton hash = new JButton("哈希计算(文本)");
 		hash.setFont(SysFontAndFace.font14);
+		JButton hashFile = new JButton("哈希计算(文件)");
+		hashFile.setFont(SysFontAndFace.font14);
 		getContentPane().add(dbtool);
 		getContentPane().add(jwttool);
 		getContentPane().add(notepad);
 		getContentPane().add(base64);
+		getContentPane().add(base64File);
 		getContentPane().add(url);
 		getContentPane().add(hash);
+		getContentPane().add(hashFile);
 		getContentPane().add(datetime);
 		getContentPane().add(sql);
 		getContentPane().add(json);
@@ -158,6 +164,16 @@ public class IndexFrame extends JFrame {
 				}
 			}
 		});
+		base64File.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(e.getSource() instanceof JButton){
+					Base64Frame.getInstance(instance).showBase64FileTab();
+	            	Base64Frame.getInstance(instance).setBackColor();
+	            	Base64Frame.getInstance(instance).setVisible(true);
+	            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
+				}
+			}
+		});
 		json.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Base64Frame.getInstance(instance).showJsonTab();
@@ -185,6 +201,14 @@ public class IndexFrame extends JFrame {
 		url.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
             	Base64Frame.getInstance(instance).showUrlTab();
+            	Base64Frame.getInstance(instance).setBackColor();
+            	Base64Frame.getInstance(instance).setVisible(true);
+            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
+            }
+		});
+		hashFile.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+            	Base64Frame.getInstance(instance).showHashFileTab();
             	Base64Frame.getInstance(instance).setBackColor();
             	Base64Frame.getInstance(instance).setVisible(true);
             	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
