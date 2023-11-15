@@ -411,7 +411,7 @@ public class Base64Frame extends JFrame {
 					fileBytes = StreamUtils.getBytes(input);
 				} catch (FileNotFoundException e2) {
 					targetTextBase64File.setText(e2.toString());
-				} catch (IOException e1) {
+				} catch (Throwable e1 ) {
 					targetTextBase64File.setText(e1.toString());
 				}finally{
 					try {

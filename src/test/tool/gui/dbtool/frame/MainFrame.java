@@ -1830,6 +1830,7 @@ public class MainFrame extends JFrame{
 		}
 		public void mouseEntered(MouseEvent e) {// 鼠标进入
 			setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+			jProgressBar_jvm.setToolTipText(jProgressBar_jvm.getValue()+"M/"+jProgressBar_jvm.getMaximum()+"M");
 		}
 		public void mouseExited(MouseEvent e) {// 鼠标移除
 			setCursor(Cursor.getDefaultCursor());
