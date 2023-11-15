@@ -1,10 +1,10 @@
-/config/
-/ladon-stru-index.sql
-/ladon-stru.sql
 /lib/
 /log4j.properties
 /org/
 /test/
+/config/
+/ladon-stru-index.sql
+/ladon-stru.sql
 /CopyOfRSyntaxTextAreaDemoApp.class
 /DemoRootPane$AboutAction.class
 /DemoRootPane$AnimateBracketMatchingAction.class

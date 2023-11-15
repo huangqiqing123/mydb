@@ -116,6 +116,7 @@ public class Base64Frame extends JFrame {
 		targetTextSql.setBackground(mycolor.getColor());
 		targetTextUrl.setBackground(mycolor.getColor());
 		targetTextHash.setBackground(mycolor.getColor());
+		targetTextHashFile.setBackground(mycolor.getColor());
 	}
 	public void setFont(Font font){
 		originTextJwt.setFont(font);
@@ -132,6 +133,7 @@ public class Base64Frame extends JFrame {
 		targetTextSql.setFont(font);
 		targetTextUrl.setFont(font);
 		targetTextHash.setFont(font);
+		targetTextHashFile.setFont(font);
 	}
 	
 
@@ -159,7 +161,7 @@ public class Base64Frame extends JFrame {
 		tabbedPane.addTab("时间戳转换", ImageIcons.txt_gif, initTimeStampFormatTab(), "时间戳转换");
 		tabbedPane.addTab("URL编码", ImageIcons.txt_gif, initUrlEncodeTab(), "URL编码解码");
 		tabbedPane.addTab("哈希(文本)", ImageIcons.key_gif, initHashTab(), "哈希计算(文本)");
-		tabbedPane.addTab("哈希(文件)", ImageIcons.key_gif, initHashTab(), "哈希计算(文件)");
+		tabbedPane.addTab("哈希(文件)", ImageIcons.key_gif, initHashFile(), "哈希计算(文件)");
 		getContentPane().add(tabbedPane, BorderLayout.CENTER);
 		
 	}
@@ -417,8 +419,8 @@ public class Base64Frame extends JFrame {
 					} catch (Exception e2) {
 					}
 				}
-				if(fileBytes == null){
-					return;
+				if(fileBytes == null || fileBytes.length == 0){
+					JOptionPane.showMessageDialog(frame, "文件内容为空！");
 				}
 				if (basicRadio.isSelected()) {
 					try {
@@ -1166,6 +1168,178 @@ public class Base64Frame extends JFrame {
 		hashpanel.add(bottomPanel, BorderLayout.SOUTH);
 		return hashpanel;
 	}
+	
+	JButton jButtonOpenHash = null;
+	FileDialog openDialogHash = null;
+	String originFilePathHash = null;
+	final MyJextAreaColor targetTextHashFile = new MyJextAreaColor(true);
+	private JPanel initHashFile() {
+		
+		//分为两部分，上部分是分隔栏，下部分是设置和按钮区域。
+		JPanel hashpanel = new JPanel(new BorderLayout());
+
+		// 分隔栏
+		JSplitPane splitPane = new JSplitPane();
+		splitPane.setContinuousLayout(true);
+		splitPane.setOneTouchExpandable(true);
+		splitPane.setBorder(null);
+		splitPane.setDividerSize(8);// 分隔栏宽度
+		splitPane.setMinimumSize(new Dimension(0, 0)); // 最小可以为0
+		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);// 上下分割
+		splitPane.setDividerLocation(100);// 分隔栏初始位置
+
+		jButtonOpenHash = new JButton("请选择要哈希的文件...",ImageIcons.open_png_24);
+		jButtonOpenHash.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				//弹出路径选择对话框
+				openDialogHash = new FileDialog(Base64Frame.getInstance(), "请选择要哈希的文件...",FileDialog.LOAD);
+				openDialogHash.setVisible(true);
+		 		
+		 		// 点击了【确定】按钮
+		 		if (openDialogHash.getDirectory() != null && openDialogHash.getFile() != null) {
+		 			originFilePathHash = openDialogHash.getDirectory() + openDialogHash.getFile();
+		 			jButtonOpenHash.setText("已选择文件："+originFilePathHash);;
+		 		}
+			}
+		});
+		splitPane.setTopComponent(jButtonOpenHash);
+
+		targetTextHashFile.setLineWrap(true);
+		targetTextHashFile.setHighlightCurrentLine(false);
+		targetTextHashFile.setCodeFoldingEnabled(false);
+		splitPane.setBottomComponent(new RTextScrollPane(targetTextHashFile));
+		targetTextHashFile.find.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				showFindReplaceDialog(targetTextHashFile);
+			}   	
+        });    
+		hashpanel.add(splitPane, BorderLayout.CENTER);
+
+		// bottomPanel，东南西北布局， 包含设置区域、按钮区域
+		JPanel bottomPanel = new JPanel(new BorderLayout());
+
+		// 设置区域，流式布局，居中对齐
+		JPanel settingsPannel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		ButtonGroup buttonGroup = new ButtonGroup();
+		final JRadioButton md5Radio = new JRadioButton("MD5");
+		final JRadioButton sha1Radio = new JRadioButton("SHA1");
+		final JRadioButton sha256Radio = new JRadioButton("SHA256");
+		final JRadioButton sha384Radio = new JRadioButton("SHA384");
+		final JRadioButton sha512Radio = new JRadioButton("SHA512");
+		md5Radio.setSelected(true);// 默认选中MD5模式
+		buttonGroup.add(md5Radio);
+		buttonGroup.add(sha1Radio);
+		buttonGroup.add(sha256Radio);
+		buttonGroup.add(sha384Radio);
+		buttonGroup.add(sha512Radio);
+		settingsPannel.add(md5Radio);
+		settingsPannel.add(sha1Radio);
+		settingsPannel.add(sha256Radio);
+		settingsPannel.add(sha384Radio);
+		settingsPannel.add(sha512Radio);
+
+		// 按钮区域，流式布局，居中对齐
+		JPanel buttonPannel = new JPanel(new FlowLayout(FlowLayout.CENTER));// 按钮居中对齐
+		JButton button = new JButton("计算");
+		button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (originFilePathHash == null || originFilePathHash.isEmpty()) {
+					JOptionPane.showMessageDialog(frame, "请选择要哈希的文件！");
+					return;
+				}
+				FileInputStream input = null;
+				byte[] fileBytes = null;
+				try {
+					input = new FileInputStream(originFilePathHash);
+					fileBytes = StreamUtils.getBytes(input);
+				} catch (FileNotFoundException e2) {
+					targetTextHashFile.setText(e2.toString());
+				} catch (Throwable e1) {
+					e1.printStackTrace();
+					targetTextHashFile.setText(e1.toString());
+				}finally{
+					try {
+						input.close();
+					} catch (Exception e2) {
+					}
+				}
+				if(fileBytes == null || fileBytes.length == 0){
+					JOptionPane.showMessageDialog(frame, "文件内容为空！");
+					return;
+				}
+				
+				byte[] resultByteArr = null;
+				if (md5Radio.isSelected()) {
+					try {
+						resultByteArr = DigestUtils.md5(fileBytes);
+					} catch (Exception e1) {
+						targetTextHashFile.setText(e1.toString());
+					}
+				} else if (sha1Radio.isSelected()) {
+					try {
+						resultByteArr  = DigestUtils.sha1(fileBytes);
+					} catch (Exception e1) {
+						targetTextHashFile.setText(e1.toString());
+					}
+				}else if (sha256Radio.isSelected()) {
+					try {
+						resultByteArr = DigestUtils.sha256(fileBytes);
+					} catch (Exception e1) {
+						targetTextHashFile.setText(e1.toString());
+					}
+				} else if (sha512Radio.isSelected()) {
+					try {
+						resultByteArr = DigestUtils.sha512(fileBytes);
+					} catch (Exception e1) {
+						targetTextHashFile.setText(e1.toString());
+					}
+				} else if (sha384Radio.isSelected()) {
+					try {
+						resultByteArr = DigestUtils.sha384(fileBytes);
+					} catch (Exception e1) {
+						targetTextHashFile.setText(e1.toString());
+					}
+				}
+				String resultHex = new String(Hex.encodeHex(resultByteArr));
+				String resultBase64 = Base64.getEncoder().encodeToString(resultByteArr);
+				targetTextHashFile.setText("哈希后字节长度："+resultByteArr.length);
+				targetTextHashFile.append("\n");
+				targetTextHashFile.append("哈希后摘要位数："+resultByteArr.length*8);
+				targetTextHashFile.append("\n");
+				targetTextHashFile.append("哈希后16进制编码结果："+resultHex);
+				targetTextHashFile.append("\n");
+				targetTextHashFile.append("哈希后Base64编码结果："+resultBase64);
+			}
+		});
+		buttonPannel.add(button);
+
+		JButton emptyResult = new JButton("清空结果");
+		emptyResult.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				targetTextHashFile.setText("");
+			}
+		});
+		buttonPannel.add(emptyResult);
+		JButton emptyAll = new JButton("清空全部");
+		emptyAll.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				originFilePathHash = null;
+				jButtonOpenHash.setText("请选择要哈希的文件...");
+				targetTextHashFile.setText("");
+			}
+		});
+		buttonPannel.add(emptyAll);
+
+		// 将设置区域、按钮区域加入bottomPanel
+		bottomPanel.add(settingsPannel, BorderLayout.NORTH);
+		bottomPanel.add(buttonPannel, BorderLayout.SOUTH);
+
+		// 将bottomPanel加入base64Panel
+		hashpanel.add(bottomPanel, BorderLayout.SOUTH);
+		return hashpanel;
+	}
+
 
 	private void showFindReplaceDialog(MyJextAreaColor area) {
 		area.showFindDialog(this);
