@@ -4672,9 +4672,12 @@ public class MainFrame extends JFrame{
 		}else if(value instanceof MyJextAreaColor){
 			
 			final MyJextAreaColor area = (MyJextAreaColor)value;
+			RTextScrollPane rTextScrollPane = new RTextScrollPane(area);
 			ThemesUtil.updateTheme(area, ThemesUtil.IDEA);
-			area.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
 			area.setBackground(((MyColor)ConfigUtil.getConfInfo().get(Const.EYE_SAFETY_COLOR)).getColor());
+			area.setCodeFoldingEnabled(true);
+			area.setHighlightCurrentLine(false);
+			area.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
 			area.setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
 			area.setEditable(false);
 			area.setText(result.get(key));
@@ -4696,10 +4699,10 @@ public class MainFrame extends JFrame{
 	        });    
 			if(isRefresh){
 				jTabbedPane1.remove(selectIndex);
-				jTabbedPane1.insertTab(key, ImageIcons.txt_gif, new RTextScrollPane((MyJextAreaColor)value), sqlMap.get(key), selectIndex);
+				jTabbedPane1.insertTab(key, ImageIcons.txt_gif, rTextScrollPane, sqlMap.get(key), selectIndex);
 				jTabbedPane1.setSelectedIndex(selectIndex);
 			}else{	
-				jTabbedPane1.insertTab(key, ImageIcons.txt_gif, new RTextScrollPane((MyJextAreaColor)value), sqlMap.get(key), selectIndex);
+				jTabbedPane1.insertTab(key, ImageIcons.txt_gif, rTextScrollPane, sqlMap.get(key), selectIndex);
 				//jTabbedPane1.add(key,new JScrollPane(area));
 			}
 		}else{
