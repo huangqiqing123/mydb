@@ -4035,7 +4035,7 @@ public class MainFrame extends JFrame{
     					}else{
     						//如果成功生成了建表sql，则使用TextArea进行展现	
     						result.put(key, createSqlMap.get("sql"));
-    						show_componts.put(key,new MyJextArea(true));
+    						show_componts.put(key,new MyJextAreaColor(true));
     						continue;
     					}
     				}
@@ -4077,7 +4077,7 @@ public class MainFrame extends JFrame{
     							}else{
     								//使用TextArea进行展现
     								result.put(key, list.get(0).get("创建SQL").toString());
-    								MyJextArea text = new MyJextArea(true);
+    								MyJextAreaColor text = new MyJextAreaColor(true);
     								show_componts.put(key,text);
     								continue;
     							}
@@ -4099,7 +4099,7 @@ public class MainFrame extends JFrame{
     								continue;		
     							}else{				
     								result.put(key, list.get(0).get("创建SQL").toString());
-    								MyJextArea text = new MyJextArea(true);
+    								MyJextAreaColor text = new MyJextAreaColor(true);
     								show_componts.put(key,text);
     								continue;
     							}
@@ -4125,7 +4125,7 @@ public class MainFrame extends JFrame{
     							continue;		
     						}else{				
     							result.put(key, list.get(0).get("VIEW_DEFINITION").toString());
-    							MyJextArea text = new MyJextArea(true);
+    							MyJextAreaColor text = new MyJextAreaColor(true);
     							show_componts.put(key,text);
     							continue;
     						}
@@ -4667,6 +4667,39 @@ public class MainFrame extends JFrame{
 				jTabbedPane1.setSelectedIndex(selectIndex);
 			}else{	
 				jTabbedPane1.insertTab(key, ImageIcons.txt_gif, new JScrollPane((MyJextArea)value), sqlMap.get(key), selectIndex);
+				//jTabbedPane1.add(key,new JScrollPane(area));
+			}
+		}else if(value instanceof MyJextAreaColor){
+			
+			final MyJextAreaColor area = (MyJextAreaColor)value;
+			ThemesUtil.updateTheme(area, ThemesUtil.IDEA);
+			area.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_SQL);
+			area.setBackground(((MyColor)ConfigUtil.getConfInfo().get(Const.EYE_SAFETY_COLOR)).getColor());
+			area.setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
+			area.setEditable(false);
+			area.setText(result.get(key));
+			
+			 //CTRL+F 弹出查找替换对话框
+			area.addKeyListener(new java.awt.event.KeyAdapter() {
+				public void keyPressed(java.awt.event.KeyEvent evt) {
+					if (evt.isControlDown()) {
+						if (evt.getKeyCode() == KeyEvent.VK_F) {// ctrl+f 执行查找替换													// 
+							showFindDialog(area);
+						}}
+				}
+			});
+			//为右键菜单【查找替换】添加弹出对话框事件。
+			area.find.addActionListener(new ActionListener(){
+				public void actionPerformed(ActionEvent arg0) {
+					showFindDialog(area);
+				}   	
+	        });    
+			if(isRefresh){
+				jTabbedPane1.remove(selectIndex);
+				jTabbedPane1.insertTab(key, ImageIcons.txt_gif, new RTextScrollPane((MyJextAreaColor)value), sqlMap.get(key), selectIndex);
+				jTabbedPane1.setSelectedIndex(selectIndex);
+			}else{	
+				jTabbedPane1.insertTab(key, ImageIcons.txt_gif, new RTextScrollPane((MyJextAreaColor)value), sqlMap.get(key), selectIndex);
 				//jTabbedPane1.add(key,new JScrollPane(area));
 			}
 		}else{
