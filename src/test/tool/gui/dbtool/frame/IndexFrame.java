@@ -117,6 +117,8 @@ public class IndexFrame extends JFrame {
 		hash.setFont(SysFontAndFace.font14);
 		JButton hashFile = new JButton("哈希计算(文件)");
 		hashFile.setFont(SysFontAndFace.font14);
+		JButton jinzhi = new JButton("进制转换");
+		jinzhi.setFont(SysFontAndFace.font14);
 		getContentPane().add(dbtool);
 		getContentPane().add(jwttool);
 		getContentPane().add(notepad);
@@ -128,6 +130,7 @@ public class IndexFrame extends JFrame {
 		getContentPane().add(datetime);
 		getContentPane().add(sql);
 		getContentPane().add(json);
+		getContentPane().add(jinzhi);
 		
 		
 		dbtool.addActionListener(new ActionListener() {
@@ -217,6 +220,14 @@ public class IndexFrame extends JFrame {
 		hash.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
             	Base64Frame.getInstance(instance).showHashTab();
+            	Base64Frame.getInstance(instance).setBackColor();
+            	Base64Frame.getInstance(instance).setVisible(true);
+            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
+            }
+		});
+		jinzhi.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+            	Base64Frame.getInstance(instance).showJInzhiTab();
             	Base64Frame.getInstance(instance).setBackColor();
             	Base64Frame.getInstance(instance).setVisible(true);
             	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));

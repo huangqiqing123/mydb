@@ -1,11 +1,13 @@
 package test.tool.gui.dbtool.frame;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
 import java.awt.Font;
 
+import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -16,6 +18,7 @@ import javax.swing.JButton;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+import javax.swing.border.TitledBorder;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -29,6 +32,7 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import test.tool.gui.common.MyColor;
+import test.tool.gui.common.SysFontAndFace;
 import test.tool.gui.dbtool.consts.Const;
 import test.tool.gui.dbtool.image.ImageIcons;
 import test.tool.gui.dbtool.mycomponent.MyJTextField;
@@ -100,6 +104,9 @@ public class Base64Frame extends JFrame {
 	public void showHashFileTab(){
 		getInstance().tabbedPane.setSelectedIndex(8);
 	}
+	public void showJInzhiTab(){
+		getInstance().tabbedPane.setSelectedIndex(9);
+	}
 	public void setBackColor(){
 		MyColor mycolor = (MyColor)ConfigUtil.getConfInfo().get(Const.EYE_SAFETY_COLOR);
 		originTextJwt.setBackground(mycolor.getColor());
@@ -153,15 +160,16 @@ public class Base64Frame extends JFrame {
 		//整体JTabbedPane，一个JTabbedPane中可以加入多个选项卡。
 		tabbedPane = new JTabbedPane(JTabbedPane.TOP);
 		tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
-		tabbedPane.addTab("JWT解码", ImageIcons.txt_gif, initJwtTab(), "JWT编码解码");
-		tabbedPane.addTab("Base64(文本)", ImageIcons.txt_gif, initBase64Tab(), "Base64编码解码(文本)");
-		tabbedPane.addTab("Base64(文件)", ImageIcons.txt_gif, initBase64FileTab(), "Base64编码解码(文件)");
-		tabbedPane.addTab("Json格式化", ImageIcons.txt_gif, initJsonFormatTab(), "Json格式化");
-		tabbedPane.addTab("SQL格式化", ImageIcons.sql_png, initSqlFormatTab(), "SQL格式化");
-		tabbedPane.addTab("时间戳转换", ImageIcons.txt_gif, initTimeStampFormatTab(), "时间戳转换");
-		tabbedPane.addTab("URL编码", ImageIcons.txt_gif, initUrlEncodeTab(), "URL编码解码");
-		tabbedPane.addTab("哈希(文本)", ImageIcons.key_gif, initHashTab(), "哈希计算(文本)");
-		tabbedPane.addTab("哈希(文件)", ImageIcons.key_gif, initHashFile(), "哈希计算(文件)");
+		tabbedPane.addTab("JWT解码",initJwtTab());
+		tabbedPane.addTab("Base64(文本)", initBase64Tab());
+		tabbedPane.addTab("Base64(文件)",  initBase64FileTab());
+		tabbedPane.addTab("Json格式化", initJsonFormatTab());
+		tabbedPane.addTab("SQL格式化", initSqlFormatTab());
+		tabbedPane.addTab("时间戳转换",  initTimeStampFormatTab());
+		tabbedPane.addTab("URL编码解码",  initUrlEncodeTab());
+		tabbedPane.addTab("哈希(文本)", initHashTab());
+		tabbedPane.addTab("哈希(文件)",  initHashFile());
+		tabbedPane.addTab("进制转换",  initJinzhi());
 		getContentPane().add(tabbedPane, BorderLayout.CENTER);
 		
 	}
@@ -823,22 +831,22 @@ public class Base64Frame extends JFrame {
 		//流式布局，左对齐
 		JPanel timeStampPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		
-		JLabel labelTimeStamp = new JLabel("时间戳");
+		JLabel labelTimeStamp = new JLabel("时间戳");labelTimeStamp.setFont(SysFontAndFace.font14);
 		
-		final JTextField fieldTimeStamp = new MyJTextField();
+		final JTextField fieldTimeStamp = new MyJTextField();fieldTimeStamp.setFont(SysFontAndFace.font14);
 		fieldTimeStamp.setColumns(15);
 		fieldTimeStamp.setPreferredSize(new Dimension(100, 25));
 		fieldTimeStamp.setText((System.currentTimeMillis()/1000)+"");
 		
-		JRadioButton miao = new JRadioButton("秒");
+		JRadioButton miao = new JRadioButton("秒");miao.setFont(SysFontAndFace.font14);
 		miao.setSelected(true);
-		final JRadioButton haomiao = new JRadioButton("毫秒");
+		final JRadioButton haomiao = new JRadioButton("毫秒");haomiao.setFont(SysFontAndFace.font14);
 		ButtonGroup group = new ButtonGroup();
 		group.add(miao);
 		group.add(haomiao);
 		
-		JButton button = new JButton("转换");
-		final JTextField result = new MyJTextField();
+		JButton button = new JButton("转换");button.setFont(SysFontAndFace.font14);
+		final JTextField result = new MyJTextField();result.setFont(SysFontAndFace.font14);
 		result.setColumns(30);
 		result.setPreferredSize(new Dimension(150, 25));
 		button.addActionListener(new ActionListener() {
@@ -1339,7 +1347,120 @@ public class Base64Frame extends JFrame {
 		hashpanel.add(bottomPanel, BorderLayout.SOUTH);
 		return hashpanel;
 	}
-
+	private Component initJinzhi() {
+		
+		//JPanel jpanel = new JPanel(new BorderLayout());
+		JSplitPane splitPane = new JSplitPane();
+		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);//上下分割
+		splitPane.setDividerSize(0);//分隔栏宽度
+		splitPane.setDividerLocation(100);//分隔栏初始位置
+		
+		//流式布局，左对齐
+		JPanel ten2OtherPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		JLabel originTenNum = new JLabel("十进制数：");originTenNum.setFont(SysFontAndFace.font14);
+		final JTextField tenJinzhi = new MyJTextField();tenJinzhi.setFont(SysFontAndFace.font14);
+		tenJinzhi.setColumns(30);
+		tenJinzhi.setPreferredSize(new Dimension(100, 25));
+		JLabel zhunaweitip = new JLabel("转换为：");zhunaweitip.setFont(SysFontAndFace.font14);
+		JRadioButton two = new JRadioButton("2");two.setFont(SysFontAndFace.font14);
+		two.setSelected(true);
+		JRadioButton eight = new JRadioButton("8");eight.setFont(SysFontAndFace.font14);
+		JRadioButton hex = new JRadioButton("16");hex.setFont(SysFontAndFace.font14);
+		ButtonGroup group = new ButtonGroup();
+		group.add(two);
+		group.add(eight);
+		group.add(hex);
+		
+		JButton button = new JButton("转换");button.setFont(SysFontAndFace.font14);
+		final JTextField resultField = new MyJTextField();resultField.setFont(SysFontAndFace.font14);
+		resultField.setColumns(30);
+		resultField.setPreferredSize(new Dimension(150, 25));
+		button.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String originText = tenJinzhi.getText();
+				if(originText == null || originText.isEmpty()){
+					JOptionPane.showMessageDialog(frame, "请输入待转换的数据!");
+					return;
+				}
+				try {
+					String result = null;
+					if(two.isSelected()){
+						result = Long.toBinaryString(Long.parseLong(originText));
+					}else if(eight.isSelected()){
+						result = Long.toOctalString(Long.parseLong(originText));
+					}else if(hex.isSelected()){
+						result = Long.toHexString(Long.parseLong(originText));
+					}
+					resultField.setText(result);
+				} catch (Exception e2) {
+					JOptionPane.showMessageDialog(frame, "进制转换出错!"+e2.getMessage());
+					return;
+				}
+			}
+		});
+		ten2OtherPanel.setBorder(BorderFactory.createTitledBorder(""));
+		ten2OtherPanel.add(originTenNum);
+		ten2OtherPanel.add(tenJinzhi);
+		ten2OtherPanel.add(zhunaweitip);
+		ten2OtherPanel.add(two);ten2OtherPanel.add(eight);ten2OtherPanel.add(hex);
+		ten2OtherPanel.add(button);
+		ten2OtherPanel.add(resultField);
+		
+		//流式布局，左对齐
+		JPanel other2TenPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		TitledBorder titleBorder = BorderFactory.createTitledBorder("其他进制转为十进制:");
+		titleBorder.setTitleFont(SysFontAndFace.font14);
+		other2TenPanel.setBorder(titleBorder);
+		JLabel originJinzhi = new JLabel("原进制：");originJinzhi.setFont(SysFontAndFace.font14);
+		JRadioButton two2 = new JRadioButton("2");two2.setFont(SysFontAndFace.font14);
+		two2.setSelected(true);
+		JRadioButton eight2 = new JRadioButton("8");eight2.setFont(SysFontAndFace.font14);
+		JRadioButton hex2 = new JRadioButton("16");hex2.setFont(SysFontAndFace.font14);
+		ButtonGroup group2 = new ButtonGroup();
+		group2.add(two2);
+		group2.add(eight2);
+		group2.add(hex2);
+		JLabel originJinzhiData = new JLabel("原进制数据：");originJinzhiData.setFont(SysFontAndFace.font14);
+		final JTextField originJinzhiText = new MyJTextField();originJinzhiText.setFont(SysFontAndFace.font14);
+		originJinzhiText.setColumns(30);
+		originJinzhiText.setPreferredSize(new Dimension(100, 25));
+		JButton button2 = new JButton("转换");button2.setFont(SysFontAndFace.font14);
+		final JTextField resultField2 = new MyJTextField();resultField2.setFont(SysFontAndFace.font14);
+		resultField2.setColumns(30);
+		resultField2.setPreferredSize(new Dimension(150, 25));
+		button2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String originText = originJinzhiText.getText();
+				if(originText == null || originText.isEmpty()){
+					JOptionPane.showMessageDialog(frame, "请输入待转换的数据!");
+					return;
+				}
+				try {
+					String result = null;
+					if(two2.isSelected()){
+						result = String.valueOf(Long.parseLong(originText,2));
+					}else if(eight2.isSelected()){
+						result = String.valueOf(Long.parseLong(originText,8));
+					}else if(hex2.isSelected()){
+						result = String.valueOf(Long.parseLong(originText,16));
+					}
+					resultField2.setText(result);
+				} catch (Exception e2) {
+					JOptionPane.showMessageDialog(frame, "进制转换出错!"+e2.getMessage());
+					return;
+				}
+			}
+		});
+		other2TenPanel.add(originJinzhi);
+		other2TenPanel.add(two2);other2TenPanel.add(eight2);other2TenPanel.add(hex2);
+		other2TenPanel.add(originJinzhiData);
+		other2TenPanel.add(originJinzhiText);
+		other2TenPanel.add(button2);
+		other2TenPanel.add(resultField2);
+		splitPane.setTopComponent(ten2OtherPanel);
+		splitPane.setBottomComponent(other2TenPanel);
+		return splitPane;
+	}
 
 	private void showFindReplaceDialog(MyJextAreaColor area) {
 		area.showFindDialog(this);
