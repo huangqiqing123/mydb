@@ -93,7 +93,7 @@ public class IndexFrame extends JFrame {
 		this.setTitle("工具箱");
 		
 		//使用网格布局，同时指定行数、列数、水平间隙、垂直间隙
-		GridLayout layout = new GridLayout(0,3,5,5);
+		GridLayout layout = new GridLayout(0,4,5,5);
 		getContentPane().setLayout(layout);
 		JButton dbtool = new JButton("数据库工具");
 		dbtool.setFont(SysFontAndFace.font14);
@@ -101,9 +101,9 @@ public class IndexFrame extends JFrame {
 		jwttool.setFont(SysFontAndFace.font14);
 		JButton notepad = new JButton("记事本");
 		notepad.setFont(SysFontAndFace.font14);
-		JButton base64 = new JButton("Base64编码解码(文本)");
+		JButton base64 = new JButton("Base64(文本)");
 		base64.setFont(SysFontAndFace.font14);
-		JButton base64File = new JButton("Base64编码(文件)");
+		JButton base64File = new JButton("Base64(文件)");
 		base64File.setFont(SysFontAndFace.font14);
 		JButton url = new JButton("URL编码解码");
 		url.setFont(SysFontAndFace.font14);
@@ -119,6 +119,8 @@ public class IndexFrame extends JFrame {
 		hashFile.setFont(SysFontAndFace.font14);
 		JButton jinzhi = new JButton("进制转换");
 		jinzhi.setFont(SysFontAndFace.font14);
+		JButton md = new JButton("Markdown");
+		md.setFont(SysFontAndFace.font14);
 		getContentPane().add(dbtool);
 		getContentPane().add(jwttool);
 		getContentPane().add(notepad);
@@ -131,6 +133,7 @@ public class IndexFrame extends JFrame {
 		getContentPane().add(sql);
 		getContentPane().add(json);
 		getContentPane().add(jinzhi);
+		getContentPane().add(md);
 		
 		
 		dbtool.addActionListener(new ActionListener() {
@@ -228,6 +231,14 @@ public class IndexFrame extends JFrame {
 		jinzhi.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
             	Base64Frame.getInstance(instance).showJInzhiTab();
+            	Base64Frame.getInstance(instance).setBackColor();
+            	Base64Frame.getInstance(instance).setVisible(true);
+            	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));
+            }
+		});
+		md.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+            	Base64Frame.getInstance(instance).showMdTab();
             	Base64Frame.getInstance(instance).setBackColor();
             	Base64Frame.getInstance(instance).setVisible(true);
             	Base64Frame.getInstance(instance).setFont((Font)ConfigUtil.getConfInfo().get(Const.SQL_FONT));

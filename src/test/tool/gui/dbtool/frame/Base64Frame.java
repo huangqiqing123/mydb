@@ -2,12 +2,15 @@ package test.tool.gui.dbtool.frame;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.FileDialog;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.ScrollPane;
 
 import javax.swing.BorderFactory;
+import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -15,6 +18,7 @@ import javax.swing.JPanel;
 import javax.swing.ButtonGroup;
 import javax.swing.JRadioButton;
 import javax.swing.JButton;
+import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
@@ -24,6 +28,17 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.log4j.lf5.util.StreamUtils;
 import org.apache.poi.util.IOUtils;
+import org.commonmark.Extension;
+import org.commonmark.ext.gfm.tables.TableBlock;
+import org.commonmark.ext.gfm.tables.TablesExtension;
+import org.commonmark.ext.heading.anchor.HeadingAnchorExtension;
+import org.commonmark.node.Link;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.AttributeProvider;
+import org.commonmark.renderer.html.AttributeProviderContext;
+import org.commonmark.renderer.html.AttributeProviderFactory;
+import org.commonmark.renderer.html.HtmlRenderer;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rsyntaxtextarea.themes.ThemesUtil;
@@ -46,13 +61,17 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +126,9 @@ public class Base64Frame extends JFrame {
 	public void showJInzhiTab(){
 		getInstance().tabbedPane.setSelectedIndex(9);
 	}
+	public void showMdTab(){
+		getInstance().tabbedPane.setSelectedIndex(10);
+	}
 	public void setBackColor(){
 		MyColor mycolor = (MyColor)ConfigUtil.getConfInfo().get(Const.EYE_SAFETY_COLOR);
 		originTextJwt.setBackground(mycolor.getColor());
@@ -115,6 +137,7 @@ public class Base64Frame extends JFrame {
 		originTextSql.setBackground(mycolor.getColor());
 		originTextUrl.setBackground(mycolor.getColor());
 		originTextHash.setBackground(mycolor.getColor());
+		originMd.setBackground(mycolor.getColor());
 	
 		targetTextJwt.setBackground(mycolor.getColor());
 		targetTextBase64.setBackground(mycolor.getColor());
@@ -124,6 +147,7 @@ public class Base64Frame extends JFrame {
 		targetTextUrl.setBackground(mycolor.getColor());
 		targetTextHash.setBackground(mycolor.getColor());
 		targetTextHashFile.setBackground(mycolor.getColor());
+		targetMd.setBackground(mycolor.getColor());
 	}
 	public void setFont(Font font){
 		originTextJwt.setFont(font);
@@ -132,6 +156,7 @@ public class Base64Frame extends JFrame {
 		originTextSql.setFont(font);
 		originTextUrl.setFont(font);
 		originTextHash.setFont(font);
+		originMd.setFont(font);
 	
 		targetTextJwt.setFont(font);
 		targetTextBase64.setFont(font);
@@ -141,6 +166,7 @@ public class Base64Frame extends JFrame {
 		targetTextUrl.setFont(font);
 		targetTextHash.setFont(font);
 		targetTextHashFile.setFont(font);
+		targetMd.setFont(font);
 	}
 	
 
@@ -170,6 +196,7 @@ public class Base64Frame extends JFrame {
 		tabbedPane.addTab("哈希(文本)", initHashTab());
 		tabbedPane.addTab("哈希(文件)",  initHashFile());
 		tabbedPane.addTab("进制转换",  initJinzhi());
+		tabbedPane.addTab("Markdown",  initMdTab());
 		getContentPane().add(tabbedPane, BorderLayout.CENTER);
 		
 	}
@@ -703,6 +730,159 @@ public class Base64Frame extends JFrame {
 		jsonPanel.add(buttonPannel, BorderLayout.SOUTH);
 		return jsonPanel;
 	}
+	//===============================================
+	final MyJextAreaColor originMd = new MyJextAreaColor(true);
+	final JEditorPane targetMd = new JEditorPane();
+	private JPanel initMdTab() {
+		
+		// jsonpanel中区域划分为两部分，上部分是分隔栏面板(上栏是待格式化数据，下栏是格式化结果)，下部分是按钮区域。
+		JPanel jsonPanel = new JPanel(new BorderLayout());
+
+		// 分隔栏面板
+		JSplitPane splitPane = new JSplitPane();
+		splitPane.setContinuousLayout(true);
+		splitPane.setOneTouchExpandable(true);
+		splitPane.setBorder(null);
+		splitPane.setDividerSize(8);// 分隔栏宽度
+		splitPane.setMinimumSize(new Dimension(0, 0)); // 最小可以为0
+		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);// 上下分割
+		splitPane.setDividerLocation(150);// 分隔栏初始位置
+
+		originMd.setLineWrap(false);// 自动换行
+		originMd.setCodeFoldingEnabled(true);
+		originMd.setHighlightCurrentLine(false);
+		originMd.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_MARKDOWN);
+		ThemesUtil.updateTheme(originMd, ThemesUtil.IDEA);
+		originMd.find.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent arg0) {
+				showFindReplaceDialog(originMd);
+			}   	
+        });    
+		// 将JTextArea放入RTextScrollPane可以解决滚动条不展示的问题
+		splitPane.setTopComponent(new RTextScrollPane(originMd));
+		targetMd.setContentType("text/html");
+		splitPane.setBottomComponent(new JScrollPane(targetMd));
+
+		//将分隔栏面板加入jsonPanel
+		jsonPanel.add(splitPane, BorderLayout.CENTER);
+
+
+		// 按钮区域，流式布局，居中对齐
+		JPanel buttonPannel = new JPanel(new FlowLayout(FlowLayout.CENTER));// 按钮居中对齐
+		JButton button = new JButton("转换");
+		JButton buttonHtml = new JButton("另存为html");
+		buttonHtml.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// 将内容输出至外部文件
+				// 弹出路径选择框
+				FileDialog saveDialog = new FileDialog(Base64Frame.getInstance(),"保存文件", FileDialog.SAVE);
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+				sdf.setTimeZone(TimeZone.getTimeZone("GMT+8"));//如果不指定时区，在有些机器上会出现时间误差。  
+				String currentDateTime = sdf.format(new Date());	
+				saveDialog.setFile(currentDateTime+".html");
+				saveDialog.setVisible(true);
+				String path = null;
+				if(saveDialog.getDirectory()==null){//点击了取消按钮
+					return;
+				}else{
+					path = saveDialog.getDirectory()+saveDialog.getFile();	
+					if (!path.toLowerCase().endsWith(".html")) {
+						path = path  + ".html";
+					}
+					try {
+						File file = new File(path);
+						FileWriter fileWriter = new FileWriter(file);
+						fileWriter.write(targetMd.getText());
+						fileWriter.flush();
+						fileWriter.close();
+						JOptionPane.showMessageDialog(Base64Frame.getInstance(), "保存成功=>" + path);
+						
+						//用本地默认编辑器打开
+						Desktop desk=Desktop.getDesktop(); 
+						desk.open(file);
+						
+					} catch (IOException e2) {
+						JOptionPane.showMessageDialog(Base64Frame.getInstance(), e2.getMessage());
+					}
+				}
+			}
+			
+		});;
+		button.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				//支持table表格
+				List<Extension> tableExtensions = Arrays.asList(TablesExtension.create());
+				List<Extension> headingAnchorExtensions = Arrays.asList(HeadingAnchorExtension.create());
+				Parser parser = Parser.builder()
+						.extensions(tableExtensions)
+						.extensions(headingAnchorExtensions)
+						.build();
+				Node document = parser.parse(originMd.getText());
+				HtmlRenderer renderer = HtmlRenderer.builder()
+						.extensions(tableExtensions)
+						.extensions(headingAnchorExtensions)
+						.attributeProviderFactory(new AttributeProviderFactory() {
+							@Override
+							public AttributeProvider create(AttributeProviderContext context) {
+								return new CustomAttributeProvider();
+							}
+						})
+				       .build();
+				String html = renderer.render(document);
+				StringBuffer sb = new StringBuffer();
+				sb.append("<html>");
+				sb.append("<style>");
+				sb.append("body");
+				sb.append("{");
+				sb.append("font-size:14pt;");
+				sb.append("font-family:Arial;");
+				sb.append("}");
+				sb.append("td");
+				sb.append("{");
+				sb.append("font-size:14pt;");
+				sb.append("border:1 solid #5b99c8;font-family:Arial;");
+				sb.append("}");
+				sb.append("th");
+				sb.append("{");
+				sb.append("font-size:14pt;");
+				sb.append("background-color:#8fcae9;");
+				sb.append("border:1 solid #5b99c8;font-family:Arial;");
+				sb.append("}</style>");
+				sb.append("<head>");
+				sb.append("</head>");
+				sb.append("<body bgcolor=\"#eff7ff\">");
+				sb.append(html);
+				sb.append("</body>");
+				sb.append("</html>");
+				System.out.println(sb.toString());
+				targetMd.setText(sb.toString());
+			}
+			
+		});
+		buttonPannel.add(button);
+		buttonPannel.add(buttonHtml);
+
+		// 将buttonPannel加入jsonPanel
+		jsonPanel.add(buttonPannel, BorderLayout.SOUTH);
+		return jsonPanel;
+	}
+    static class CustomAttributeProvider implements AttributeProvider {
+        @Override
+        public void setAttributes(Node node, String tagName, Map<String, String> attributes) {
+            //改变a标签的target属性为_blank
+            if (node instanceof Link) {
+                attributes.put("target", "_blank");
+            }
+            if (node instanceof TableBlock) {
+            	attributes.put("border", "1");
+            	attributes.put("cellpadding","2");
+            	attributes.put("cellspacing","0");
+                attributes.put("style", "border-collapse:collapse;border:1 solid #5b99c8;");
+            }
+        }
+    }
 	//===============================================
 	final MyJextAreaColor originTextJwt = new MyJextAreaColor(true);
 	final MyJextAreaColor targetTextJwt = new MyJextAreaColor(true);
