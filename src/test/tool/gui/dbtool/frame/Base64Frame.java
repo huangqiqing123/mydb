@@ -812,8 +812,9 @@ public class Base64Frame extends JFrame {
 		button.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				//支持table表格
+				//支持table表格-扩展
 				List<Extension> tableExtensions = Arrays.asList(TablesExtension.create());
+				//为h标签加id-扩展
 				List<Extension> headingAnchorExtensions = Arrays.asList(HeadingAnchorExtension.create());
 				Parser parser = Parser.builder()
 						.extensions(tableExtensions)
@@ -856,7 +857,6 @@ public class Base64Frame extends JFrame {
 				sb.append(html);
 				sb.append("</body>");
 				sb.append("</html>");
-				System.out.println(sb.toString());
 				targetMd.setText(sb.toString());
 			}
 			
